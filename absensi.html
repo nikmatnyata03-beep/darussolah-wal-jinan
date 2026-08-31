@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="Modul absensi harian TPQ Darul Jinan untuk guru dan ustadzah." />
+  <title>Absensi Harian | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pine: #0d4433;
+      --pine-deep: #082e25;
+      --pine-light: #155641;
+      --gold: #c99435;
+      --gold-light: #e8c879;
+      --cream: #f5f6f0;
+      --paper: #fffdf9;
+      --sand: #ecefe7;
+      --ink: #1e2c26;
+      --muted: #748079;
+      --line: #e0e4dc;
+      --green: #3f8b62;
+      --red: #b45d4a;
+      --blue: #567b9e;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; color: var(--ink); background: var(--cream); font-family: "DM Sans", system-ui, sans-serif; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .serif { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .app-shell { display: grid; min-height: 100svh; grid-template-columns: 246px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; display: flex; min-height: 100svh; flex-direction: column; padding: 26px 17px 18px; color: rgba(255,255,255,.74); background: var(--pine-deep); }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 9px; }
+    .brand-logo { display: grid; width: 38px; height: 38px; place-items: center; color: var(--pine); border-radius: 50%; background: #fff; }
+    .brand-symbol { width: 100%; height: 100%; padding: 5px; }
+    .brand-name { display: block; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.1; }
+    .brand-caption { display: block; margin-top: 4px; color: rgba(255,255,255,.43); font-size: 8px; letter-spacing: .12em; text-transform: uppercase; }
+    .sidebar-context { margin: 35px 9px 25px; padding: 13px 12px; border: 1px solid rgba(255,255,255,.11); border-radius: 10px; background: rgba(255,255,255,.045); }
+    .context-label { display: block; margin-bottom: 5px; color: var(--gold-light); font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .context-name { display: block; color: #fff; font-size: 11px; font-weight: 600; }
+    .context-meta { display: block; margin-top: 3px; color: rgba(255,255,255,.48); font-size: 10px; }
+    .nav-label { display: block; margin: 0 11px 9px; color: rgba(255,255,255,.34); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    .side-nav { display: grid; gap: 3px; }
+    .side-link { display: flex; align-items: center; gap: 11px; min-height: 41px; padding: 0 11px; color: rgba(255,255,255,.59); border-radius: 9px; font-size: 11px; font-weight: 600; transition: color .2s ease, background .2s ease; }
+    .side-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+    .side-link.active { color: #fff; background: var(--pine-light); box-shadow: inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display: grid; width: 21px; height: 21px; place-items: center; color: var(--gold-light); border: 1px solid rgba(232,200,121,.24); border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .side-link:not(.active) .nav-icon { color: rgba(255,255,255,.55); border-color: rgba(255,255,255,.12); }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-footer { padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.1); }
+    .user-card { display: flex; align-items: center; gap: 9px; }
+    .user-avatar { display: grid; width: 29px; height: 29px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 10px; font-weight: 700; }
+    .user-card strong { display: block; color: #fff; font-size: 10px; font-weight: 600; }
+    .user-card span { display: block; margin-top: 2px; color: rgba(255,255,255,.43); font-size: 9px; }
+
+    .main-content { min-width: 0; background: var(--cream); }
+    .topbar { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 42px; border-bottom: 1px solid var(--line); background: rgba(255,253,249,.72); }
+    .breadcrumbs { color: var(--muted); font-size: 10px; }
+    .breadcrumbs strong { color: var(--pine); font-weight: 700; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .connection { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 10px; font-weight: 600; }
+    .connection::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; box-shadow: 0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color: var(--muted); font-size: 10px; }
+    .top-avatar { display: grid; width: 32px; height: 32px; place-items: center; color: var(--pine); border: 1px solid rgba(13,68,51,.15); border-radius: 50%; background: var(--pine-soft, #e4eee8); font-size: 10px; font-weight: 700; }
+    .content { width: min(1180px, calc(100% - 84px)); margin: 0 auto; padding: 42px 0 55px; }
+    .content-header { display: flex; align-items: end; justify-content: space-between; gap: 25px; margin-bottom: 29px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { width: 23px; height: 1px; background: currentColor; content: ""; }
+    .content-header h1 { margin: 12px 0 7px; color: var(--pine-deep); font-size: clamp(36px, 4vw, 51px); letter-spacing: -.035em; line-height: 1; }
+    .content-header p { margin: 0; color: var(--muted); font-size: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 9px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 15px; border: 1px solid transparent; border-radius: 9px; font-size: 11px; font-weight: 700; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #fff; background: var(--pine); box-shadow: 0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background: var(--pine-deep); box-shadow: 0 10px 20px rgba(13,68,51,.18); }
+    .btn-ghost { color: var(--pine); border-color: var(--line); background: var(--paper); }
+    .btn-ghost:hover { border-color: rgba(13,68,51,.28); background: #fff; }
+    .arrow { font-size: 15px; line-height: 0; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric-card { position: relative; min-height: 123px; padding: 19px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .metric-card::after { position: absolute; right: -28px; bottom: -47px; width: 115px; height: 115px; border: 1px solid rgba(13,68,51,.1); border-radius: 50%; content: ""; }
+    .metric-card.highlight { color: #fff; border-color: var(--pine); background: var(--pine); }
+    .metric-card.highlight::after { border-color: rgba(232,200,121,.26); }
+    .metric-label { display: block; color: var(--muted); font-size: 10px; }
+    .highlight .metric-label { color: rgba(255,255,255,.65); }
+    .metric-value { display: block; margin-top: 11px; color: var(--pine-deep); font-family: "DM Serif Display", Georgia, serif; font-size: 32px; line-height: 1; }
+    .highlight .metric-value { color: var(--gold-light); }
+    .metric-foot { display: block; margin-top: 8px; color: var(--green); font-size: 9px; font-weight: 700; }
+    .highlight .metric-foot { color: rgba(255,255,255,.58); }
+
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 303px; gap: 17px; align-items: start; }
+    .panel { border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .attendance-panel { min-width: 0; }
+    .panel-header { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 21px 22px 17px; border-bottom: 1px solid var(--line); }
+    .panel-heading h2 { margin: 0; color: var(--pine-deep); font-size: 15px; font-weight: 700; }
+    .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .session-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px; color: var(--pine); border-radius: 7px; background: var(--pine-soft, #e4eee8); font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .session-tag::before { width: 5px; height: 5px; border-radius: 50%; background: var(--green); content: ""; }
+    .table-tools { display: flex; align-items: center; justify-content: space-between; gap: 13px; padding: 14px 22px; }
+    .filter-tabs { display: flex; align-items: center; gap: 5px; }
+    .filter-tab { padding: 7px 9px; color: var(--muted); border: 0; border-radius: 6px; background: transparent; font-size: 10px; font-weight: 600; }
+    .filter-tab:hover { color: var(--pine); background: var(--sand); }
+    .filter-tab.active { color: var(--pine); background: var(--pine-soft, #e4eee8); }
+    .search-wrap { position: relative; }
+    .search-wrap::before { position: absolute; top: 50%; left: 10px; color: var(--muted); content: "⌕"; font-size: 15px; transform: translateY(-54%); }
+    .search-input { width: 155px; height: 31px; padding: 0 9px 0 27px; color: var(--ink); outline: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--cream); font-size: 10px; }
+    .search-input:focus { border-color: var(--pine); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 620px; }
+    th { padding: 10px 22px; color: #929b94; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
+    td { padding: 13px 22px; border-bottom: 1px solid #edf0ea; color: var(--muted); font-size: 11px; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .student-cell { display: flex; align-items: center; gap: 9px; color: var(--pine-deep); font-weight: 700; }
+    .student-avatar { display: grid; width: 28px; height: 28px; place-items: center; flex: 0 0 auto; color: var(--pine); border-radius: 50%; background: #dce9df; font-size: 9px; font-weight: 700; }
+    tr:nth-child(2n) .student-avatar { background: #f1dfb3; }
+    tr:nth-child(3n) .student-avatar { background: #ecd0c3; }
+    .student-detail small { display: block; margin-top: 2px; color: #9ba39d; font-size: 9px; font-weight: 400; }
+    .status-select { min-width: 95px; padding: 6px 22px 6px 8px; color: var(--muted); outline: 0; border: 0; border-radius: 6px; background: var(--sand); font-size: 10px; font-weight: 700; }
+    .status-select[data-status="hadir"] { color: #397452; background: #e5f1e7; }
+    .status-select[data-status="izin"], .status-select[data-status="sakit"] { color: #84642b; background: #f8edcf; }
+    .status-select[data-status="alpa"] { color: #a04f40; background: #f6e3dc; }
+    .status-select[data-status="terlambat"] { color: #536d8d; background: #e3edf4; }
+    .status-select[data-status="belum"] { color: #7c8680; background: #eceeea; }
+    .time-cell { color: var(--muted); font-size: 10px; }
+    .row-action { color: var(--muted); border: 0; background: transparent; font-size: 16px; line-height: 1; }
+    .row-action:hover { color: var(--pine); }
+    .empty-row td { padding: 35px; color: var(--muted); text-align: center; }
+
+    .side-stack { display: grid; gap: 15px; }
+    .scan-card { position: relative; min-height: 248px; padding: 22px; overflow: hidden; color: #fff; border-radius: 13px; background: var(--pine); }
+    .scan-card::after { position: absolute; right: -55px; bottom: -72px; width: 220px; height: 220px; border: 1px solid rgba(232,200,121,.23); border-radius: 50%; content: ""; }
+    .scan-card .eyebrow { color: var(--gold-light); }
+    .scan-card h3 { position: relative; z-index: 1; max-width: 210px; margin: 14px 0 8px; font-size: 25px; line-height: 1.03; }
+    .scan-card p { position: relative; z-index: 1; max-width: 220px; margin: 0 0 18px; color: rgba(255,255,255,.64); font-size: 10px; }
+    .scan-button { position: relative; z-index: 1; color: var(--pine); background: var(--gold-light); }
+    .scan-button:hover { background: #f3d894; }
+    .scan-mark { position: absolute; right: 25px; bottom: 26px; z-index: 1; display: grid; width: 70px; height: 70px; place-items: center; color: var(--gold-light); border: 1px solid rgba(232,200,121,.45); border-radius: 10px; font-size: 44px; line-height: 1; opacity: .75; }
+    .scan-mark::after { position: absolute; inset: 11px; border: 1px dashed rgba(232,200,121,.55); content: ""; }
+    .insight-card { padding: 19px; }
+    .mini-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--pine-deep); font-size: 12px; font-weight: 700; }
+    .mini-heading a { color: var(--gold); font-size: 10px; }
+    .insight-stat { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; }
+    .donut { position: relative; display: grid; width: 94px; height: 94px; place-items: center; border-radius: 50%; background: conic-gradient(var(--green) 0 87.5%, #e8ece5 87.5% 100%); }
+    .donut::before { position: absolute; width: 70px; height: 70px; border-radius: 50%; background: var(--paper); content: ""; }
+    .donut strong { position: relative; z-index: 1; color: var(--pine-deep); font-family: "DM Serif Display", Georgia, serif; font-size: 24px; font-weight: 400; }
+    .legend { display: grid; gap: 10px; margin-left: 15px; }
+    .legend-row { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; }
+    .legend-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .legend-row:nth-child(2) .legend-dot { background: var(--gold); }
+    .legend-row:nth-child(3) .legend-dot { background: #e2e6df; }
+    .legend-row strong { margin-left: auto; color: var(--pine); font-weight: 700; }
+    .notice-card { display: flex; align-items: start; gap: 10px; padding: 14px; color: #6f5523; border: 1px solid #f1e2bd; border-radius: 11px; background: #fff7e4; font-size: 10px; }
+    .notice-card b { display: grid; width: 20px; height: 20px; place-items: center; flex: 0 0 auto; color: #72531d; border-radius: 50%; background: #ecd18f; font-size: 11px; }
+    .notice-card strong { display: block; margin-bottom: 3px; font-size: 11px; }
+    .notice-card span { display: block; color: #947b4d; line-height: 1.45; }
+
+    .sync-bar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 15px; padding: 13px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+    .sync-copy { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 10px; }
+    .sync-icon { display: grid; width: 23px; height: 23px; place-items: center; color: var(--green); border-radius: 50%; background: #e5f1e7; font-size: 11px; }
+    .sync-copy strong { display: block; color: var(--pine); font-size: 10px; }
+    .sync-copy span { display: block; margin-top: 2px; color: #919a93; font-size: 9px; }
+    .sync-bar .btn { min-height: 34px; padding: 0 12px; font-size: 10px; }
+    .modal[hidden] { display: none; }
+    .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 22px; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(8,46,37,.64); backdrop-filter: blur(5px); }
+    .scan-modal { position: relative; width: min(100%, 425px); padding: 25px; border-radius: 16px; background: var(--paper); box-shadow: 0 25px 70px rgba(0,0,0,.22); }
+    .modal-close { position: absolute; top: 13px; right: 14px; display: grid; width: 28px; height: 28px; place-items: center; color: var(--muted); border: 0; border-radius: 50%; background: var(--sand); font-size: 19px; }
+    .modal-close:hover { color: var(--pine); background: var(--pine-soft, #e4eee8); }
+    .scan-modal h2 { margin: 13px 0 7px; color: var(--pine-deep); font-size: 28px; line-height: 1; }
+    .scan-modal > p { margin: 0 0 18px; color: var(--muted); font-size: 11px; }
+    .scanner-window { position: relative; display: grid; height: 190px; margin-bottom: 17px; place-items: center; overflow: hidden; border-radius: 11px; background: var(--pine-deep); }
+    .scanner-window::before { position: absolute; width: 154px; height: 115px; border: 1px solid var(--gold-light); border-radius: 8px; content: ""; box-shadow: 0 0 0 999px rgba(8,46,37,.19); }
+    .scanner-window::after { position: absolute; width: 145px; height: 1px; background: var(--gold-light); content: ""; animation: scan-line 2.2s ease-in-out infinite; }
+    .qr-dots { width: 60px; height: 60px; color: var(--gold-light); font-size: 50px; line-height: 1; opacity: .75; }
+    .scanner-label { position: absolute; bottom: 12px; color: rgba(255,255,255,.62); font-size: 9px; }
+    @keyframes scan-line { 0%,100% { transform: translateY(-50px); opacity: .25; } 50% { transform: translateY(50px); opacity: 1; } }
+    .manual-code { display: grid; gap: 7px; }
+    .manual-code label { color: #53615a; font-size: 10px; font-weight: 700; }
+    .manual-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .manual-row input { min-width: 0; height: 40px; padding: 0 11px; outline: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 11px; }
+    .manual-row input:focus { border-color: var(--pine); }
+    .manual-row .btn { min-height: 40px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 30; display: flex; align-items: center; gap: 10px; width: min(350px, calc(100% - 44px)); padding: 13px 15px; color: #fff; border-radius: 11px; background: var(--pine-deep); box-shadow: 0 18px 40px rgba(8,46,37,.23); opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .25s ease, transform .25s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast > span { display: grid; width: 23px; height: 23px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 11px; }
+    .toast strong { display: block; font-size: 11px; }
+    .toast small { display: block; margin-top: 2px; color: rgba(255,255,255,.6); font-size: 9px; }
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 214px minmax(0, 1fr); }
+      .topbar { padding: 0 28px; }
+      .content { width: min(100% - 56px, 1180px); }
+      .workspace-grid { grid-template-columns: minmax(0, 1fr) 270px; }
+      th, td { padding-right: 14px; padding-left: 14px; }
+    }
+    @media (max-width: 820px) {
+      .app-shell { display: block; }
+      .sidebar { position: relative; display: grid; min-height: auto; grid-template-columns: 1fr auto; gap: 14px; padding: 17px 18px 12px; }
+      .sidebar-brand { padding: 0; }
+      .sidebar-context { display: none; }
+      .sidebar-spacer, .sidebar-footer { display: none; }
+      .nav-label { display: none; }
+      .side-nav { grid-column: 1 / -1; display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .side-nav::-webkit-scrollbar { display: none; }
+      .side-link { min-width: fit-content; min-height: 36px; padding: 0 10px; font-size: 10px; white-space: nowrap; }
+      .side-link.active { box-shadow: inset 0 -3px 0 var(--gold-light); }
+      .nav-icon { width: 19px; height: 19px; }
+      .topbar { min-height: 65px; padding: 0 18px; }
+      .help-link { display: none; }
+      .content { width: calc(100% - 36px); padding-top: 30px; }
+      .content-header { align-items: start; flex-direction: column; gap: 17px; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .workspace-grid { grid-template-columns: 1fr; }
+      .side-stack { grid-template-columns: 1fr 1fr; }
+      .scan-card { min-height: 220px; }
+      .insight-card { min-height: 220px; }
+      .sync-bar { align-items: start; flex-direction: column; }
+      .sync-bar .btn { width: 100%; }
+    }
+    @media (max-width: 520px) {
+      .topbar { align-items: center; }
+      .breadcrumbs { font-size: 9px; }
+      .connection { font-size: 0; }
+      .connection::before { margin-right: 2px; }
+      .content-header h1 { font-size: 39px; }
+      .header-actions { gap: 7px; }
+      .header-actions .btn { padding: 0 9px; font-size: 10px; }
+      .table-tools { align-items: start; flex-direction: column-reverse; padding: 13px 14px; }
+      .filter-tabs { width: 100%; overflow-x: auto; }
+      .filter-tab { white-space: nowrap; }
+      .search-wrap, .search-input { width: 100%; }
+      .search-wrap { width: 100%; }
+      th { padding-right: 11px; padding-left: 11px; }
+      td { padding: 11px; }
+      .side-stack { grid-template-columns: 1fr; }
+      .scan-card, .insight-card { min-height: auto; }
+      .modal { padding: 14px; }
+      .scan-modal { padding: 22px 17px; }
+    }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="guru" data-portal-page="attendance">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="index.html" aria-label="Kembali ke situs TPQ Darul Jinan">
+        <span class="brand-logo"><svg class="brand-symbol" viewBox="0 0 48 48" role="img" aria-label="Emblem TPQ Darul Jinan"><path d="M9 28.5V22C9 13.2 15.8 6 24 6s15 7.2 15 16v6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M7 28.5h34l-1.5 13H8.5l-1.5-13Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 29.5 24 34l14-4.5-14 8-14-8Z" fill="none" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 34v4" stroke="currentColor" stroke-width="1.5"/><path d="M22 11.5a4.6 4.6 0 1 0 5.7 5.7A5.1 5.1 0 0 1 22 11.5Z" fill="currentColor"/></svg></span>
+        <span><span class="brand-name">TPQ Darul Jinan</span><span class="brand-caption">Ruang kerja guru</span></span>
+      </a>
+      <div class="sidebar-context"><span class="context-label">Lembaga aktif</span><span class="context-name">TPQ Darul Jinan</span><span class="context-meta">Tahun ajaran 2026 / 2027</span></div>
+      <nav class="side-nav" aria-label="Menu dashboard">
+        <span class="nav-label">Workspace</span>
+        <a class="side-link" href="#ringkasan"><span class="nav-icon">01</span>Ringkasan</a>
+        <a class="side-link active" href="#absensi"><span class="nav-icon">02</span>Absensi</a>
+        <a class="side-link" href="materi.html"><span class="nav-icon">03</span>Materi &amp; tugas</a>
+        <a class="side-link" href="tahfidz.html"><span class="nav-icon">04</span>Tahfidz</a>
+        <a class="side-link" href="#santri"><span class="nav-icon">05</span>Data santri</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NS</span><span><strong>Ustadzah Nisa</strong><span>Guru TPQ &bull; Sore</span></span></div></div>
+    </aside>
+
+    <div class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><a href="index.html">TPQ Darul Jinan</a><span> / </span><strong>Absensi harian</strong></div><div class="topbar-actions"><span class="connection" id="connection-status">Offline-first aktif</span><a class="help-link" href="index.html#faq">Butuh bantuan?</a><span class="top-avatar">NS</span></div></header>
+      <main class="content" id="absensi">
+        <div class="content-header"><div><span class="eyebrow">Operasional / Absensi</span><h1 class="serif">Absensi hari ini.</h1><p id="today-label">Memuat tanggal...</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="close-session">Tutup sesi</button><button class="btn btn-primary" type="button" data-open-scan>Buka pemindaian QR <span class="arrow">&nearr;</span></button></div></div>
+         <section class="metrics-grid" id="ringkasan" aria-label="Ringkasan absensi"><article class="metric-card"><span class="metric-label">Santri di kelas</span><span class="metric-value" id="metric-total">08</span><span class="metric-foot">Iqra 2 &bull; sore</span></article><article class="metric-card highlight"><span class="metric-label">Sudah hadir</span><span class="metric-value" id="metric-present">05</span><span class="metric-foot" id="metric-present-foot">62,5% dari kelas</span></article><article class="metric-card"><span class="metric-label">Izin / sakit</span><span class="metric-value" id="metric-excused">02</span><span class="metric-foot">Perlu ditindaklanjuti</span></article><article class="metric-card"><span class="metric-label">Belum tercatat</span><span class="metric-value" id="metric-pending">01</span><span class="metric-foot">Sebelum sesi ditutup</span></article></section>
+        <div class="workspace-grid">
+           <section class="panel attendance-panel" id="santri" aria-labelledby="attendance-title"><div class="panel-header"><div class="panel-heading"><h2 id="attendance-title">Daftar santri</h2><p>Perbarui status secara manual bila QR tidak tersedia.</p></div><span class="session-tag">DATA CONTOH</span></div><div class="table-tools"><div class="filter-tabs" role="group" aria-label="Filter kehadiran"><button class="filter-tab active" type="button" data-filter="all">Semua <span>(8)</span></button><button class="filter-tab" type="button" data-filter="belum">Belum diisi</button><button class="filter-tab" type="button" data-filter="hadir">Hadir</button><button class="filter-tab" type="button" data-filter="izin">Izin / sakit</button></div><div class="search-wrap"><input class="search-input" id="student-search" type="search" placeholder="Cari nama santri" /></div></div><div class="table-scroll"><table><thead><tr><th>Santri</th><th>Kehadiran</th><th>Waktu scan</th><th aria-label="Aksi"></th></tr></thead><tbody id="student-rows">
+            <tr data-name="aisyah zahra" data-status="hadir" data-qr="DJ-001"><td><div class="student-cell"><span class="student-avatar">AZ</span><span class="student-detail">Aisyah Zahra<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="hadir"><option value="belum">Belum diisi</option><option value="hadir" selected>Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">15.32 WIB</td><td><button class="row-action" type="button" aria-label="Detail Aisyah Zahra">&hellip;</button></td></tr>
+            <tr data-name="naufal akbar" data-status="hadir" data-qr="DJ-002"><td><div class="student-cell"><span class="student-avatar">NA</span><span class="student-detail">Naufal Akbar<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="hadir"><option value="belum">Belum diisi</option><option value="hadir" selected>Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">15.34 WIB</td><td><button class="row-action" type="button" aria-label="Detail Naufal Akbar">&hellip;</button></td></tr>
+            <tr data-name="fathimah nabila" data-status="izin" data-qr="DJ-003"><td><div class="student-cell"><span class="student-avatar">FN</span><span class="student-detail">Fathimah Nabila<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="izin"><option value="belum">Belum diisi</option><option value="hadir">Hadir</option><option value="izin" selected>Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">-</td><td><button class="row-action" type="button" aria-label="Detail Fathimah Nabila">&hellip;</button></td></tr>
+            <tr data-name="rayyan hakim" data-status="sakit" data-qr="DJ-004"><td><div class="student-cell"><span class="student-avatar">RH</span><span class="student-detail">Rayyan Hakim<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="sakit"><option value="belum">Belum diisi</option><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit" selected>Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">-</td><td><button class="row-action" type="button" aria-label="Detail Rayyan Hakim">&hellip;</button></td></tr>
+            <tr data-name="salwa nurdini" data-status="hadir" data-qr="DJ-005"><td><div class="student-cell"><span class="student-avatar">SN</span><span class="student-detail">Salwa Nurdini<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="hadir"><option value="belum">Belum diisi</option><option value="hadir" selected>Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">15.29 WIB</td><td><button class="row-action" type="button" aria-label="Detail Salwa Nurdini">&hellip;</button></td></tr>
+            <tr data-name="haidar fawwaz" data-status="terlambat" data-qr="DJ-006"><td><div class="student-cell"><span class="student-avatar">HF</span><span class="student-detail">Haidar Fawwaz<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="terlambat"><option value="belum">Belum diisi</option><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat" selected>Terlambat</option></select></td><td class="time-cell">15.47 WIB</td><td><button class="row-action" type="button" aria-label="Detail Haidar Fawwaz">&hellip;</button></td></tr>
+            <tr data-name="maryam safira" data-status="hadir" data-qr="DJ-007"><td><div class="student-cell"><span class="student-avatar">MS</span><span class="student-detail">Maryam Safira<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="hadir"><option value="belum">Belum diisi</option><option value="hadir" selected>Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">15.35 WIB</td><td><button class="row-action" type="button" aria-label="Detail Maryam Safira">&hellip;</button></td></tr>
+            <tr data-name="umar faruq" data-status="belum" data-qr="DJ-008"><td><div class="student-cell"><span class="student-avatar">UF</span><span class="student-detail">Umar Faruq<small>Iqra 2</small></span></div></td><td><select class="status-select" data-status="belum"><option value="belum" selected>Belum diisi</option><option value="hadir">Hadir</option><option value="izin">Izin</option><option value="sakit">Sakit</option><option value="alpa">Alpa</option><option value="terlambat">Terlambat</option></select></td><td class="time-cell">-</td><td><button class="row-action" type="button" aria-label="Detail Umar Faruq">&hellip;</button></td></tr>
+          </tbody></table></div></section>
+           <aside class="side-stack"><section class="scan-card"><span class="eyebrow">Metode utama</span><h3 class="serif">Pindai QR santri.</h3><p>Lebih cepat untuk mencatat kehadiran tanpa mengetik satu per satu.</p><button class="btn scan-button" type="button" data-open-scan>Mulai pindai <span class="arrow">&nearr;</span></button><span class="scan-mark">⌗</span></section><section class="panel insight-card" id="rekap"><div class="mini-heading"><span>Kehadiran kelas</span><a href="#rekap">Lihat rekap &rarr;</a></div><div class="insight-stat"><div class="donut"><strong id="donut-value">63%</strong></div><div class="legend"><div class="legend-row"><span class="legend-dot"></span>Hadir <strong id="legend-present">5</strong></div><div class="legend-row"><span class="legend-dot"></span>Izin / sakit <strong id="legend-excused">2</strong></div><div class="legend-row"><span class="legend-dot"></span>Belum <strong id="legend-pending">1</strong></div></div></div></section><div class="notice-card"><b>i</b><div><strong>Notifikasi wali</strong><span>Santri yang alpa tanpa keterangan akan masuk daftar tindak lanjut setelah sesi ditutup.</span></div></div></aside>
+        </div>
+        <div class="sync-bar"><div class="sync-copy"><span class="sync-icon">↻</span><span><strong id="sync-title">Mode offline-first aktif</strong><span id="sync-detail">Perubahan tersimpan di perangkat dan akan disinkronkan saat online.</span></span></div><button class="btn btn-primary" type="button" id="save-attendance">Simpan absensi</button></div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-title" hidden><div class="modal-backdrop" data-close-scan></div><div class="scan-modal"><button class="modal-close" type="button" aria-label="Tutup pemindaian" data-close-scan>&times;</button><span class="eyebrow">Absensi QR</span><h2 id="scan-title" class="serif">Pindai kartu santri.</h2><p>Arahkan kamera ke QR unik santri. Untuk pratinjau, masukkan kode contoh di bawah.</p><div class="scanner-window"><div class="qr-dots">⌗</div><span class="scanner-label">Menunggu kode QR...</span></div><div class="manual-code"><label for="qr-input">Kode QR manual</label><div class="manual-row"><input id="qr-input" type="text" placeholder="Contoh: DJ-008" autocomplete="off" /><button class="btn btn-primary" type="button" id="scan-submit">Catat hadir</button></div></div></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span>&#10003;</span><div><strong id="toast-title">Absensi tersimpan.</strong><small id="toast-detail">Perubahan siap disinkronkan.</small></div></div>
+  <script>
+    (() => {
+       let rows = [...document.querySelectorAll('#student-rows tr[data-name]')];
+      const modal = document.querySelector('#scan-modal');
+      const toast = document.querySelector('#toast');
+       const search = document.querySelector('#student-search');
+       search.setAttribute('aria-label', 'Cari nama santri');
+      const donut = document.querySelector('.donut');
+      let activeFilter = 'all';
+      let toastTimer;
+
+      const showToast = (title, detail) => {
+        document.querySelector('#toast-title').textContent = title;
+        document.querySelector('#toast-detail').textContent = detail;
+        toast.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3600);
+      };
+
+      const updateStats = () => {
+        const statuses = rows.map((row) => row.dataset.status);
+        const total = statuses.length;
+        const attended = statuses.filter((status) => ['hadir', 'terlambat'].includes(status)).length;
+        const excused = statuses.filter((status) => ['izin', 'sakit'].includes(status)).length;
+        const pending = statuses.filter((status) => status === 'belum').length;
+        const percent = total ? Math.round((attended / total) * 100) : 0;
+        document.querySelector('#metric-total').textContent = String(total).padStart(2, '0');
+        document.querySelector('#metric-present').textContent = String(attended).padStart(2, '0');
+        document.querySelector('#metric-excused').textContent = String(excused).padStart(2, '0');
+        document.querySelector('#metric-pending').textContent = String(pending).padStart(2, '0');
+        document.querySelector('#metric-present-foot').textContent = `${percent}% dari kelas`;
+        document.querySelector('#legend-present').textContent = attended;
+        document.querySelector('#legend-excused').textContent = excused;
+        document.querySelector('#legend-pending').textContent = pending;
+        document.querySelector('#donut-value').textContent = `${percent}%`;
+        donut.style.background = `conic-gradient(var(--green) 0 ${percent}%, #e8ece5 ${percent}% 100%)`;
+      };
+
+      const updateTime = (row, status) => {
+        const timeCell = row.querySelector('.time-cell');
+        if (['hadir', 'terlambat'].includes(status)) {
+          timeCell.textContent = status === 'terlambat' ? '15.47 WIB' : '15.40 WIB';
+        } else {
+          timeCell.textContent = '-';
+        }
+      };
+
+      const applyFilters = () => {
+        const query = search.value.trim().toLowerCase();
+        let shown = 0;
+        rows.forEach((row) => {
+          const status = row.dataset.status;
+          const matchesFilter = activeFilter === 'all' || (activeFilter === 'izin' ? ['izin', 'sakit'].includes(status) : activeFilter === status);
+          const matchesSearch = !query || row.dataset.name.includes(query);
+          const visible = matchesFilter && matchesSearch;
+          row.hidden = !visible;
+          if (visible) shown += 1;
+        });
+        let empty = document.querySelector('.empty-row');
+        if (!shown) {
+          if (!empty) {
+            empty = document.createElement('tr');
+            empty.className = 'empty-row';
+            empty.innerHTML = '<td colspan="4">Tidak ada santri yang sesuai dengan filter.</td>';
+            document.querySelector('#student-rows').append(empty);
+          }
+          empty.hidden = false;
+        } else if (empty) {
+          empty.hidden = true;
+        }
+      };
+
+       const bindRows = () => {
+         rows.forEach((row) => {
+           const select = row.querySelector('.status-select');
+           select.addEventListener('change', () => {
+             row.dataset.status = select.value;
+             select.dataset.status = select.value;
+             updateTime(row, select.value);
+             updateStats();
+             applyFilters();
+           });
+         });
+
+         document.querySelectorAll('.row-action').forEach((button) => button.addEventListener('click', () => {
+           const row = button.closest('tr');
+           const name = row.querySelector('.student-detail').childNodes[0].textContent.trim();
+           showToast(`Detail ${name}`, `Status saat ini: ${row.dataset.status}.`);
+         }));
+       };
+
+       const renderLiveRows = (students, attendance) => {
+         const safe = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+         const statusMap = {pending:'belum', present:'hadir', excused:'izin', sick:'sakit', absent:'alpa', late:'terlambat'};
+         const labels = {belum:'Belum diisi', hadir:'Hadir', izin:'Izin', sakit:'Sakit', alpa:'Alpa', terlambat:'Terlambat'};
+         const records = new Map((attendance?.records || []).map(record => [record.student_id, record]));
+         document.querySelector('#student-rows').innerHTML = students.map(student => {
+           const record = records.get(student.id);
+           const status = statusMap[record?.status] || 'belum';
+           const name = student.full_name || 'Santri';
+           const nis = student.nis || student.id;
+           const initials = name.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+           const options = Object.keys(labels).map(value => `<option value="${value}"${status === value ? ' selected' : ''}>${labels[value]}</option>`).join('');
+           return `<tr data-name="${safe(name.toLowerCase())}" data-student-id="${safe(student.id)}" data-status="${status}" data-qr="${safe(nis)}"><td><div class="student-cell"><span class="student-avatar">${safe(initials)}</span><span class="student-detail">${safe(name)}<small>${safe(nis)}</small></span></div></td><td><select class="status-select" data-status="${status}">${options}</select></td><td class="time-cell">${record?.recorded_at ? 'Tersimpan' : '-'}</td><td><button class="row-action" type="button" aria-label="Detail ${safe(name)}">&hellip;</button></td></tr>`;
+         }).join('');
+         rows = [...document.querySelectorAll('#student-rows tr[data-name]')];
+         bindRows();
+         updateStats();
+         applyFilters();
+       };
+
+       document.querySelectorAll('[data-filter]').forEach((button) => {
+        button.addEventListener('click', () => {
+          activeFilter = button.dataset.filter;
+          document.querySelectorAll('[data-filter]').forEach((item) => item.classList.toggle('active', item === button));
+          applyFilters();
+        });
+      });
+      search.addEventListener('input', applyFilters);
+
+       document.querySelectorAll('[data-open-scan]').forEach((button) => button.addEventListener('click', () => {
+         modal.hidden = false;
+         document.querySelector('#qr-input').focus();
+       }));
+      document.querySelectorAll('[data-close-scan]').forEach((button) => button.addEventListener('click', () => { modal.hidden = true; }));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') modal.hidden = true;
+      });
+
+      const submitScan = () => {
+        const code = document.querySelector('#qr-input').value.trim().toUpperCase();
+        const row = rows.find((item) => item.dataset.qr === code);
+        if (!row) {
+          showToast('Kode belum ditemukan.', 'Gunakan kode contoh DJ-001 sampai DJ-008.');
+          return;
+        }
+        const select = row.querySelector('.status-select');
+        select.value = 'hadir';
+        select.dispatchEvent(new Event('change'));
+        modal.hidden = true;
+        document.querySelector('#qr-input').value = '';
+        showToast(`${row.querySelector('.student-detail').childNodes[0].textContent.trim()} tercatat hadir.`, 'Status diperbarui melalui pemindaian QR.');
+      };
+      document.querySelector('#scan-submit').addEventListener('click', submitScan);
+      document.querySelector('#qr-input').addEventListener('keydown', (event) => { if (event.key === 'Enter') submitScan(); });
+
+       document.querySelector('#save-attendance').addEventListener('click', async () => {
+         const total = rows.length;
+         const portal = window.DarussolahPortal;
+         if (!portal?.session || !portal.classes?.length || !portal.students?.length) {
+           showToast('Absensi tersimpan.', `${total} data siap disinkronkan ke server.`);
+           document.querySelector('#sync-title').textContent = 'Perubahan tersimpan';
+           document.querySelector('#sync-detail').textContent = 'Mode demo: data akan tersinkron setelah API diaktifkan.';
+           return;
+         }
+         const statusMap = {belum:'pending', hadir:'present', izin:'excused', sakit:'sick', alpa:'absent', terlambat:'late'};
+         const records = rows.map(row => ({
+           student_id: row.dataset.studentId || portal.students.find(student => student.nis === row.dataset.qr)?.id,
+           status: statusMap[row.dataset.status] || 'pending'
+         })).filter(record => record.student_id);
+         if (!records.length) {
+           showToast('Data santri belum siap.', 'Pastikan data siswa dari API sudah termuat sebelum menyimpan.');
+           return;
+         }
+         try {
+           const {data: sessionData} = await portal.client.auth.getSession();
+           const token = sessionData.session?.access_token;
+           if (!token) {
+             showToast('Sesi berakhir.', 'Silakan masuk kembali sebelum menyimpan absensi.');
+             return;
+           }
+           const response = await fetch(`${portal.config.apiBase}/v1/private/${encodeURIComponent(portal.config.tenantSlug)}/attendance`, {
+             method: 'PUT',
+             headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
+             body: JSON.stringify({class_id: portal.classes[0].id, attendance_date: new Date().toISOString().slice(0, 10), records})
+           });
+           if (!response.ok) {
+             showToast('Absensi belum tersimpan.', `Server mengembalikan status ${response.status}.`);
+             return;
+           }
+           showToast('Absensi tersimpan.', `${records.length} data berhasil dikirim ke server.`);
+           document.querySelector('#sync-title').textContent = 'Tersimpan ke server';
+           document.querySelector('#sync-detail').textContent = 'Perubahan terakhir sudah diterima API.';
+         } catch (error) {
+           showToast('Koneksi belum tersedia.', 'Perubahan tetap ada di layar dan dapat dicoba lagi.');
+         }
+       });
+
+      document.querySelector('#close-session').addEventListener('click', (event) => {
+        event.currentTarget.textContent = 'Sesi ditutup';
+        event.currentTarget.classList.remove('btn-ghost');
+        event.currentTarget.classList.add('btn-primary');
+        showToast('Sesi absensi ditutup.', 'Santri yang belum tercatat masuk daftar tindak lanjut.');
+      });
+
+       document.querySelector('#today-label').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+       window.addEventListener('darussolah:ready', event => {
+         const {students, attendance} = event.detail || {};
+         if (students?.length) renderLiveRows(students, attendance);
+       });
+       bindRows();
+       updateStats();
+      applyFilters();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0d4433" />
+  <meta name="description" content="Portal SIM-DWJ untuk wali santri, guru, dan admin lembaga." />
+    <meta name="darussolah-supabase-url" content="" />
+    <meta name="darussolah-supabase-anon-key" content="" />
+    <title>Masuk Portal | TPQ Darul Jinan</title>
+    <script src="darussolah-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pine: #0d4433;
+      --pine-deep: #082e25;
+      --pine-light: #164f3d;
+      --gold: #c99435;
+      --gold-light: #e8c879;
+      --cream: #f8f6f0;
+      --sand: #f0e9dd;
+      --paper: #fffdf9;
+      --ink: #1d2924;
+      --muted: #68726d;
+      --line: #dfe1d9;
+      --clay: #a9503b;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; color: var(--ink); background: var(--cream); font-family: "DM Sans", system-ui, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .serif { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .auth-layout { display: grid; min-height: 100svh; grid-template-columns: minmax(410px, .9fr) minmax(520px, 1.1fr); }
+    .auth-visual { position: relative; display: flex; min-height: 100svh; overflow: hidden; color: #fff; background: var(--pine-deep); }
+    .auth-visual::before { position: absolute; top: -215px; right: -175px; width: 530px; height: 530px; border: 1px solid rgba(232, 200, 121, .26); border-radius: 50%; box-shadow: 0 0 0 38px rgba(232, 200, 121, .05), 0 0 0 76px rgba(232, 200, 121, .025); content: ""; }
+    .auth-visual::after { position: absolute; right: -100px; bottom: -170px; width: 390px; height: 390px; border: 1px solid rgba(232, 200, 121, .2); border-radius: 50%; content: ""; }
+    .visual-inner { position: relative; z-index: 1; display: flex; width: min(100%, 570px); flex: 1; flex-direction: column; justify-content: space-between; padding: 42px 12%; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; width: fit-content; }
+    .brand-logo { display: grid; width: 48px; height: 48px; place-items: center; color: var(--pine); border-radius: 50%; background: #fff; }
+    .brand-symbol { width: 100%; height: 100%; padding: 6px; }
+    .brand-name { display: block; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.1; }
+    .brand-caption { display: block; margin-top: 4px; color: rgba(255,255,255,.52); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; }
+    .visual-content { max-width: 430px; margin: auto 0; padding: 78px 0 64px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--gold-light); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { width: 25px; height: 1px; background: currentColor; content: ""; }
+    .visual-content h1 { margin: 22px 0 20px; font-size: clamp(44px, 5vw, 68px); letter-spacing: -.04em; line-height: 1.01; }
+    .visual-content h1 em { color: var(--gold-light); font-style: normal; }
+    .visual-content > p { max-width: 355px; margin: 0; color: rgba(255,255,255,.68); font-size: 14px; }
+    .visual-list { display: grid; gap: 13px; margin: 35px 0 0; padding: 0; list-style: none; color: rgba(255,255,255,.82); font-size: 12px; }
+    .visual-list li { display: flex; align-items: center; gap: 10px; }
+    .visual-list li::before { display: grid; width: 20px; height: 20px; place-items: center; flex: 0 0 auto; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); content: "✓"; font-size: 10px; font-weight: 700; }
+    .visual-bottom { display: flex; align-items: end; justify-content: space-between; gap: 20px; color: rgba(255,255,255,.42); font-size: 10px; }
+    .visual-bottom strong { display: block; margin-bottom: 4px; color: var(--gold-light); font-size: 11px; font-weight: 600; }
+    .visual-code { font-family: Georgia, serif; font-size: 48px; line-height: .8; opacity: .5; }
+
+    .auth-form-area { display: grid; place-items: center; padding: 42px 8%; background: var(--cream); }
+    .form-wrap { width: min(100%, 470px); }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 56px; color: var(--pine); font-size: 11px; font-weight: 700; }
+    .back-link span { color: var(--gold); font-size: 17px; line-height: 0; }
+    .form-heading .eyebrow { color: var(--gold); }
+    .form-heading h2 { max-width: 400px; margin: 18px 0 11px; color: var(--pine-deep); font-size: 46px; letter-spacing: -.035em; line-height: 1.02; }
+    .form-heading > p { max-width: 380px; margin: 0; color: var(--muted); font-size: 13px; }
+    .role-block { margin-top: 31px; }
+    .field-label { display: block; margin-bottom: 10px; color: #53615a; font-size: 11px; font-weight: 700; }
+    .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .role-option { min-height: 72px; padding: 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: #fff; font-size: 11px; font-weight: 600; text-align: left; transition: border .2s ease, background .2s ease, color .2s ease; }
+    .role-option:hover { border-color: rgba(13,68,51,.38); color: var(--pine); }
+    .role-option[aria-pressed="true"] { color: var(--pine); border-color: var(--pine); background: var(--pine-light); box-shadow: 0 7px 15px rgba(13,68,51,.12); }
+    .role-icon { display: grid; width: 23px; height: 23px; margin-bottom: 7px; place-items: center; color: var(--pine); border-radius: 6px; background: var(--pine-soft, #e4eee8); font-size: 12px; }
+    .role-option[aria-pressed="true"] .role-icon { color: var(--pine-deep); background: var(--gold-light); }
+    .role-option[aria-pressed="true"] .role-name { color: #fff; }
+    .login-form { margin-top: 28px; }
+    .field { display: grid; gap: 8px; margin-bottom: 17px; }
+    .field label { color: #53615a; font-size: 11px; font-weight: 700; }
+    .field input { width: 100%; height: 47px; padding: 0 14px; color: var(--ink); outline: none; border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: 12px; transition: border .2s ease, box-shadow .2s ease; }
+    .field input::placeholder { color: #9da39c; }
+    .field input:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgba(13,68,51,.08); }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 65px; }
+    .show-password { position: absolute; top: 50%; right: 10px; padding: 5px 6px; color: var(--pine); border: 0; background: transparent; font-size: 10px; font-weight: 700; transform: translateY(-50%); }
+    .show-password:hover { color: var(--gold); }
+    .form-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 3px 0 24px; }
+    .remember { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
+    .remember input { accent-color: var(--pine); }
+    .forgot { color: var(--pine); border-bottom: 1px solid rgba(13,68,51,.25); font-size: 10px; font-weight: 700; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 48px; padding: 0 19px; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 700; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { width: 100%; color: #fff; background: var(--pine); box-shadow: 0 9px 19px rgba(13,68,51,.16); }
+    .btn-primary:hover { background: var(--pine-deep); box-shadow: 0 12px 25px rgba(13,68,51,.22); }
+    .arrow { font-size: 16px; line-height: 0; }
+    .auth-helper { margin: 14px 0 0; color: #929890; font-size: 10px; text-align: center; }
+    .auth-message { display: none; margin-top: 18px; padding: 12px 14px; color: #486148; border: 1px solid #ccdfc9; border-radius: 9px; background: #edf6e9; font-size: 11px; }
+    .auth-message.show { display: block; }
+    .auth-message strong { display: block; margin-bottom: 2px; font-size: 12px; }
+    .aux-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 40px; padding: 16px 17px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.5); }
+    .aux-card p { margin: 0; color: var(--muted); font-size: 11px; }
+    .aux-card p strong { display: block; margin-bottom: 3px; color: var(--pine-deep); font-size: 12px; }
+    .aux-link { color: var(--pine); font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .privacy-note { margin-top: 34px; color: #8a928b; font-size: 10px; line-height: 1.5; }
+    .privacy-note a { color: var(--pine); border-bottom: 1px solid rgba(13,68,51,.24); }
+    .demo-badge { display: inline-flex; align-items: center; gap: 7px; margin-top: 15px; padding: 7px 9px; color: #70531d; border-radius: 7px; background: #fbf1d9; font-size: 10px; }
+    .demo-badge::before { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); content: ""; }
+    .login-btn.is-loading { color: transparent; pointer-events: none; }
+    .login-btn.is-loading::after { position: absolute; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; content: ""; animation: spin .75s linear infinite; }
+    .login-btn { position: relative; }
+    .portal-link { display: inline-block; margin-top: 8px; color: var(--gold); font-size: 10px; font-weight: 700; }
+    .portal-link:hover { color: var(--pine); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 900px) {
+      .auth-layout { grid-template-columns: 1fr; }
+      .auth-visual { min-height: auto; }
+      .visual-inner { min-height: 455px; padding: 28px 8%; }
+      .visual-content { padding: 60px 0 42px; }
+      .visual-content h1 { max-width: 590px; }
+      .auth-form-area { min-height: 700px; padding: 65px 8%; }
+      .back-link { margin-bottom: 42px; }
+    }
+    @media (max-width: 540px) {
+      .visual-inner { min-height: 425px; padding: 24px 22px; }
+      .visual-content { padding: 48px 0 34px; }
+      .visual-content h1 { font-size: 47px; }
+      .visual-content > p { font-size: 13px; }
+      .visual-list { margin-top: 25px; }
+      .visual-bottom { font-size: 9px; }
+      .visual-code { font-size: 38px; }
+      .auth-form-area { display: block; padding: 42px 22px 48px; }
+      .back-link { margin-bottom: 48px; }
+      .form-heading h2 { font-size: 40px; }
+      .role-grid { gap: 6px; }
+      .role-option { min-height: 70px; padding: 9px; font-size: 10px; }
+      .aux-card { align-items: start; flex-direction: column; gap: 11px; }
+      .privacy-note { margin-top: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="auth-layout">
+    <section class="auth-visual" aria-label="Informasi portal SIM-DWJ">
+      <div class="visual-inner">
+        <a class="brand" href="index.html" aria-label="Kembali ke beranda TPQ Darul Jinan">
+          <span class="brand-logo"><svg class="brand-symbol" viewBox="0 0 48 48" role="img" aria-label="Emblem TPQ Darul Jinan"><path d="M9 28.5V22C9 13.2 15.8 6 24 6s15 7.2 15 16v6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M7 28.5h34l-1.5 13H8.5l-1.5-13Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 29.5 24 34l14-4.5-14 8-14-8Z" fill="none" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 34v4" stroke="currentColor" stroke-width="1.5"/><path d="M22 11.5a4.6 4.6 0 1 0 5.7 5.7A5.1 5.1 0 0 1 22 11.5Z" fill="currentColor"/></svg></span>
+          <span><span class="brand-name">TPQ Darul Jinan</span><span class="brand-caption">Taman Pendidikan Al-Qur'an</span></span>
+        </a>
+        <div class="visual-content">
+          <span class="eyebrow">Portal SIM-DWJ</span>
+          <h1 class="serif">Satu pintu untuk merawat <em>kabar belajar.</em></h1>
+          <p>Ruang digital untuk menjaga komunikasi antara lembaga, guru, dan wali santri tetap dekat.</p>
+          <ul class="visual-list"><li>Wali dapat terhubung dengan lebih dari satu anak</li><li>Guru mencatat kehadiran, materi, dan hafalan</li><li>Admin mengelola data dengan akses sesuai peran</li></ul>
+          <span class="demo-badge">Pratinjau antarmuka fase MVP</span>
+        </div>
+        <div class="visual-bottom"><div><strong>Yayasan Darussolah Wal Jinan</strong><span>TPQ &bull; MDT &bull; RA &bull; RTQ</span></div><span class="visual-code">01</span></div>
+      </div>
+    </section>
+
+    <section class="auth-form-area" aria-labelledby="login-title">
+      <div class="form-wrap">
+        <a class="back-link" href="index.html"><span>&larr;</span> Kembali ke situs TPQ</a>
+        <div class="form-heading"><span class="eyebrow" style="color:var(--gold)">Akses akun</span><h2 id="login-title" class="serif">Selamat datang kembali.</h2><p>Pilih peran Anda untuk masuk ke ruang kerja yang sesuai.</p></div>
+        <div class="role-block"><span class="field-label">Peran Anda</span><div class="role-grid" role="group" aria-label="Pilih peran akun">
+          <button class="role-option" type="button" data-role="wali" aria-pressed="true"><span class="role-icon">&#9825;</span><span class="role-name">Wali santri</span></button>
+          <button class="role-option" type="button" data-role="guru" aria-pressed="false"><span class="role-icon">&#9998;</span><span class="role-name">Guru / ustadz</span></button>
+          <button class="role-option" type="button" data-role="admin" aria-pressed="false"><span class="role-icon">&#9881;</span><span class="role-name">Admin</span></button>
+        </div></div>
+        <form class="login-form" id="login-form">
+          <input type="hidden" id="role" name="role" value="wali" />
+          <div class="field"><label for="identity">Email atau nomor WhatsApp</label><input id="identity" name="identity" type="text" placeholder="Masukkan email atau nomor HP" autocomplete="username" required /></div>
+          <div class="field"><label for="password">Kata sandi</label><div class="password-wrap"><input id="password" name="password" type="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required /><button class="show-password" id="toggle-password" type="button" aria-label="Tampilkan kata sandi">Lihat</button></div></div>
+          <div class="form-row"><label class="remember"><input type="checkbox" name="remember" /> Ingat perangkat ini</label><a class="forgot" href="#bantuan">Lupa kata sandi?</a></div>
+          <button class="btn btn-primary login-btn" id="login-button" type="submit">Masuk ke portal <span class="arrow">&nearr;</span></button>
+          <p class="auth-helper" id="role-helper">Wali santri dapat melihat ringkasan semua anak yang terhubung.</p>
+          <div class="auth-message" id="auth-message" role="status" aria-live="polite"><strong>Antarmuka login siap.</strong><span>Integrasi akun akan dihubungkan ke Supabase Auth pada tahap implementasi.</span></div>
+        </form>
+        <div class="aux-card" id="bantuan"><p><strong>Belum punya akses?</strong>Hubungi admin lembaga untuk aktivasi akun.</p><a class="aux-link" href="index.html#ppdb">Tanya admin <span>&rarr;</span></a></div>
+        <p class="privacy-note">Dengan melanjutkan, Anda memahami bahwa data akun digunakan sesuai kebutuhan layanan pendidikan. Baca ringkasan <a href="index.html#faq">informasi privasi</a> kami.</p>
+      </div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const roleButtons = [...document.querySelectorAll('[data-role]')];
+      const roleInput = document.querySelector('#role');
+      const helper = document.querySelector('#role-helper');
+      const loginButton = document.querySelector('#login-button');
+      const message = document.querySelector('#auth-message');
+      const loginForm = document.querySelector('#login-form');
+      const passwordInput = document.querySelector('#password');
+      const togglePassword = document.querySelector('#toggle-password');
+       const config = window.DARUSSOLAH_CONFIG || {};
+       const apiBase = String(config.apiBase || '').replace(/\/+$/, '');
+       const supabaseUrl = String(config.supabaseUrl || document.querySelector('meta[name="darussolah-supabase-url"]')?.content.trim() || '').replace(/\/+$/, '');
+       const supabaseAnonKey = String(config.supabaseAnonKey || document.querySelector('meta[name="darussolah-supabase-anon-key"]')?.content.trim() || '');
+       const configuredFields = [apiBase, supabaseUrl, supabaseAnonKey].filter(Boolean);
+       const partiallyConfigured = configuredFields.length > 0 && configuredFields.length < 3;
+       const supabaseClient = configuredFields.length === 3 && window.supabase ? window.supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
+      const roleContent = {
+        wali: { helper: 'Wali santri dapat melihat ringkasan semua anak yang terhubung.', button: 'Masuk ke portal' },
+        guru: { helper: 'Guru dapat mengelola kehadiran, materi, tugas, dan catatan perkembangan.', button: 'Masuk ke ruang guru' },
+        admin: { helper: 'Admin lembaga mengelola data sesuai unit dan hak aksesnya.', button: 'Masuk ke panel admin' }
+      };
+       const roleDestinations = { wali: 'wali.html', guru: 'absensi.html', admin: 'keuangan.html' };
+       const allowedRedirects = new Set(['wali.html', 'absensi.html', 'materi.html', 'tahfidz.html', 'nilai.html', 'keuangan.html', 'kepegawaian.html', 'notifikasi.html', 'pengaturan.html', 'analitik.html', 'cms.html', 'santri.html']);
+       const requestedRedirect = new URLSearchParams(window.location.search).get('redirect') || '';
+       const redirectTarget = (() => { try { const url = new URL(requestedRedirect, window.location.href); const path = url.pathname.split('/').pop(); return url.origin === window.location.origin && allowedRedirects.has(path) ? `${path}${url.search}` : ''; } catch (error) { return ''; } })();
+
+      roleButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          const role = button.dataset.role;
+          roleInput.value = role;
+          roleButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+          helper.textContent = roleContent[role].helper;
+          loginButton.innerHTML = `${roleContent[role].button} <span class="arrow">&nearr;</span>`;
+        });
+      });
+
+      togglePassword.addEventListener('click', () => {
+        const visible = passwordInput.type === 'text';
+        passwordInput.type = visible ? 'password' : 'text';
+        togglePassword.textContent = visible ? 'Lihat' : 'Sembunyikan';
+        togglePassword.setAttribute('aria-label', visible ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi');
+      });
+
+      document.querySelector('.forgot').addEventListener('click', (event) => {
+        event.preventDefault();
+        message.innerHTML = '<strong>Permintaan reset dicatat.</strong><span>Alur reset kata sandi akan dikirim melalui WhatsApp atau email setelah layanan terhubung.</span>';
+        message.classList.add('show');
+      });
+
+      const showAuthMessage = (title, copy, link = '') => {
+        const safe = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+        message.innerHTML = `<strong>${safe(title)}</strong><span>${safe(copy)}</span>${link}`;
+        message.classList.add('show');
+      };
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+         if (!loginForm.reportValidity()) return;
+         loginButton.classList.add('is-loading');
+         if (partiallyConfigured) {
+           loginButton.classList.remove('is-loading');
+           showAuthMessage('Konfigurasi belum lengkap.', 'Isi API URL, Supabase URL, dan anon key di darussolah-config.js sebelum mengaktifkan login production.');
+           return;
+         }
+         if (supabaseClient) {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: document.querySelector('#identity').value.trim(),
+            password: passwordInput.value
+          });
+          if (error || !data.user) {
+            loginButton.classList.remove('is-loading');
+            showAuthMessage('Login belum berhasil.', error?.message || 'Akun belum dapat diverifikasi.');
+            return;
+          }
+          const { data: roles, error: roleError } = await supabaseClient
+            .schema('darussolah')
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', data.user.id);
+          const selectedRole = roleInput.value;
+          const allowed = {
+            wali: ['wali'],
+            guru: ['guru'],
+            admin: ['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran']
+          }[selectedRole] || [];
+          if (roleError || !roles?.some(item => allowed.includes(item.role))) {
+            await supabaseClient.auth.signOut();
+            loginButton.classList.remove('is-loading');
+            showAuthMessage('Peran belum diizinkan.', 'Akun berhasil dikenali, tetapi belum memiliki akses untuk peran yang dipilih.');
+            return;
+          }
+          loginButton.classList.remove('is-loading');
+           const destination = redirectTarget || roleDestinations[selectedRole];
+           showAuthMessage('Login berhasil.', 'Sesi aman tersimpan. Buka portal sesuai peran Anda.', `<a class="portal-link" href="${destination}">Buka portal &rarr;</a>`);
+          return;
+        }
+        window.setTimeout(() => {
+          loginButton.classList.remove('is-loading');
+          showAuthMessage('Pratinjau berhasil.', 'Form login siap dihubungkan ke Supabase Auth sesuai peran akun.', `<a class="portal-link" href="${roleDestinations[roleInput.value]}">Buka pratinjau portal &rarr;</a>`);
+        }, 650);
+      });
+    })();
+  </script>
+</body>
+</html>

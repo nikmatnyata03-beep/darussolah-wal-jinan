@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="CMS dan manajemen konten TPQ Darul Jinan." />
+  <title>CMS &amp; Konten | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pine:#0d4433; --pine-deep:#082e25; --pine-light:#155641; --gold:#c99435; --gold-light:#e8c879; --cream:#f5f6f0; --paper:#fffdf9; --sand:#ecefe7; --ink:#1e2c26; --muted:#748079; --line:#e0e4dc; --green:#3f8b62; --red:#ae5b47; --blue:#557e9e; }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; }
+    body { margin:0; color:var(--ink); background:var(--cream); font-family:"DM Sans",system-ui,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased; }
+    button, input, select, textarea { font:inherit; }
+    button { cursor:pointer; }
+    a { color:inherit; text-decoration:none; }
+    .serif { font-family:"DM Serif Display",Georgia,serif; font-weight:400; }
+    .app-shell { display:grid; min-height:100svh; grid-template-columns:246px minmax(0,1fr); }
+    .sidebar { position:sticky; top:0; display:flex; min-height:100svh; flex-direction:column; padding:26px 17px 18px; color:rgba(255,255,255,.74); background:var(--pine-deep); }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 9px; }
+    .brand-logo { display:grid; width:38px; height:38px; place-items:center; color:var(--pine); border-radius:50%; background:#fff; }
+    .brand-symbol { width:100%; height:100%; padding:5px; }
+    .brand-name { display:block; color:#fff; font-size:12px; font-weight:700; line-height:1.1; }
+    .brand-caption { display:block; margin-top:4px; color:rgba(255,255,255,.43); font-size:8px; letter-spacing:.12em; text-transform:uppercase; }
+    .sidebar-context { margin:35px 9px 25px; padding:13px 12px; border:1px solid rgba(255,255,255,.11); border-radius:10px; background:rgba(255,255,255,.045); }
+    .context-label { display:block; margin-bottom:5px; color:var(--gold-light); font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+    .context-name { display:block; color:#fff; font-size:11px; font-weight:600; }
+    .context-meta { display:block; margin-top:3px; color:rgba(255,255,255,.48); font-size:10px; }
+    .nav-label { display:block; margin:0 11px 9px; color:rgba(255,255,255,.34); font-size:9px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; }
+    .side-nav { display:grid; gap:3px; }
+    .side-link { display:flex; align-items:center; gap:11px; min-height:41px; padding:0 11px; color:rgba(255,255,255,.59); border-radius:9px; font-size:11px; font-weight:600; transition:color .2s ease,background .2s ease; }
+    .side-link:hover { color:#fff; background:rgba(255,255,255,.07); }
+    .side-link.active { color:#fff; background:var(--pine-light); box-shadow:inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display:grid; width:21px; height:21px; place-items:center; color:var(--gold-light); border:1px solid rgba(232,200,121,.24); border-radius:6px; font-size:10px; font-weight:700; }
+    .side-link:not(.active) .nav-icon { color:rgba(255,255,255,.55); border-color:rgba(255,255,255,.12); }
+    .sidebar-spacer { flex:1; }
+    .sidebar-footer { padding:14px 10px 0; border-top:1px solid rgba(255,255,255,.1); }
+    .user-card { display:flex; align-items:center; gap:9px; }
+    .user-avatar { display:grid; width:29px; height:29px; place-items:center; color:var(--pine-deep); border-radius:50%; background:var(--gold-light); font-size:10px; font-weight:700; }
+    .user-card strong { display:block; color:#fff; font-size:10px; font-weight:600; }
+    .user-card span { display:block; margin-top:2px; color:rgba(255,255,255,.43); font-size:9px; }
+    .main-content { min-width:0; background:var(--cream); }
+    .topbar { display:flex; min-height:76px; align-items:center; justify-content:space-between; gap:20px; padding:0 42px; border-bottom:1px solid var(--line); background:rgba(255,253,249,.72); }
+    .breadcrumbs { color:var(--muted); font-size:10px; }
+    .breadcrumbs strong { color:var(--pine); font-weight:700; }
+    .topbar-actions { display:flex; align-items:center; gap:12px; }
+    .status-online { display:inline-flex; align-items:center; gap:7px; color:var(--green); font-size:10px; font-weight:600; }
+    .status-online::before { width:6px; height:6px; border-radius:50%; background:currentColor; content:""; box-shadow:0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color:var(--muted); font-size:10px; }
+    .top-avatar { display:grid; width:32px; height:32px; place-items:center; color:var(--pine); border:1px solid rgba(13,68,51,.15); border-radius:50%; background:#e4eee8; font-size:10px; font-weight:700; }
+    .content { width:min(1180px,calc(100% - 84px)); margin:0 auto; padding:42px 0 58px; }
+    .content-header { display:flex; align-items:end; justify-content:space-between; gap:25px; margin-bottom:29px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; color:var(--gold); font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; }
+    .eyebrow::before { width:23px; height:1px; background:currentColor; content:""; }
+    .content-header h1 { margin:12px 0 7px; color:var(--pine-deep); font-size:clamp(36px,4vw,51px); letter-spacing:-.035em; line-height:1; }
+    .content-header p { margin:0; color:var(--muted); font-size:12px; }
+    .header-actions { display:flex; align-items:center; gap:9px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:41px; padding:0 14px; border:1px solid transparent; border-radius:8px; font-size:10px; font-weight:700; transition:transform .2s ease,box-shadow .2s ease,background .2s ease; }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-primary { color:#fff; background:var(--pine); box-shadow:0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background:var(--pine-deep); }
+    .btn-ghost { color:var(--pine); border-color:var(--line); background:var(--paper); }
+    .btn-ghost:hover { border-color:rgba(13,68,51,.25); background:#fff; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:17px; }
+    .metric-card { position:relative; min-height:119px; padding:19px; overflow:hidden; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+    .metric-card::after { position:absolute; right:-28px; bottom:-47px; width:115px; height:115px; border:1px solid rgba(13,68,51,.1); border-radius:50%; content:""; }
+    .metric-card.highlight { color:#fff; border-color:var(--pine); background:var(--pine); }
+    .metric-card.highlight::after { border-color:rgba(232,200,121,.26); }
+    .metric-label { display:block; color:var(--muted); font-size:10px; }
+    .highlight .metric-label { color:rgba(255,255,255,.64); }
+    .metric-value { display:block; margin-top:11px; color:var(--pine-deep); font-family:"DM Serif Display",Georgia,serif; font-size:31px; line-height:1; }
+    .highlight .metric-value { color:var(--gold-light); }
+    .metric-foot { display:block; margin-top:8px; color:var(--green); font-size:9px; font-weight:700; }
+    .highlight .metric-foot { color:rgba(255,255,255,.58); }
+    .cms-layout { display:grid; grid-template-columns:minmax(0,1.28fr) minmax(310px,.72fr); gap:17px; align-items:start; }
+    .right-stack { display:grid; gap:15px; min-width:0; }
+    .panel { min-width:0; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+    .panel-header { display:flex; align-items:start; justify-content:space-between; gap:15px; padding:20px 22px 16px; border-bottom:1px solid var(--line); }
+    .panel-heading h2 { margin:0; color:var(--pine-deep); font-size:15px; font-weight:700; }
+    .panel-heading p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .data-chip { padding:6px 8px; color:var(--pine); border-radius:7px; background:#e4eee8; font-size:9px; font-weight:700; white-space:nowrap; }
+    .content-tools { display:flex; align-items:center; justify-content:space-between; gap:13px; padding:14px 22px; }
+    .filter-tabs { display:flex; gap:5px; }
+    .filter-tab { padding:7px 9px; color:var(--muted); border:0; border-radius:6px; background:transparent; font-size:10px; font-weight:600; }
+    .filter-tab:hover { color:var(--pine); background:var(--sand); }
+    .filter-tab.active { color:var(--pine); background:#e4eee8; }
+    .search-wrap { position:relative; }
+    .search-wrap::before { position:absolute; top:50%; left:10px; color:var(--muted); content:"⌕"; font-size:15px; transform:translateY(-54%); }
+    .search-input { width:155px; height:31px; padding:0 9px 0 27px; color:var(--ink); outline:0; border:1px solid var(--line); border-radius:7px; background:var(--cream); font-size:10px; }
+    .search-input:focus { border-color:var(--pine); }
+    .content-scroll { overflow-x:auto; }
+    .content-table { width:100%; min-width:650px; border-collapse:collapse; }
+    .content-table th { padding:10px 14px; color:#929b94; border-top:1px solid var(--line); border-bottom:1px solid var(--line); font-size:9px; font-weight:700; letter-spacing:.07em; text-align:left; text-transform:uppercase; }
+    .content-table th:first-child, .content-table td:first-child { padding-left:22px; }
+    .content-table th:last-child, .content-table td:last-child { padding-right:22px; }
+    .content-table td { padding:13px 14px; border-bottom:1px solid #edf0ea; color:var(--muted); font-size:10px; vertical-align:middle; }
+    .content-table tbody tr:last-child td { border-bottom:0; }
+    .content-table tr[hidden] { display:none; }
+    .article-cell { display:flex; align-items:center; gap:10px; min-width:245px; color:var(--pine-deep); font-weight:700; }
+    .article-thumb { display:grid; width:43px; height:35px; place-items:center; flex:0 0 auto; color:#fff; border-radius:7px; background:linear-gradient(135deg,#417b63,#d1a44d); font-size:9px; font-weight:700; }
+    .article-thumb.blue { background:linear-gradient(135deg,#547991,#b7d2bf); }
+    .article-thumb.rose { background:linear-gradient(135deg,#a86150,#e7c18a); }
+    .article-copy small { display:block; margin-top:2px; color:#9ba39d; font-size:9px; font-weight:400; }
+    .type-label { color:var(--pine); font-size:9px; font-weight:700; }
+    .publish-pill { display:inline-block; padding:5px 7px; color:#397452; border-radius:6px; background:#e5f1e7; font-size:9px; font-weight:700; white-space:nowrap; }
+    .publish-pill.draft { color:#876226; background:#f8edcf; }
+    .publish-pill.scheduled { color:#557e9e; background:#e3edf2; }
+    .row-action { padding:6px 8px; color:var(--pine); border:0; border-radius:6px; background:var(--sand); font-size:9px; font-weight:700; white-space:nowrap; }
+    .row-action:hover { color:#fff; background:var(--pine); }
+    .queue-card { padding:20px; color:#fff; border-radius:13px; background:var(--pine); }
+    .queue-card .panel-heading h2 { color:#fff; }
+    .queue-card .panel-heading p { color:rgba(255,255,255,.58); }
+    .queue-total { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-top:21px; }
+    .queue-total strong { color:var(--gold-light); font-family:"DM Serif Display",Georgia,serif; font-size:32px; font-weight:400; line-height:.9; }
+    .queue-total span { color:rgba(255,255,255,.57); font-size:9px; }
+    .queue-bar { height:7px; margin-top:17px; overflow:hidden; border-radius:4px; background:rgba(255,255,255,.16); }
+    .queue-bar i { display:block; width:67%; height:100%; border-radius:inherit; background:var(--gold-light); }
+    .queue-list { margin-top:15px; border-top:1px solid rgba(255,255,255,.13); }
+    .queue-item { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.11); }
+    .queue-item:last-child { border-bottom:0; }
+    .queue-item span { color:rgba(255,255,255,.66); font-size:9px; }
+    .queue-item strong { color:#fff; font-size:10px; }
+    .queue-item em { color:var(--gold-light); font-size:9px; font-style:normal; font-weight:700; }
+    .pages-card { padding:20px; }
+    .pages-head { display:flex; align-items:start; justify-content:space-between; gap:12px; }
+    .pages-head h2 { margin:0; color:var(--pine-deep); font-size:15px; }
+    .pages-head button { color:var(--gold); border:0; background:transparent; font-size:9px; font-weight:700; }
+    .page-list { margin-top:14px; }
+    .page-item { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid #edf0ea; }
+    .page-item:last-child { border-bottom:0; }
+    .page-mark { display:grid; width:28px; height:28px; place-items:center; flex:0 0 auto; color:var(--pine); border-radius:7px; background:#e4eee8; font-size:11px; font-weight:700; }
+    .page-copy { min-width:0; flex:1; }
+    .page-copy strong { display:block; color:var(--pine-deep); font-size:10px; }
+    .page-copy span { display:block; margin-top:2px; color:var(--muted); font-size:8px; }
+    .page-edit { padding:5px 7px; color:var(--pine); border:0; border-radius:6px; background:var(--sand); font-size:9px; font-weight:700; }
+    .media-panel { margin-top:17px; }
+    .media-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:18px 22px 22px; }
+    .media-item { position:relative; min-height:105px; overflow:hidden; border-radius:9px; background:linear-gradient(135deg,#39745a,#d4a74d); }
+    .media-item:nth-child(2) { background:linear-gradient(135deg,#5c7b91,#c6decd); }
+    .media-item:nth-child(3) { background:linear-gradient(135deg,#a56050,#e4c08b); }
+    .media-item:nth-child(4) { background:linear-gradient(135deg,#436c72,#e8d39a); }
+    .media-item::before { position:absolute; inset:18px 20px auto; height:1px; background:rgba(255,255,255,.65); content:""; transform:rotate(-21deg); box-shadow:0 29px 0 rgba(255,255,255,.44),0 58px 0 rgba(255,255,255,.27); }
+    .media-item span { position:absolute; right:8px; bottom:7px; left:8px; color:#fff; font-size:9px; font-weight:700; text-shadow:0 1px 7px rgba(0,0,0,.25); }
+    .media-item small { display:block; margin-top:2px; color:rgba(255,255,255,.74); font-size:8px; font-weight:400; }
+    .banner-panel { margin-top:17px; }
+    .banner-list { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:18px 22px 22px; }
+    .banner-row { display:flex; align-items:center; gap:10px; padding:11px; border:1px solid var(--line); border-radius:9px; background:var(--cream); }
+    .banner-preview { display:grid; width:58px; height:43px; place-items:center; flex:0 0 auto; color:#fff; border-radius:7px; background:linear-gradient(135deg,#0d4433,#c99435); font-family:"DM Serif Display",Georgia,serif; font-size:17px; }
+    .banner-row:nth-child(2) .banner-preview { background:linear-gradient(135deg,#557e9e,#c8dcca); }
+    .banner-row:nth-child(3) .banner-preview { background:linear-gradient(135deg,#a65e4d,#e9bd7a); }
+    .banner-copy { min-width:0; flex:1; }
+    .banner-copy strong { display:block; color:var(--pine-deep); font-size:10px; }
+    .banner-copy span { display:block; margin-top:3px; color:var(--muted); font-size:8px; }
+    .banner-toggle { padding:5px 7px; color:var(--green); border:0; border-radius:6px; background:#e5f1e7; font-size:9px; font-weight:700; white-space:nowrap; }
+    .banner-toggle.off { color:var(--muted); background:var(--sand); }
+    .modal[hidden] { display:none; }
+    .modal { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:22px; }
+    .modal-backdrop { position:absolute; inset:0; background:rgba(8,46,37,.64); backdrop-filter:blur(5px); }
+    .dialog { position:relative; width:min(100%,490px); padding:26px; border-radius:16px; background:var(--paper); box-shadow:0 25px 70px rgba(0,0,0,.22); }
+    .dialog-close { position:absolute; top:13px; right:14px; display:grid; width:28px; height:28px; place-items:center; color:var(--muted); border:0; border-radius:50%; background:var(--sand); font-size:19px; }
+    .dialog h2 { margin:13px 0 7px; color:var(--pine-deep); font-size:28px; line-height:1; }
+    .dialog > p { margin:0 0 18px; color:var(--muted); font-size:11px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    .form-field { display:grid; gap:7px; }
+    .form-field.full { grid-column:1 / -1; }
+    .form-field label { color:#53615a; font-size:10px; font-weight:700; }
+    .form-field input, .form-field select, .form-field textarea { width:100%; color:var(--ink); outline:0; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:11px; }
+    .form-field input, .form-field select { height:40px; padding:0 11px; }
+    .form-field textarea { min-height:105px; padding:11px; resize:vertical; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:var(--pine); }
+    .dialog-actions { display:flex; gap:8px; margin-top:18px; }
+    .dialog-actions .btn { flex:1; }
+    .toast { position:fixed; right:22px; bottom:22px; z-index:30; display:flex; align-items:center; gap:10px; width:min(350px,calc(100% - 44px)); padding:13px 15px; color:#fff; border-radius:11px; background:var(--pine-deep); box-shadow:0 18px 40px rgba(8,46,37,.23); opacity:0; pointer-events:none; transform:translateY(12px); transition:opacity .25s ease,transform .25s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast > span { display:grid; width:23px; height:23px; place-items:center; color:var(--pine-deep); border-radius:50%; background:var(--gold-light); font-size:11px; }
+    .toast strong { display:block; font-size:11px; }
+    .toast small { display:block; margin-top:2px; color:rgba(255,255,255,.6); font-size:9px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media (max-width:1100px) { .app-shell { grid-template-columns:214px minmax(0,1fr); } .topbar { padding:0 28px; } .content { width:min(100% - 56px,1180px); } .cms-layout { grid-template-columns:minmax(0,1fr) 290px; } }
+    @media (max-width:820px) { .app-shell { display:block; } .sidebar { position:relative; display:grid; min-height:auto; grid-template-columns:1fr auto; gap:14px; padding:17px 18px 12px; } .sidebar-brand { padding:0; } .sidebar-context,.sidebar-spacer,.sidebar-footer { display:none; } .nav-label { display:none; } .side-nav { grid-column:1 / -1; display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; } .side-nav::-webkit-scrollbar { display:none; } .side-link { min-width:fit-content; min-height:36px; padding:0 10px; font-size:10px; white-space:nowrap; } .side-link.active { box-shadow:inset 0 -3px 0 var(--gold-light); } .topbar { min-height:65px; padding:0 18px; } .help-link { display:none; } .content { width:calc(100% - 36px); padding-top:30px; } .content-header { align-items:start; flex-direction:column; gap:17px; } .header-actions { width:100%; } .header-actions .btn { flex:1; } .metrics-grid { grid-template-columns:1fr 1fr; } .cms-layout { grid-template-columns:1fr; } .media-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:620px) { .status-online { font-size:0; } .status-online::before { margin-right:2px; } .content-header h1 { font-size:40px; } .metrics-grid { gap:8px; } .metric-card { min-height:112px; padding:15px; } .metric-value { font-size:26px; } .content-tools { align-items:start; flex-direction:column-reverse; padding:13px 16px; } .filter-tabs { width:100%; overflow-x:auto; } .filter-tab { white-space:nowrap; } .search-wrap,.search-input { width:100%; } .panel-header { padding-left:16px; padding-right:16px; } .composer { padding-left:16px; padding-right:16px; } .form-grid { grid-template-columns:1fr; } .form-field.full { grid-column:auto; } .composer-bottom { align-items:start; flex-direction:column; } .composer-bottom .btn { width:100%; } .banner-list { grid-template-columns:1fr; padding:16px; } }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="admin">
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navigasi CMS">
+      <a class="sidebar-brand" href="index.html"><span class="brand-logo" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 21.5 25 10l16 11.5v18A3.5 3.5 0 0 1 37.5 43h-25A3.5 3.5 0 0 1 9 39.5v-18Z" fill="#0D4433"/><path d="M25 10v33M9 21.5h32M14 27h22M17 43V27h16v16" stroke="#C99435" stroke-width="2"/><path d="m19 19 6-4 6 4-6 4-6-4Z" fill="#E8C879"/></svg></span><span><strong class="brand-name">TPQ Darul Jinan</strong><small class="brand-caption">Portal pengelola</small></span></a>
+      <div class="sidebar-context"><span class="context-label">Yayasan aktif</span><span class="context-name">Darussolah Wal Jinan</span><span class="context-meta">4 lembaga terhubung</span></div>
+      <nav class="side-nav" aria-label="Menu CMS"><span class="nav-label">Ruang kerja</span><a class="side-link" href="keuangan.html"><span class="nav-icon">01</span>Keuangan</a><a class="side-link" href="notifikasi.html"><span class="nav-icon">02</span>Komunikasi</a><a class="side-link active" href="cms.html" aria-current="page"><span class="nav-icon">03</span>CMS &amp; konten</a><a class="side-link" href="#galeri"><span class="nav-icon">04</span>Media &amp; galeri</a><a class="side-link" href="#banner"><span class="nav-icon">05</span>Banner beranda</a><a class="side-link" href="#laporan"><span class="nav-icon">06</span>Laporan</a><a class="side-link" href="analitik.html"><span class="nav-icon">07</span>Analitik</a></nav>
+      <div class="sidebar-spacer"></div><div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NA</span><span><strong>Nadia Aulia</strong><span>Super admin yayasan</span></span></div></div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><span>Yayasan Darussolah Wal Jinan</span><span> / </span><strong>CMS &amp; konten</strong></div><div class="topbar-actions"><span class="status-online">Draft tersimpan</span><a class="help-link" href="#bantuan">Pusat bantuan</a><span class="top-avatar">NA</span></div></header>
+      <div class="content">
+        <div class="content-header"><div><span class="eyebrow">Cerita yang terkelola</span><h1 class="serif">CMS &amp; konten.</h1><p>Rawat wajah publik lembaga tanpa menunggu bantuan developer.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" data-modal="mediaModal">+ Tambah media</button><button class="btn btn-primary" type="button" data-modal="articleModal">+ Tulis artikel</button></div></div>
+        <section class="metrics-grid" aria-label="Ringkasan konten"><article class="metric-card highlight"><span class="metric-label">Total konten</span><strong class="metric-value">48</strong><span class="metric-foot">Di 4 lembaga &amp; yayasan</span></article><article class="metric-card"><span class="metric-label">Sudah tayang</span><strong class="metric-value">32</strong><span class="metric-foot">67% dari seluruh konten</span></article><article class="metric-card"><span class="metric-label">Terjadwal</span><strong class="metric-value" id="scheduledValue">05</strong><span class="metric-foot">Siap terbit otomatis</span></article><article class="metric-card"><span class="metric-label">Media tersimpan</span><strong class="metric-value">182</strong><span class="metric-foot">Foto, video, dan dokumen</span></article></section>
+        <div class="cms-layout">
+          <section class="panel" id="konten" aria-labelledby="libraryHeading"><div class="panel-header"><div class="panel-heading"><h2 id="libraryHeading">Perpustakaan konten</h2><p>Artikel, berita, dan halaman yang dikelola admin.</p></div><span class="data-chip">Data contoh</span></div><div class="content-tools"><div class="filter-tabs" role="tablist" aria-label="Filter konten"><button class="filter-tab active" type="button" data-content-filter="all">Semua <span>(12)</span></button><button class="filter-tab" type="button" data-content-filter="published">Tayang <span>(8)</span></button><button class="filter-tab" type="button" data-content-filter="draft">Draft <span>(2)</span></button><button class="filter-tab" type="button" data-content-filter="scheduled">Terjadwal <span>(2)</span></button></div><label class="search-wrap"><span class="sr-only">Cari konten</span><input class="search-input" id="contentSearch" type="search" placeholder="Cari judul..." /></label></div><div class="content-scroll"><table class="content-table"><thead><tr><th>Judul konten</th><th>Jenis</th><th>Pemilik</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="contentRows"><tr data-content="published"><td><div class="article-cell"><span class="article-thumb">01</span><span class="article-copy">Menjaga Adab di Ruang Belajar<small>Terakhir diperbarui 8 Agu 2026</small></span></div></td><td><span class="type-label">Artikel</span></td><td>Yayasan</td><td><span class="publish-pill">Tayang</span></td><td><button class="row-action" type="button" data-edit="Menjaga Adab di Ruang Belajar">Edit</button></td></tr><tr data-content="scheduled"><td><div class="article-cell"><span class="article-thumb blue">02</span><span class="article-copy">Evaluasi Tahfidz Agustus 2026<small>Akan tayang 18 Agu 2026 · 07.00</small></span></div></td><td><span class="type-label">Berita</span></td><td>TPQ</td><td><span class="publish-pill scheduled">Terjadwal</span></td><td><button class="row-action" type="button" data-edit="Evaluasi Tahfidz Agustus 2026">Edit</button></td></tr><tr data-content="draft"><td><div class="article-cell"><span class="article-thumb rose">03</span><span class="article-copy">Kisah Alumni: Dari Iqra ke Hafidz<small>Disimpan 6 Agu 2026 · belum selesai</small></span></div></td><td><span class="type-label">Cerita</span></td><td>RA</td><td><span class="publish-pill draft">Draft</span></td><td><button class="row-action" type="button" data-edit="Kisah Alumni: Dari Iqra ke Hafidz">Lanjutkan</button></td></tr><tr data-content="published"><td><div class="article-cell"><span class="article-thumb blue">04</span><span class="article-copy">Pendaftaran Santri Baru 2026 / 2027<small>Terakhir diperbarui 2 Agu 2026</small></span></div></td><td><span class="type-label">Halaman</span></td><td>Yayasan</td><td><span class="publish-pill">Tayang</span></td><td><button class="row-action" type="button" data-edit="Pendaftaran Santri Baru 2026 / 2027">Edit</button></td></tr><tr data-content="scheduled"><td><div class="article-cell"><span class="article-thumb">05</span><span class="article-copy">Agenda Kegiatan September<small>Akan tayang 1 Sep 2026 · 06.00</small></span></div></td><td><span class="type-label">Agenda</span></td><td>MDT</td><td><span class="publish-pill scheduled">Terjadwal</span></td><td><button class="row-action" type="button" data-edit="Agenda Kegiatan September">Edit</button></td></tr></tbody></table></div></section>
+          <div class="right-stack"><section class="queue-card" aria-labelledby="queueHeading"><div class="panel-heading"><h2 id="queueHeading">Antrean publikasi</h2><p>Konten berikut siap menemani halaman publik.</p></div><div class="queue-total"><strong id="queueTotal">05</strong><span>konten menunggu tayang</span></div><div class="queue-bar"><i></i></div><div class="queue-list"><div class="queue-item"><span>Hari ini · 15.00</span><strong>1 konten</strong></div><div class="queue-item"><span>Minggu ini</span><strong>2 konten</strong></div><div class="queue-item"><span>Bulan depan</span><em>2 konten</em></div></div></section><section class="panel pages-card" id="halaman"><div class="pages-head"><h2>Halaman statis</h2><button type="button" data-modal="pageModal">Kelola semua →</button></div><div class="page-list"><div class="page-item"><span class="page-mark">⌂</span><span class="page-copy"><strong>Visi &amp; misi</strong><span>Diperbarui 12 Jul 2026</span></span><button class="page-edit" type="button" data-page="Visi & misi">Edit</button></div><div class="page-item"><span class="page-mark">▤</span><span class="page-copy"><strong>Sejarah lembaga</strong><span>Diperbarui 4 Jun 2026</span></span><button class="page-edit" type="button" data-page="Sejarah lembaga">Edit</button></div><div class="page-item"><span class="page-mark">♧</span><span class="page-copy"><strong>Struktur organisasi</strong><span>Diperbarui 18 Mei 2026</span></span><button class="page-edit" type="button" data-page="Struktur organisasi">Edit</button></div></div></section></div>
+        </div>
+        <section class="panel media-panel" id="galeri" aria-labelledby="mediaHeading"><div class="panel-header"><div class="panel-heading"><h2 id="mediaHeading">Media &amp; galeri kegiatan</h2><p>Kelompokkan foto dan video agar mudah ditemukan kembali.</p></div><div><span class="data-chip">182 file</span> <button class="btn btn-ghost" type="button" data-modal="mediaModal">+ Upload media</button></div></div><div class="media-grid"><div class="media-item"><span>Kegiatan Ramadhan<small>24 foto · 28 Mar 2026</small></span></div><div class="media-item"><span>Wisuda Iqra<small>18 foto · 20 Mei 2026</small></span></div><div class="media-item"><span>Outing Class<small>36 foto · 12 Jun 2026</small></span></div><div class="media-item"><span>Belajar Bersama<small>12 foto · 3 Agu 2026</small></span></div></div></section>
+        <section class="panel banner-panel" id="banner" aria-labelledby="bannerHeading"><div class="panel-header"><div class="panel-heading"><h2 id="bannerHeading">Banner &amp; slider beranda</h2><p>Atur pesan pertama yang dilihat pengunjung halaman publik.</p></div><button class="btn btn-ghost" type="button" data-modal="bannerModal">+ Tambah banner</button></div><div class="banner-list"><div class="banner-row"><span class="banner-preview">01</span><span class="banner-copy"><strong>Selamat datang di Darul Jinan</strong><span>Urutan 1 · tampil di beranda</span></span><button class="banner-toggle" type="button" data-banner-toggle>Aktif</button></div><div class="banner-row"><span class="banner-preview">02</span><span class="banner-copy"><strong>Pendaftaran santri baru</strong><span>Urutan 2 · tayang sampai 30 Sep</span></span><button class="banner-toggle" type="button" data-banner-toggle>Aktif</button></div><div class="banner-row"><span class="banner-preview">03</span><span class="banner-copy"><strong>Beasiswa santri yatim</strong><span>Urutan 3 · disimpan sebagai draft</span></span><button class="banner-toggle off" type="button" data-banner-toggle>Nonaktif</button></div></div></section>
+      </div>
+    </main>
+  </div>
+  <div class="modal" id="articleModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="articleTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Editor konten</span><h2 class="serif" id="articleTitle">Tulis artikel</h2><p>Susun berita dengan editor sederhana, lalu pilih kapan ingin ditayangkan.</p><form id="articleForm"><div class="form-grid"><div class="form-field full"><label for="articleName">Judul</label><input id="articleName" required placeholder="Contoh: Kegiatan belajar bulan ini" /></div><div class="form-field"><label for="articleType">Jenis konten</label><select id="articleType"><option>Berita / kegiatan</option><option>Artikel</option><option>Cerita inspiratif</option></select></div><div class="form-field"><label for="articlePublish">Publikasi</label><select id="articlePublish"><option value="draft">Simpan sebagai draft</option><option value="schedule">Jadwalkan besok</option><option value="publish">Terbitkan sekarang</option></select></div><div class="form-field full"><label for="articleCopy">Isi artikel</label><textarea id="articleCopy" required placeholder="Tulis isi berita di sini..."></textarea></div></div><button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Simpan konten</button></form></div></div>
+  <div class="modal" id="mediaModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="mediaTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Perpustakaan media</span><h2 class="serif" id="mediaTitle">Tambah media</h2><p>Unggah foto atau video lalu kelompokkan berdasarkan kegiatan.</p><form id="mediaForm"><div class="form-grid"><div class="form-field full"><label for="mediaFile">File media</label><input id="mediaFile" required type="file" accept="image/*,video/*" /></div><div class="form-field full"><label for="mediaCategory">Kategori kegiatan</label><input id="mediaCategory" required placeholder="Contoh: Kegiatan Ramadhan" /></div></div><button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Simpan ke galeri</button></form></div></div>
+  <div class="modal" id="pageModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="pageTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Halaman statis</span><h2 class="serif" id="pageTitle">Edit halaman</h2><p>Perubahan teks akan tampil di halaman publik setelah disimpan.</p><form id="pageForm"><div class="form-field"><label for="pageName">Nama halaman</label><input id="pageName" required value="Visi & misi" /></div><div class="form-field" style="margin-top:13px"><label for="pageCopy">Isi halaman</label><textarea id="pageCopy" required>Menjadi ruang tumbuh yang menumbuhkan cinta kepada Al-Qur'an, adab, dan ilmu.</textarea></div><button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Simpan perubahan</button></form></div></div>
+  <div class="modal" id="bannerModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="bannerTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Beranda publik</span><h2 class="serif" id="bannerTitle">Tambah banner</h2><p>Siapkan pesan singkat yang akan tampil sebagai slider beranda.</p><form id="bannerForm"><div class="form-grid"><div class="form-field full"><label for="bannerName">Judul banner</label><input id="bannerName" required placeholder="Contoh: Mari tumbuh bersama" /></div><div class="form-field"><label for="bannerCta">Label tombol</label><input id="bannerCta" value="Pelajari lebih lanjut" /></div><div class="form-field"><label for="bannerStatus">Status</label><select id="bannerStatus"><option>Aktif</option><option>Nonaktif</option></select></div></div><button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Simpan banner</button></form></div></div>
+  <div class="toast" id="toast" role="status"><span>✓</span><div><strong id="toastTitle">Perubahan tersimpan</strong><small id="toastText">Konten berhasil diperbarui.</small></div></div>
+  <script>
+     let contentFilter='all'; let toastTimer; const toast=document.getElementById('toast');
+     document.querySelectorAll('.help-link[href="#bantuan"]').forEach(link=>link.href='index.html#faq');
+     document.querySelector('.side-link[href="#laporan"]')?.setAttribute('href','analitik.html#laporan');
+    function showToast(title,text){document.getElementById('toastTitle').textContent=title;document.getElementById('toastText').textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3200);}
+    function setModal(id,open){const modal=document.getElementById(id);modal.hidden=!open;modal.setAttribute('aria-hidden',String(!open));if(open)modal.querySelector('input,textarea')?.focus();}
+    function escapeHTML(value){return value.replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
+    function refreshContent(){const query=document.getElementById('contentSearch').value.toLowerCase().trim();document.querySelectorAll('#contentRows tr').forEach((row)=>{row.hidden=(contentFilter!=='all'&&row.dataset.content!==contentFilter)||!row.textContent.toLowerCase().includes(query);});}
+    document.querySelectorAll('[data-content-filter]').forEach((button)=>button.addEventListener('click',()=>{contentFilter=button.dataset.contentFilter;document.querySelectorAll('[data-content-filter]').forEach((item)=>item.classList.toggle('active',item===button));refreshContent();}));
+    document.getElementById('contentSearch').addEventListener('input',refreshContent);
+    document.querySelectorAll('[data-modal]').forEach((button)=>button.addEventListener('click',()=>{if(button.dataset.modal==='pageModal'&&button.dataset.page)document.getElementById('pageName').value=button.dataset.page;setModal(button.dataset.modal,true);}));
+    document.querySelectorAll('[data-close-modal]').forEach((button)=>button.addEventListener('click',()=>setModal(button.closest('.modal').id,false)));
+    document.addEventListener('keydown',(event)=>{if(event.key==='Escape')document.querySelectorAll('.modal').forEach((modal)=>{if(!modal.hidden)setModal(modal.id,false);});});
+    document.querySelectorAll('[data-edit]').forEach((button)=>button.addEventListener('click',()=>{document.getElementById('articleName').value=button.dataset.edit;document.getElementById('articleCopy').value='Konten ini siap diperbarui oleh admin lembaga.';setModal('articleModal',true);}));
+    document.querySelectorAll('[data-page]').forEach((button)=>button.addEventListener('click',()=>{document.getElementById('pageName').value=button.dataset.page;setModal('pageModal',true);}));
+    document.getElementById('articleForm').addEventListener('submit',(event)=>{event.preventDefault();const name=escapeHTML(document.getElementById('articleName').value.trim());const publish=document.getElementById('articlePublish').value;const row=document.createElement('tr');row.dataset.content=publish==='publish'?'published':publish==='schedule'?'scheduled':'draft';const status=publish==='publish'?['Tayang','']:publish==='schedule'?['Terjadwal','scheduled']:['Draft','draft'];row.innerHTML=`<td><div class="article-cell"><span class="article-thumb">NEW</span><span class="article-copy">${name}<small>Baru saja · Nadia Aulia</small></span></div></td><td><span class="type-label">${document.getElementById('articleType').value}</span></td><td>Yayasan</td><td><span class="publish-pill ${status[1]}">${status[0]}</span></td><td><button class="row-action" type="button" data-edit="${name}">Edit</button></td>`;document.getElementById('contentRows').prepend(row);row.querySelector('[data-edit]').addEventListener('click',()=>{document.getElementById('articleName').value=name;setModal('articleModal',true);});if(publish==='schedule')document.getElementById('scheduledValue').textContent='06';setModal('articleModal',false);event.target.reset();showToast(publish==='publish'?'Konten diterbitkan':publish==='schedule'?'Konten dijadwalkan':'Draft tersimpan','Konten baru sudah masuk ke perpustakaan.');});
+    document.getElementById('mediaForm').addEventListener('submit',(event)=>{event.preventDefault();setModal('mediaModal',false);event.target.reset();showToast('Media tersimpan','File berhasil ditambahkan ke kategori galeri.');});
+     document.getElementById('pageForm').addEventListener('submit',(event)=>{event.preventDefault();setModal('pageModal',false);showToast('Halaman diperbarui','Perubahan akan tampil di halaman publik.');});
+     document.querySelectorAll('[data-banner-toggle]').forEach((button)=>button.addEventListener('click',()=>{const active=button.classList.toggle('off')===false;button.textContent=active?'Aktif':'Nonaktif';showToast(active?'Banner diaktifkan':'Banner dinonaktifkan','Status slider beranda sudah diperbarui.');}));
+     document.getElementById('bannerForm').addEventListener('submit',(event)=>{event.preventDefault();setModal('bannerModal',false);event.target.reset();showToast('Banner tersimpan','Banner baru siap ditampilkan pada beranda publik.');});
+     let editingArticle=null;
+     const articleForm=document.getElementById('articleForm');
+     const openExistingArticle=button=>{editingArticle=button.closest('tr');const row=editingArticle;const title=row.querySelector('.article-copy').childNodes[0].textContent.trim();document.getElementById('articleName').value=title;document.getElementById('articleCopy').value=row.dataset.body||'Konten ini siap diperbarui oleh admin lembaga.';document.getElementById('articlePublish').value=row.dataset.content==='published'?'publish':row.dataset.content==='scheduled'?'schedule':'draft';};
+     document.querySelectorAll('[data-modal="articleModal"]').forEach(button=>button.addEventListener('click',()=>{editingArticle=null;},true));
+     document.getElementById('contentRows').addEventListener('click',event=>{const button=event.target.closest('[data-edit]');if(button)openExistingArticle(button);},true);
+     articleForm.addEventListener('submit',event=>{if(!editingArticle)return;event.preventDefault();event.stopImmediatePropagation();const rawName=document.getElementById('articleName').value.trim()||'Konten tanpa judul';const name=escapeHTML(rawName);const publish=document.getElementById('articlePublish').value;const status=publish==='publish'?['Tayang','']:publish==='schedule'?['Terjadwal','scheduled']:['Draft','draft'];editingArticle.dataset.content=status[1]||'published';editingArticle.dataset.body=document.getElementById('articleCopy').value;const copy=editingArticle.querySelector('.article-copy');copy.childNodes[0].nodeValue=rawName;const updated=copy.querySelector('small');if(updated)updated.textContent='Terakhir diperbarui baru saja';const type=editingArticle.querySelector('.type-label');if(type)type.textContent=document.getElementById('articleType').value;const pill=editingArticle.querySelector('.publish-pill');if(pill){pill.className=`publish-pill ${status[1]}`;pill.textContent=status[0];}const editButton=editingArticle.querySelector('[data-edit]');if(editButton)editButton.dataset.edit=name;setModal('articleModal',false);articleForm.reset();editingArticle=null;showToast('Konten diperbarui','Perubahan artikel sudah disimpan di perpustakaan.');},true);
+     articleForm.addEventListener('submit',()=>{if(editingArticle)return;const body=document.getElementById('articleCopy').value;setTimeout(()=>{const row=document.querySelector('#contentRows tr');if(row)row.dataset.body=body;},0);});
+     document.getElementById('mediaForm').addEventListener('submit',event=>{const file=document.getElementById('mediaFile').files[0];const category=document.getElementById('mediaCategory').value.trim()||'Kegiatan baru';const item=document.createElement('div');item.className='media-item';item.innerHTML=`<span>${escapeHTML(category)}<small>${escapeHTML(file?.name||'1 file')} · Baru saja</small></span>`;document.querySelector('.media-grid').prepend(item);const count=document.querySelector('.media-panel .data-chip');if(count){const total=Number.parseInt(count.textContent,10)||182;count.textContent=`${total+1} file`; }},true);
+     let editingPageName=document.getElementById('pageName').value;document.querySelector('.page-list').addEventListener('click',event=>{const button=event.target.closest('[data-page]');if(button)editingPageName=button.dataset.page;},true);
+     document.getElementById('pageForm').addEventListener('submit',event=>{const name=document.getElementById('pageName').value.trim()||'Halaman baru';const copy=document.getElementById('pageCopy').value.trim();const existing=[...document.querySelectorAll('.page-item')].find(item=>item.querySelector('.page-copy strong').textContent===editingPageName);if(existing){existing.querySelector('.page-copy strong').textContent=name;existing.querySelector('.page-copy span').textContent='Diperbarui baru saja';existing.querySelector('.page-edit').dataset.page=name;}else{const item=document.createElement('div');item.className='page-item';item.innerHTML=`<span class="page-mark">▤</span><span class="page-copy"><strong>${escapeHTML(name)}</strong><span>Diperbarui baru saja</span></span><button class="page-edit" type="button" data-page="${escapeHTML(name)}">Edit</button>`;document.querySelector('.page-list').prepend(item);}document.getElementById('pageForm').dataset.copy=copy;},true);
+     document.getElementById('bannerForm').addEventListener('submit',event=>{const name=document.getElementById('bannerName').value.trim()||'Banner baru';const status=document.getElementById('bannerStatus').value;const order=String(document.querySelectorAll('.banner-row').length+1).padStart(2,'0');const item=document.createElement('div');item.className='banner-row';item.innerHTML=`<span class="banner-preview">${order}</span><span class="banner-copy"><strong>${escapeHTML(name)}</strong><span>Urutan ${order} · ${status==='Aktif'?'tampil di beranda':'disimpan sebagai draft'}</span></span><button class="banner-toggle${status==='Aktif'?'':' off'}" type="button" data-banner-toggle>${status}</button>`;document.querySelector('.banner-list').append(item);item.querySelector('[data-banner-toggle]').addEventListener('click',button=>{const active=button.currentTarget.classList.toggle('off')===false;button.currentTarget.textContent=active?'Aktif':'Nonaktif';showToast(active?'Banner diaktifkan':'Banner dinonaktifkan','Status slider beranda sudah diperbarui.');},true);},true);
+   </script>
+</body>
+</html>

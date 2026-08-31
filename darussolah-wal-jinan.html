@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a5b47">
+  <meta name="description" content="Darussolah Wal Jinan - ekosistem pendidikan yang menumbuhkan ilmu, adab, dan amal.">
+  <meta name="darussolah-api-base" content="https://darussolah-api-653823333936.asia-southeast2.run.app">
+  <title>Darussolah Wal Jinan | Ilmu, Adab, Amal</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #173a30;
+      --forest: #0a604a;
+      --forest-dark: #063d32;
+      --leaf: #b9d8b3;
+      --mint: #eaf3e8;
+      --cream: #faf8f2;
+      --paper: #fffefa;
+      --sand: #eee5d4;
+      --gold: #d2a044;
+      --gold-soft: #f3e8cb;
+      --coral: #d9766d;
+      --plum: #a74471;
+      --muted: #6b7b72;
+      --line: #dbe5db;
+      --white: #fff;
+      --shadow: 0 24px 70px rgba(14, 54, 41, .10);
+      --shadow-sm: 0 12px 32px rgba(14, 54, 41, .07);
+      --radius-lg: 30px;
+      --radius-md: 20px;
+      --radius-sm: 14px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--cream); font: 15px/1.65 Manrope, ui-sans-serif, system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+    body.modal-open { overflow: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 3px solid rgba(210, 160, 68, .75); outline-offset: 4px; }
+    .container { width: min(1160px, calc(100% - 44px)); margin: 0 auto; }
+    .skip-link { position: fixed; left: 16px; top: -60px; z-index: 30; padding: 10px 14px; border-radius: 10px; color: var(--white); background: var(--forest-dark); transition: top .2s; }
+    .skip-link:focus { top: 16px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--forest); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 25px; height: 2px; background: var(--gold); }
+    .display, h1, h2, h3 { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; letter-spacing: -.045em; }
+    h1, h2, h3, p { margin-top: 0; }
+    h2 { font-size: clamp(36px, 4vw, 54px); line-height: 1.04; margin-bottom: 14px; }
+    h3 { font-size: 25px; line-height: 1.12; margin-bottom: 8px; }
+    .muted { color: var(--muted); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; border: 1px solid transparent; border-radius: 999px; padding: 0 18px; font-size: 13px; font-weight: 800; transition: transform .2s, background .2s, border-color .2s, color .2s; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { color: var(--white); background: var(--forest); box-shadow: 0 10px 22px rgba(10, 96, 74, .18); }
+    .btn-primary:hover { background: var(--forest-dark); }
+    .btn-ghost { color: var(--forest); border-color: var(--line); background: rgba(255,255,255,.65); }
+    .btn-ghost:hover { border-color: var(--forest); background: var(--white); }
+    .btn-light { color: var(--forest-dark); background: var(--white); }
+    .btn-light:hover { background: var(--gold-soft); }
+    .arrow { font-size: 16px; line-height: 0; }
+
+    .notice { color: #e8f0e8; background: var(--forest-dark); font-size: 11px; }
+    .notice-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 35px; }
+    .notice strong { color: #fff; font-weight: 800; }
+    .notice-link { display: inline-flex; align-items: center; gap: 6px; color: #f6d999; font-weight: 800; }
+    .site-header { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid rgba(219,229,219,.8); background: rgba(250,248,242,.90); backdrop-filter: blur(18px); }
+    .nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 76px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; min-width: 230px; font-weight: 800; letter-spacing: -.04em; }
+    .brand-copy { line-height: 1.1; }
+    .brand-copy small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .brand-seal, .seal-fallback { display: grid; place-items: center; width: 42px; height: 42px; border: 2px solid var(--gold); border-radius: 50%; color: var(--white); background: var(--forest); font: 800 10px/1 Manrope, sans-serif; letter-spacing: -.04em; box-shadow: inset 0 0 0 4px rgba(255,255,255,.12); }
+    .brand-seal img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .brand-seal img + .seal-fallback { display: none; }
+    .brand-seal img:not([src]), .brand-seal img[hidden] { display: none; }
+    .nav-links { display: flex; align-items: center; gap: 24px; color: #607269; font-size: 12px; font-weight: 800; }
+    .nav-links a { transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--forest); }
+    .nav-actions { display: flex; align-items: center; gap: 9px; }
+    .nav-actions .btn { min-height: 40px; padding-inline: 15px; font-size: 12px; }
+    .menu-toggle { display: none; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 12px; color: var(--forest); background: var(--white); }
+    .menu-toggle span, .menu-toggle::before, .menu-toggle::after { display: block; width: 18px; height: 2px; margin: 0 auto; border-radius: 2px; background: currentColor; content: ""; transition: transform .2s, opacity .2s; }
+    .menu-toggle span { margin-block: 4px; }
+    .menu-toggle[aria-expanded="true"] span { opacity: 0; }
+    .menu-toggle[aria-expanded="true"]::before { transform: translateY(6px) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"]::after { transform: translateY(-6px) rotate(-45deg); }
+    .mobile-panel { display: none; padding: 0 22px 20px; }
+    .mobile-panel a { display: block; padding: 12px 0; border-bottom: 1px solid var(--line); color: var(--forest); font-weight: 800; }
+
+    .hero { position: relative; padding: 78px 0 70px; overflow: hidden; }
+    .hero::before { position: absolute; z-index: -1; width: 440px; height: 440px; top: -180px; right: -220px; border-radius: 50%; background: rgba(185,216,179,.26); content: ""; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(390px, .84fr); align-items: center; gap: 64px; }
+    .hero-copy { max-width: 650px; }
+    .hero-copy h1 { max-width: 670px; margin: 18px 0 20px; color: var(--ink); font-size: clamp(52px, 6.3vw, 82px); line-height: .98; }
+    .hero-copy h1 em { color: var(--forest); font-style: italic; }
+    .hero-copy h1 .accent { position: relative; white-space: nowrap; }
+    .hero-copy h1 .accent::after { position: absolute; right: -4px; bottom: -6px; left: 2px; height: 9px; border-radius: 50%; background: var(--gold); opacity: .42; content: ""; transform: rotate(-2deg); }
+    .hero-lead { max-width: 560px; color: var(--muted); font-size: 17px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 27px; }
+    .hero-meta { display: flex; align-items: center; gap: 14px; margin-top: 29px; color: var(--muted); font-size: 11px; }
+    .avatar-stack { display: flex; padding-left: 7px; }
+    .avatar { width: 29px; height: 29px; margin-left: -7px; border: 2px solid var(--cream); border-radius: 50%; background: var(--leaf); }
+    .avatar:nth-child(2) { background: #e5b96b; }
+    .avatar:nth-child(3) { background: #d78076; }
+    .avatar:nth-child(4) { background: #8bb0a0; }
+    .hero-visual { position: relative; min-height: 510px; }
+    .hero-image-frame { position: absolute; inset: 30px 24px 18px 18px; overflow: hidden; border-radius: 44% 44% 21px 21px; background: var(--sand); box-shadow: var(--shadow); }
+    .hero-image-frame::after { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 52%, rgba(5,55,43,.52)); content: ""; }
+    .hero-image { width: 100%; height: 100%; object-fit: cover; object-position: 50% 48%; }
+    .hero-ornament { position: absolute; width: 105px; height: 105px; left: -8px; bottom: 18px; border: 1px solid var(--gold); border-radius: 50%; opacity: .75; }
+    .hero-ornament::before, .hero-ornament::after { position: absolute; inset: 14px; border: 1px solid var(--gold); border-radius: 50%; content: ""; }
+    .hero-ornament::after { inset: 29px; background: var(--gold); opacity: .75; }
+    .hero-card { position: absolute; z-index: 2; right: -6px; bottom: 28px; width: 210px; padding: 19px; border: 1px solid rgba(255,255,255,.25); border-radius: 18px; color: var(--white); background: rgba(9,69,53,.92); box-shadow: 0 19px 34px rgba(4,49,37,.23); }
+    .hero-card .mini-label { display: block; margin-bottom: 8px; color: #aed9b7; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .hero-card strong { display: block; font: 28px/1 "DM Serif Display", Georgia, serif; }
+    .hero-card span { color: #d5e7d5; font-size: 11px; }
+    .hero-sticker { position: absolute; z-index: 3; top: 12px; left: -4px; display: grid; place-items: center; width: 104px; height: 104px; border-radius: 50%; color: var(--forest-dark); background: var(--gold); font: 24px/1 "DM Serif Display", Georgia, serif; text-align: center; transform: rotate(-10deg); }
+    .hero-sticker small { display: block; margin-top: 5px; font: 800 8px/1.2 Manrope, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+
+    .trustbar { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--white); box-shadow: var(--shadow-sm); }
+    .trust-item { padding: 20px 25px; border-right: 1px solid var(--line); }
+    .trust-item:last-child { border-right: 0; }
+    .trust-item strong { display: block; color: var(--forest); font: 34px/1 "DM Serif Display", Georgia, serif; }
+    .trust-item span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .ticker { display: flex; align-items: center; gap: 22px; margin-top: 25px; padding: 10px 0; overflow: hidden; color: #839187; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .ticker span { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+    .ticker span::before { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); content: ""; }
+
+    .section { padding: 105px 0; scroll-margin-top: 94px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 34px; }
+    .section-head h2 { max-width: 570px; margin: 10px 0 0; }
+    .section-head p { max-width: 390px; margin: 0; color: var(--muted); font-size: 13px; }
+    .about-grid { display: grid; grid-template-columns: .83fr 1.17fr; align-items: center; gap: 70px; }
+    .about-image { position: relative; min-height: 410px; }
+    .about-image-main { position: absolute; inset: 0 40px 0 0; overflow: hidden; border-radius: 22px 80px 22px 22px; background: var(--mint); }
+    .about-image-main img { width: 100%; height: 100%; object-fit: cover; object-position: 54% 50%; }
+    .about-note { position: absolute; right: 0; bottom: 26px; width: 190px; padding: 18px; border-radius: 16px; color: var(--forest-dark); background: var(--gold-soft); box-shadow: var(--shadow-sm); }
+    .about-note strong { display: block; font: 26px/1 "DM Serif Display", Georgia, serif; }
+    .about-note span { display: block; margin-top: 5px; color: #7e683e; font-size: 11px; }
+    .about-copy > p { max-width: 530px; color: var(--muted); font-size: 16px; }
+    .quote { margin: 25px 0 27px; padding-left: 19px; border-left: 3px solid var(--gold); color: var(--forest); font: 26px/1.2 "DM Serif Display", Georgia, serif; }
+    .values { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .value { padding: 15px 14px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,255,255,.62); }
+    .value b { display: block; color: var(--forest); font: 22px/1 "DM Serif Display", Georgia, serif; }
+    .value span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+
+    .soft-section { background: var(--mint); }
+    .unit-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .unit-card { position: relative; display: flex; flex-direction: column; min-height: 300px; padding: 21px; overflow: hidden; border: 1px solid var(--line); border-radius: 21px; background: var(--paper); transition: transform .2s, box-shadow .2s; }
+    .unit-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-sm); }
+    .unit-card::after { position: absolute; width: 145px; height: 145px; right: -58px; top: -62px; border: 1px solid var(--line); border-radius: 50%; content: ""; }
+    .unit-card.ra { border-top: 4px solid var(--plum); }
+    .unit-card.ra .unit-seal { color: var(--white); background: var(--plum); }
+    .unit-card.tpq .unit-seal, .unit-card.mdt .unit-seal, .unit-card.rtq .unit-seal { color: var(--forest-dark); background: var(--leaf); }
+    .unit-seal { position: relative; z-index: 1; display: grid; place-items: center; width: 62px; height: 62px; border-radius: 19px; color: var(--forest-dark); background: var(--leaf); font: 28px/1 "DM Serif Display", Georgia, serif; }
+    .unit-card h3 { margin-top: 24px; margin-bottom: 5px; font-size: 25px; }
+    .unit-card p { min-height: 50px; margin-bottom: 18px; color: var(--muted); font-size: 12px; }
+    .unit-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+    .unit-tag { padding: 5px 8px; border-radius: 999px; color: var(--forest); background: var(--mint); font-size: 10px; font-weight: 800; }
+    .unit-card.ra .unit-tag { color: var(--plum); background: #f9e9f0; }
+    .unit-link { display: inline-flex; align-items: center; align-self: flex-start; gap: 6px; margin-top: 19px; padding: 0; border: 0; color: var(--forest); background: transparent; font-size: 11px; font-weight: 800; }
+    .unit-link:hover { color: var(--forest-dark); }
+
+    .experience-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 18px; }
+    .experience-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .experience-card { min-height: 235px; padding: 21px; border: 1px solid var(--line); border-radius: 19px; background: var(--white); }
+    .experience-icon { display: grid; place-items: center; width: 43px; height: 43px; margin-bottom: 26px; border-radius: 14px; color: var(--forest); background: var(--mint); font-size: 19px; }
+    .experience-card:nth-child(2) .experience-icon { color: #97702d; background: var(--gold-soft); }
+    .experience-card:nth-child(3) .experience-icon { color: var(--plum); background: #f7e8ef; }
+    .experience-card h3 { font-size: 23px; }
+    .experience-card p { margin: 0; color: var(--muted); font-size: 12px; }
+    .portal-card { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 235px; padding: 26px; overflow: hidden; border-radius: 21px; color: var(--white); background: var(--forest-dark); }
+    .portal-card::before { position: absolute; width: 250px; height: 250px; right: -130px; top: -120px; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; box-shadow: 0 0 0 24px rgba(255,255,255,.04), 0 0 0 50px rgba(255,255,255,.03); content: ""; }
+    .portal-card h3 { position: relative; max-width: 260px; margin-bottom: 8px; font-size: 30px; }
+    .portal-card p { position: relative; max-width: 260px; margin-bottom: 19px; color: #bfdbca; font-size: 12px; }
+    .portal-card .btn { align-self: flex-start; position: relative; }
+
+    .news-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; }
+    .news-feature { display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+    .news-image { min-height: 290px; overflow: hidden; background: var(--sand); }
+    .news-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .news-feature:hover .news-image img { transform: scale(1.04); }
+    .news-body { display: flex; flex-direction: column; justify-content: center; padding: 26px; }
+    .news-meta { color: var(--forest); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .news-body h3 { margin: 11px 0 9px; font-size: 29px; }
+    .news-body p { margin-bottom: 20px; color: var(--muted); font-size: 12px; }
+    .text-link { display: inline-flex; align-items: center; gap: 7px; color: var(--forest); font-size: 11px; font-weight: 800; }
+    .news-list { display: grid; gap: 12px; }
+    .news-item { display: grid; grid-template-columns: 91px 1fr; gap: 14px; padding: 13px; border: 1px solid var(--line); border-radius: 17px; background: var(--white); }
+    .news-item figure { width: 91px; height: 91px; margin: 0; overflow: hidden; border-radius: 12px; background: var(--mint); }
+    .news-item figure img { width: 100%; height: 100%; object-fit: cover; }
+    .news-item h3 { margin: 7px 0 4px; font-size: 19px; }
+    .news-item p { margin: 0; color: var(--muted); font-size: 11px; }
+    .agenda { display: grid; grid-template-columns: 1fr .84fr; gap: 18px; margin-top: 54px; }
+    .agenda-list { display: grid; gap: 10px; }
+    .agenda-row { display: grid; grid-template-columns: 61px 1fr auto; align-items: center; gap: 14px; padding: 15px 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); }
+    .agenda-date { color: var(--forest); text-align: center; font-weight: 800; }
+    .agenda-date strong { display: block; font: 28px/1 "DM Serif Display", Georgia, serif; }
+    .agenda-date span { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+    .agenda-row h3 { margin: 0 0 2px; font-size: 19px; }
+    .agenda-row p { margin: 0; color: var(--muted); font-size: 11px; }
+    .agenda-type { padding: 5px 8px; border-radius: 999px; color: #82632c; background: var(--gold-soft); font-size: 9px; font-weight: 800; }
+    .agenda-note { display: flex; flex-direction: column; justify-content: space-between; min-height: 260px; padding: 25px; border-radius: 21px; color: var(--forest-dark); background: var(--gold-soft); }
+    .agenda-note h3 { max-width: 300px; margin-bottom: 9px; font-size: 32px; }
+    .agenda-note p { max-width: 300px; color: #786438; font-size: 12px; }
+
+    .apply-section { padding-top: 28px; }
+    .apply-band { display: grid; grid-template-columns: 1.05fr .95fr; gap: 30px; align-items: center; padding: 38px; overflow: hidden; border-radius: var(--radius-lg); color: var(--white); background: var(--forest); }
+    .apply-band h2 { max-width: 490px; margin-bottom: 12px; font-size: clamp(38px, 4vw, 55px); }
+    .apply-band p { max-width: 460px; margin-bottom: 22px; color: #c6dfce; font-size: 13px; }
+    .apply-side { position: relative; padding: 25px; border: 1px solid rgba(255,255,255,.19); border-radius: 20px; background: rgba(255,255,255,.09); }
+    .apply-side::after { position: absolute; width: 170px; height: 170px; right: -75px; bottom: -104px; border: 1px solid rgba(255,255,255,.19); border-radius: 50%; content: ""; }
+    .apply-step { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.15); }
+    .apply-step:last-child { border-bottom: 0; }
+    .apply-step b { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: var(--forest-dark); background: var(--gold); font-size: 10px; }
+    .apply-step strong { display: block; font-size: 12px; }
+    .apply-step span { display: block; margin-top: 2px; color: #bdd8c6; font-size: 10px; }
+
+    .support-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .support-card { padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+    .support-card.gold { color: var(--forest-dark); background: var(--gold-soft); border-color: #ebd7a9; }
+    .support-card h3 { margin-bottom: 8px; font-size: 31px; }
+    .support-card p { max-width: 410px; color: var(--muted); font-size: 12px; }
+    .gold .support-points { color: #7b673d; }
+    .support-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 23px 0; color: var(--forest); }
+    .support-points div { padding-top: 10px; border-top: 1px solid rgba(10,96,74,.19); font-size: 10px; font-weight: 800; }
+    .faq-wrap { display: grid; grid-template-columns: .72fr 1.28fr; gap: 70px; align-items: start; }
+    .faq-intro p { max-width: 310px; color: var(--muted); font-size: 13px; }
+    .faq-list { display: grid; gap: 9px; }
+    details { border: 1px solid var(--line); border-radius: 15px; background: var(--white); }
+    summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 17px 19px; color: var(--forest); font-size: 13px; font-weight: 800; cursor: pointer; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { color: var(--gold); content: "+"; font-size: 20px; font-weight: 400; }
+    details[open] summary::after { content: "-"; }
+    details p { padding: 0 19px 18px; margin: 0; color: var(--muted); font-size: 12px; }
+    .contact-section { padding-top: 20px; }
+    .contact-grid { display: grid; grid-template-columns: 1fr .9fr; gap: 18px; }
+    .contact-card { padding: 30px; border: 1px solid var(--line); border-radius: 23px; background: var(--white); }
+    .contact-card h2 { margin-bottom: 9px; font-size: 42px; }
+    .contact-card p { max-width: 430px; color: var(--muted); font-size: 13px; }
+    .contact-list { display: grid; gap: 10px; margin-top: 24px; }
+    .contact-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .contact-row:last-child { border-bottom: 0; }
+    .contact-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 11px; color: var(--forest); background: var(--mint); font-size: 14px; }
+    .contact-row strong { display: block; font-size: 12px; }
+    .contact-row span { display: block; color: var(--muted); font-size: 11px; }
+    .contact-side { display: flex; flex-direction: column; justify-content: space-between; padding: 30px; border-radius: 23px; color: var(--white); background: var(--forest-dark); }
+    .contact-side h3 { max-width: 270px; font-size: 34px; }
+    .contact-side p { max-width: 300px; color: #bdd8c6; font-size: 12px; }
+    .contact-side .btn { align-self: flex-start; margin-top: 25px; }
+
+    .site-footer { padding: 47px 0 25px; color: #bdd8c6; background: #062f27; }
+    .footer-top { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 30px; padding-bottom: 40px; }
+    .footer-brand { color: var(--white); font: 28px/1 "DM Serif Display", Georgia, serif; }
+    .footer-intro { max-width: 270px; margin-top: 10px; color: #91b8a2; font-size: 11px; }
+    .footer-col strong { display: block; margin-bottom: 12px; color: #f1d58e; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .footer-col a { display: block; margin: 7px 0; color: #c2dbca; font-size: 11px; }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 18px; border-top: 1px solid rgba(191,219,202,.17); color: #7ea491; font-size: 10px; }
+
+    .modal[hidden], .toast[hidden] { display: none; }
+    .modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: rgba(5,33,27,.62); backdrop-filter: blur(8px); }
+    .modal-card { position: relative; width: min(520px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 31px; border: 1px solid var(--line); border-radius: 24px; background: var(--cream); box-shadow: 0 30px 90px rgba(0,0,0,.24); }
+    .modal-close { position: absolute; top: 16px; right: 16px; display: grid; place-items: center; width: 33px; height: 33px; border: 1px solid var(--line); border-radius: 50%; color: var(--forest); background: var(--white); font-size: 19px; }
+    .modal-card h2 { padding-right: 34px; margin: 9px 0 9px; font-size: 39px; }
+    .modal-card > p { max-width: 410px; color: var(--muted); font-size: 12px; }
+    .form { display: grid; gap: 12px; margin-top: 23px; }
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--forest); font-size: 11px; font-weight: 800; }
+    .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; outline: none; color: var(--ink); background: var(--white); }
+    .field textarea { min-height: 82px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(10,96,74,.12); }
+    .check-field { display: flex; align-items: start; gap: 8px; color: var(--muted); font-size: 10px; }
+    .check-field input { margin-top: 3px; accent-color: var(--forest); }
+    .form .btn { width: 100%; margin-top: 4px; border-radius: 11px; }
+    .portal-switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 20px 0 2px; padding: 4px; border-radius: 13px; background: var(--mint); }
+    .portal-switch button { border: 0; border-radius: 9px; padding: 9px 5px; color: var(--muted); background: transparent; font-size: 10px; font-weight: 800; }
+    .portal-switch button.active { color: var(--white); background: var(--forest); }
+    .portal-message { margin-top: 16px; padding: 12px 13px; border-radius: 12px; color: #6c5a35; background: var(--gold-soft); font-size: 10px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 70; max-width: 330px; padding: 13px 16px; border-radius: 13px; color: var(--white); background: var(--forest-dark); box-shadow: var(--shadow); font-size: 12px; }
+
+    @media (max-width: 980px) {
+      .nav-links { gap: 14px; }
+      .hero-grid { grid-template-columns: 1fr .85fr; gap: 34px; }
+      .hero-copy h1 { font-size: clamp(49px, 7vw, 69px); }
+      .hero-visual { min-height: 430px; }
+      .unit-grid { grid-template-columns: repeat(2, 1fr); }
+      .experience-grid, .news-grid, .agenda, .contact-grid { grid-template-columns: 1fr; }
+      .experience-main { grid-template-columns: repeat(3, 1fr); }
+      .faq-wrap { grid-template-columns: 1fr; gap: 30px; }
+      .faq-intro p { max-width: 520px; }
+      .footer-top { grid-template-columns: 1.4fr repeat(2, 1fr); }
+    }
+    @media (max-width: 720px) {
+      .container { width: min(100% - 30px, 1160px); }
+      .notice-inner { min-height: 42px; }
+      .notice-inner > span { max-width: 230px; line-height: 1.35; }
+      .notice-link { white-space: nowrap; }
+      .nav { min-height: 67px; }
+      .brand { min-width: auto; }
+      .nav-links, .nav-actions .btn-ghost { display: none; }
+      .menu-toggle { display: block; }
+      .mobile-panel.open { display: block; }
+      .nav-actions { margin-left: auto; }
+      .hero { padding: 52px 0 45px; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-copy h1 { max-width: 590px; font-size: clamp(49px, 14vw, 72px); }
+      .hero-visual { min-height: 390px; max-width: 570px; margin: 0 auto; width: 100%; }
+      .hero-card { right: 0; }
+      .hero-sticker { left: 0; }
+      .trustbar { grid-template-columns: 1fr 1fr 1fr; }
+      .trust-item { padding: 14px 11px; }
+      .trust-item strong { font-size: 28px; }
+      .trust-item span { font-size: 9px; }
+      .section { padding: 72px 0; }
+      .section-head { display: block; margin-bottom: 25px; }
+      .section-head p { margin-top: 12px; }
+      .about-grid { grid-template-columns: 1fr; gap: 35px; }
+      .about-image { min-height: 330px; max-width: 520px; }
+      .values, .support-grid { grid-template-columns: 1fr; }
+      .unit-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .unit-card { min-height: 285px; padding: 16px; }
+      .unit-card h3 { font-size: 22px; }
+      .experience-main { grid-template-columns: 1fr; }
+      .experience-card { min-height: auto; }
+      .news-feature { grid-template-columns: 1fr; }
+      .news-image { min-height: 220px; }
+      .agenda-row { grid-template-columns: 52px 1fr; }
+      .agenda-type { display: none; }
+      .apply-band { grid-template-columns: 1fr; padding: 25px; }
+      .apply-band h2 { font-size: 43px; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 25px 15px; }
+      .footer-top > :first-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 450px) {
+      .hero-copy h1 { font-size: 51px; }
+      .hero-actions .btn { width: 100%; }
+      .hero-meta { align-items: flex-start; }
+      .hero-visual { min-height: 340px; }
+      .hero-card { width: 177px; padding: 14px; }
+      .hero-card strong { font-size: 25px; }
+      .hero-sticker { width: 84px; height: 84px; font-size: 20px; }
+      .trustbar { grid-template-columns: 1fr; }
+      .trust-item { border-right: 0; border-bottom: 1px solid var(--line); }
+      .trust-item:last-child { border-bottom: 0; }
+      .unit-grid { grid-template-columns: 1fr; }
+      .unit-card { min-height: auto; }
+      .about-note { right: -4px; width: 160px; }
+      .about-image-main { right: 20px; }
+      .support-points { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr; }
+      .footer-bottom { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Lewati ke konten utama</a>
+  <div class="notice">
+    <div class="container notice-inner">
+      <span><strong>Penerimaan santri 2026/2027</strong> sedang dibuka untuk beberapa program.</span>
+      <a class="notice-link" href="#pendaftaran">Lihat cara daftar <span class="arrow">&#8594;</span></a>
+    </div>
+  </div>
+
+  <header class="site-header" id="home">
+    <div class="container nav">
+      <a class="brand" href="#beranda" aria-label="Darussolah Wal Jinan, kembali ke beranda">
+        <span class="brand-seal">
+          <img src="darussolah-logo-yayasan.jpeg" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false;this.nextElementSibling.style.display='grid'">
+          <span class="seal-fallback" hidden>DWJ</span>
+        </span>
+        <span class="brand-copy">Darussolah Wal Jinan<small>Yayasan pendidikan dan dakwah</small></span>
+      </a>
+      <nav class="nav-links" aria-label="Navigasi utama">
+        <a href="#tentang">Tentang kami</a>
+        <a href="#lembaga">Lembaga</a>
+        <a href="#kegiatan">Kegiatan</a>
+        <a href="#pendaftaran">Pendaftaran</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-ghost" type="button" data-open="portal">Portal keluarga</button>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-panel" aria-label="Buka menu"><span></span></button>
+      </div>
+    </div>
+    <div class="mobile-panel" id="mobile-panel">
+      <a href="#tentang">Tentang kami</a>
+      <a href="#lembaga">Lembaga</a>
+      <a href="#kegiatan">Kegiatan</a>
+      <a href="#pendaftaran">Pendaftaran</a>
+      <button class="btn btn-primary" type="button" data-open="portal">Masuk portal keluarga <span class="arrow">&#8594;</span></button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="beranda">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">Satu rumah, banyak kebaikan</span>
+          <h1>Tempat ilmu <span class="accent">bertumbuh</span>, <em>adab</em> menjadi arah.</h1>
+          <p class="hero-lead">Darussolah Wal Jinan menghadirkan ruang belajar yang dekat dengan keluarga: hangat dalam pendampingan, tertib dalam proses, dan luas dalam manfaat.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" data-open="admission">Mulai pendaftaran <span class="arrow">&#8594;</span></button>
+            <a class="btn btn-ghost" href="#lembaga">Jelajahi lembaga</a>
+          </div>
+          <div class="hero-meta">
+            <div class="avatar-stack" aria-hidden="true"><span class="avatar"></span><span class="avatar"></span><span class="avatar"></span><span class="avatar"></span></div>
+            <span>Empat unit pendidikan, satu nilai yang menyatukan.</span>
+          </div>
+        </div>
+        <div class="hero-visual" aria-label="Suasana belajar bersama">
+          <div class="hero-image-frame">
+            <img class="hero-image" src="https://plus.unsplash.com/premium_photo-1726812032548-5b44c4c50df8?auto=format&fit=crop&w=1200&q=85" alt="Santriwati belajar bersama di kelas" fetchpriority="high">
+          </div>
+          <div class="hero-sticker">Ilmu<small>Adab &middot; Amal</small></div>
+          <div class="hero-ornament" aria-hidden="true"></div>
+          <div class="hero-card"><span class="mini-label">Ekosistem belajar</span><strong>4 ruang</strong><span>TPQ &middot; MDT &middot; RA &middot; RTQ</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container" aria-label="Sekilas Darussolah Wal Jinan">
+      <div class="trustbar">
+        <div class="trust-item"><strong>4</strong><span>Lembaga yang tumbuh dalam satu yayasan</span></div>
+        <div class="trust-item"><strong>1</strong><span>Ekosistem informasi untuk keluarga</span></div>
+        <div class="trust-item"><strong>3</strong><span>Nilai utama: ilmu, adab, dan amal</span></div>
+      </div>
+      <div class="ticker" aria-hidden="true"><span>Belajar dengan gembira</span><span>Bertumbuh dengan adab</span><span>Berbagi manfaat</span><span>Melangkah bersama keluarga</span></div>
+    </section>
+
+    <section class="section" id="tentang">
+      <div class="container about-grid">
+        <div class="about-image">
+          <div class="about-image-main"><img src="https://plus.unsplash.com/premium_photo-1661329845814-2f576261cc4d?auto=format&fit=crop&w=1000&q=85" alt="Dua santriwati membaca bersama" loading="lazy"></div>
+          <div class="about-note"><strong>Dekat dengan keluarga</strong><span>Pendidikan yang hadir dalam keseharian, bukan hanya di ruang kelas.</span></div>
+        </div>
+        <div class="about-copy">
+          <span class="eyebrow">Tentang yayasan</span>
+          <h2>Mendidik bukan hanya menambah tahu.</h2>
+          <p>Darussolah Wal Jinan adalah rumah bersama untuk menghadirkan pendidikan Al-Quran, diniyah, dan anak usia dini yang bertumbuh dengan pendampingan manusiawi.</p>
+          <div class="quote">"Ilmu yang tumbuh bersama adab akan menjadi amal yang panjang."</div>
+          <div class="values">
+            <div class="value"><b>Ilmu</b><span>Belajar dengan dasar yang baik.</span></div>
+            <div class="value"><b>Adab</b><span>Menjadi manusia yang santun.</span></div>
+            <div class="value"><b>Amal</b><span>Membawa manfaat setiap hari.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft-section" id="lembaga">
+      <div class="container">
+        <div class="section-head"><div><span class="eyebrow">Ruang belajar kami</span><h2>Temukan tempat tumbuh yang tepat.</h2></div><p>Empat lembaga, empat pendekatan, satu perhatian: mendampingi anak dan keluarga agar terus bertumbuh.</p></div>
+        <div class="unit-grid">
+          <article class="unit-card tpq">
+            <div class="unit-seal" aria-hidden="true">TPQ</div><h3>TPQ Darul Jinan</h3><p>Tempat anak mengenal, membaca, dan mencintai Al-Quran dengan pendampingan yang hangat.</p>
+            <div class="unit-tags"><span class="unit-tag">Iqra</span><span class="unit-tag">Tahsin</span><span class="unit-tag">Tilawah</span></div>
+            <button class="unit-link" type="button" data-open="admission" data-unit="TPQ Darul Jinan">Pilih program <span class="arrow">&#8594;</span></button>
+          </article>
+          <article class="unit-card mdt">
+            <div class="unit-seal" aria-hidden="true">MDT</div><h3>MDT Darussolah</h3><p>Pendidikan diniyah yang terstruktur untuk menguatkan dasar agama, karakter, dan kebiasaan baik.</p>
+            <div class="unit-tags"><span class="unit-tag">Diniyah</span><span class="unit-tag">Akhlak</span><span class="unit-tag">Fiqih</span></div>
+            <button class="unit-link" type="button" data-open="admission" data-unit="MDT Darussolah">Pilih program <span class="arrow">&#8594;</span></button>
+          </article>
+          <article class="unit-card ra">
+            <div class="unit-seal" aria-hidden="true">RA</div><h3>RA Darussolah</h3><p>Awal perjalanan pendidikan anak usia dini melalui bermain, rasa ingin tahu, dan pembiasaan adab.</p>
+            <div class="unit-tags"><span class="unit-tag">Usia dini</span><span class="unit-tag">Bermain</span><span class="unit-tag">Karakter</span></div>
+            <button class="unit-link" type="button" data-open="admission" data-unit="RA Darussolah">Pilih program <span class="arrow">&#8594;</span></button>
+          </article>
+          <article class="unit-card rtq">
+            <div class="unit-seal" aria-hidden="true">RTQ</div><h3>RTQ Darussolah</h3><p>Rumah tahfidz yang mendampingi hafalan, murojaah, dan kedekatan anak dengan Al-Quran.</p>
+            <div class="unit-tags"><span class="unit-tag">Tahfidz</span><span class="unit-tag">Murojaah</span><span class="unit-tag">Adab</span></div>
+            <button class="unit-link" type="button" data-open="admission" data-unit="RTQ Darussolah">Pilih program <span class="arrow">&#8594;</span></button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pengalaman">
+      <div class="container">
+        <div class="section-head"><div><span class="eyebrow">Satu ekosistem</span><h2>Lebih mudah untuk belajar bersama.</h2></div><p>Informasi penting tidak tercecer. Keluarga, guru, dan santri punya ruang yang saling terhubung.</p></div>
+        <div class="experience-grid">
+          <div class="experience-main">
+            <article class="experience-card"><div class="experience-icon" aria-hidden="true">&#9825;</div><h3>Untuk wali</h3><p>Kabar kelas, kehadiran, agenda, dan perkembangan anak dapat diakses dari satu tempat.</p></article>
+            <article class="experience-card"><div class="experience-icon" aria-hidden="true">&#10003;</div><h3>Untuk guru</h3><p>Presensi, jurnal, materi, dan tugas dirancang singkat agar waktu kembali untuk mendampingi.</p></article>
+            <article class="experience-card"><div class="experience-icon" aria-hidden="true">&#9733;</div><h3>Untuk santri</h3><p>Jadwal, materi, tugas, dan progres belajar hadir dengan bahasa yang dekat dan aman.</p></article>
+          </div>
+          <div class="portal-card"><div><span class="eyebrow" style="color:#d6e9d8">Portal keluarga</span><h3>Satu pintu untuk aktivitas harian.</h3><p>Portal terintegrasi sedang disiapkan bertahap bersama guru dan operator dari setiap lembaga.</p></div><button class="btn btn-light" type="button" data-open="portal">Lihat akses portal <span class="arrow">&#8594;</span></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="kegiatan">
+      <div class="container">
+        <div class="section-head"><div><span class="eyebrow">Kabar dan kegiatan</span><h2>Yang sedang hidup di ruang belajar.</h2></div><a class="text-link" href="#kontak">Tanyakan kabar terbaru <span class="arrow">&#8594;</span></a></div>
+        <div class="news-grid">
+          <article class="news-feature"><div class="news-image"><img src="https://images.unsplash.com/photo-1649030839339-3d117544fcb4?auto=format&fit=crop&w=1000&q=85" alt="Pendampingan membaca Al-Qur'an bersama guru" loading="lazy"></div><div class="news-body"><span class="news-meta">Catatan pembelajaran &middot; Yayasan</span><h3>Ruang belajar yang baik membuat anak berani bertanya.</h3><p>Kami percaya proses belajar tumbuh ketika anak merasa aman untuk mencoba, mengulang, dan menemukan jawabannya sendiri.</p><a class="text-link" href="#tentang">Baca cerita kami <span class="arrow">&#8594;</span></a></div></article>
+          <div class="news-list">
+            <article class="news-item"><figure><img src="https://images.unsplash.com/photo-1720604568178-444a03bf4cdf?auto=format&fit=crop&w=500&q=85" alt="Santri putra membaca Al-Qur'an" loading="lazy"></figure><div><span class="news-meta">TPQ Darul Jinan</span><h3>Setoran hafalan dan murojaah pekanan</h3><p>Ritme kecil yang dijaga bersama.</p></div></article>
+            <article class="news-item"><figure><img src="https://images.unsplash.com/photo-1646450820480-9545d263e9e6?auto=format&fit=crop&w=500&q=85" alt="Santriwati membaca dengan tenang" loading="lazy"></figure><div><span class="news-meta">RA Darussolah</span><h3>Belajar melalui bermain</h3><p>Rasa ingin tahu adalah awal yang baik.</p></div></article>
+            <article class="news-item"><figure><img src="https://plus.unsplash.com/premium_photo-1661382504923-8085addc989c?auto=format&fit=crop&w=500&q=85" alt="Santriwati belajar bersama di kelas" loading="lazy"></figure><div><span class="news-meta">Untuk keluarga</span><h3>Kalender kegiatan dalam satu tempat</h3><p>Supaya langkah kecil tidak terlewat.</p></div></article>
+          </div>
+        </div>
+        <div class="agenda"><div><div class="section-head" style="margin-bottom:17px"><div><span class="eyebrow">Agenda rutin</span><h3 style="margin:9px 0 0;font-size:31px">Mari hadir bersama.</h3></div></div><div class="agenda-list"><div class="agenda-row"><div class="agenda-date"><strong>01</strong><span>pekan</span></div><div><h3>Setoran dan murojaah</h3><p>Rutin mingguan &middot; TPQ dan RTQ</p></div><span class="agenda-type">Al-Quran</span></div><div class="agenda-row"><div class="agenda-date"><strong>02</strong><span>pekan</span></div><div><h3>Kajian dan evaluasi belajar</h3><p>Rutin mingguan &middot; MDT Darussolah</p></div><span class="agenda-type">Diniyah</span></div><div class="agenda-row"><div class="agenda-date"><strong>03</strong><span>periode</span></div><div><h3>Pertemuan wali santri</h3><p>Sesuai kalender &middot; Seluruh lembaga</p></div><span class="agenda-type">Keluarga</span></div></div></div><aside class="agenda-note"><div><span class="eyebrow">Catat tanggalnya</span><h3>Hadir adalah bentuk dukungan.</h3><p>Informasi jadwal pertemuan, perubahan kelas, dan agenda yayasan akan dirangkum untuk keluarga.</p></div><a class="text-link" href="#kontak">Minta kalender kegiatan <span class="arrow">&#8594;</span></a></aside></div>
+      </div>
+    </section>
+
+    <section class="section apply-section" id="pendaftaran">
+      <div class="container">
+        <div class="apply-band">
+          <div><span class="eyebrow" style="color:#d9ebda">Penerimaan santri</span><h2>Langkah pertama dimulai dari sini.</h2><p>Isi data singkat untuk memberi tahu minat Anda. Tim pendaftaran akan membantu menjelaskan pilihan lembaga dan tahapan berikutnya.</p><button class="btn btn-light" type="button" data-open="admission">Isi formulir minat <span class="arrow">&#8594;</span></button></div>
+          <div class="apply-side"><div class="apply-step"><b>01</b><div><strong>Pilih lembaga</strong><span>TPQ, MDT, RA, atau RTQ sesuai kebutuhan anak.</span></div></div><div class="apply-step"><b>02</b><div><strong>Isi data dasar</strong><span>Nama calon santri dan kontak wali.</span></div></div><div class="apply-step"><b>03</b><div><strong>Dapatkan arahan</strong><span>Operator memberi informasi syarat dan jadwal.</span></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="transparansi">
+      <div class="container">
+        <div class="section-head"><div><span class="eyebrow">Tumbuh bersama</span><h2>Pendidikan adalah kerja bersama.</h2></div><p>Yayasan, guru, orang tua, dan masyarakat mengambil bagian agar ruang belajar tetap hangat dan berkelanjutan.</p></div>
+        <div class="support-grid">
+          <article class="support-card gold"><span class="eyebrow">Dukungan program</span><h3>Jaga satu ruang belajar tetap menyala.</h3><p>Dukungan masyarakat diarahkan untuk kebutuhan pendidikan dan kegiatan yang disetujui yayasan.</p><div class="support-points"><div>Sarana belajar</div><div>Pendampingan guru</div><div>Program santri</div></div><a class="btn btn-primary" href="#kontak">Hubungi yayasan <span class="arrow">&#8594;</span></a></article>
+          <article class="support-card"><span class="eyebrow">Transparansi</span><h3>Kepercayaan dibangun dari informasi yang jelas.</h3><p>Halaman laporan, kebijakan, dan informasi donasi akan diterbitkan bertahap setelah data serta persetujuan yayasan siap.</p><div class="support-points"><div>Data terukur</div><div>Persetujuan jelas</div><div>Jejak tercatat</div></div><a class="text-link" href="#kontak">Minta informasi resmi <span class="arrow">&#8594;</span></a></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container faq-wrap">
+        <div class="faq-intro"><span class="eyebrow">Pertanyaan umum</span><h2>Hal yang sering ingin diketahui.</h2><p>Belum menemukan jawaban yang Anda cari? Tim yayasan siap membantu menjelaskan langkah berikutnya.</p><a class="text-link" href="#kontak">Ajukan pertanyaan <span class="arrow">&#8594;</span></a></div>
+        <div class="faq-list">
+          <details open><summary>Bagaimana cara memilih lembaga untuk anak?</summary><p>Mulai dari usia, kebutuhan belajar, dan tujuan keluarga. Anda dapat memilih TPQ Darul Jinan, MDT Darussolah, RA Darussolah, atau RTQ Darussolah melalui formulir minat. Operator akan membantu memastikan program yang paling sesuai.</p></details>
+          <details><summary>Apakah satu anak dapat mengikuti lebih dari satu program?</summary><p>Ekosistem yayasan dirancang agar satu keluarga dapat terhubung dengan beberapa unit. Ketersediaan dan aturan pendaftaran lintas unit akan dikonfirmasi oleh operator masing-masing lembaga.</p></details>
+          <details><summary>Dokumen apa yang perlu disiapkan?</summary><p>Umumnya data identitas anak dan wali, kartu keluarga, serta dokumen pendukung sesuai program. Checklist final diberikan setelah pilihan lembaga dan jenis pendaftaran diketahui.</p></details>
+          <details><summary>Apakah sudah tersedia portal orang tua?</summary><p>Portal keluarga sedang disiapkan bertahap. Versi awal akan memusatkan pengumuman, presensi, materi, dan agenda; akses diberikan setelah akun keluarga diverifikasi.</p></details>
+          <details><summary>Bagaimana yayasan menjaga data anak?</summary><p>Data pendaftaran dan dokumen anak diperlakukan sebagai data privat. Publikasi foto, informasi kesehatan, dan akses portal memerlukan persetujuan serta pembatasan akses sesuai kebutuhan.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact-section" id="kontak">
+      <div class="container contact-grid">
+        <div class="contact-card"><span class="eyebrow">Mari terhubung</span><h2>Kami senang mendengar cerita Anda.</h2><p>Untuk pertanyaan pendaftaran, kerja sama, atau informasi kegiatan, tinggalkan pesan. Detail kontak resmi yayasan dapat ditambahkan setelah dikonfirmasi.</p><div class="contact-list"><div class="contact-row"><span class="contact-icon" aria-hidden="true">&#9906;</span><div><strong>Wilayah layanan</strong><span>Jakarta Utara dan sekitarnya</span></div></div><div class="contact-row"><span class="contact-icon" aria-hidden="true">&#9993;</span><div><strong>Pesan untuk yayasan</strong><span>Gunakan formulir minat atau minta dihubungi</span></div></div><div class="contact-row"><span class="contact-icon" aria-hidden="true">&#8987;</span><div><strong>Waktu layanan</strong><span>Informasi jadwal akan dikonfirmasi operator</span></div></div></div></div>
+        <div class="contact-side"><div><span class="eyebrow" style="color:#d8eada">Untuk keluarga baru</span><h3>Belum tahu harus mulai dari mana?</h3><p>Ceritakan usia anak dan kebutuhan belajar Anda. Kami bantu memetakan pintu masuk yang paling tepat.</p></div><button class="btn btn-light" type="button" data-open="admission">Minta dihubungi <span class="arrow">&#8594;</span></button></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div><div class="footer-brand">Darussolah Wal Jinan</div><p class="footer-intro">Satu rumah untuk ilmu, adab, dan amal. Menghubungkan pendidikan Al-Quran, diniyah, dan anak usia dini dengan keluarga.</p></div>
+        <div class="footer-col"><strong>Jelajahi</strong><a href="#tentang">Tentang kami</a><a href="#lembaga">Lembaga</a><a href="#kegiatan">Kegiatan</a><a href="#transparansi">Transparansi</a></div>
+        <div class="footer-col"><strong>Untuk keluarga</strong><a href="#pendaftaran">Pendaftaran</a><button class="text-link" type="button" data-open="portal" style="padding:0;border:0;background:transparent">Portal keluarga <span class="arrow">&#8594;</span></button><a href="#faq">Pertanyaan umum</a></div>
+        <div class="footer-col"><strong>Unit pendidikan</strong><a href="#lembaga">TPQ Darul Jinan</a><a href="#lembaga">MDT Darussolah</a><a href="#lembaga">RA Darussolah</a><a href="#lembaga">RTQ Darussolah</a></div>
+      </div>
+      <div class="footer-bottom"><span>&copy; 2026 Yayasan Darussolah Wal Jinan</span><span>Ilmu &middot; Adab &middot; Amal &nbsp;&nbsp;|&nbsp;&nbsp; Pratinjau website publik</span></div>
+    </div>
+  </footer>
+
+  <div class="modal" id="admission-modal" role="dialog" aria-modal="true" aria-labelledby="admission-title" hidden>
+    <div class="modal-card"><button class="modal-close" type="button" data-close aria-label="Tutup">&times;</button><span class="eyebrow">Pendaftaran santri</span><h2 id="admission-title">Mari mulai percakapan.</h2><p>Isi data singkat. Formulir ini membantu operator mengarahkan Anda ke lembaga dan tahapan yang tepat.</p>
+      <form class="form" id="admission-form">
+        <div class="field"><label for="unit">Lembaga yang diminati</label><select id="unit" name="unit" required><option value="">Pilih lembaga</option><option value="tpq">TPQ Darul Jinan</option><option value="mdt">MDT Darussolah</option><option value="ra">RA Darussolah</option><option value="rtq">RTQ Darussolah</option></select></div>
+        <div class="field"><label for="parent-name">Nama wali</label><input id="parent-name" name="parentName" required placeholder="Nama lengkap"></div>
+        <div class="field"><label for="student-name">Nama calon santri</label><input id="student-name" name="studentName" required placeholder="Nama anak"></div>
+        <div class="field"><label for="phone">Nomor WhatsApp</label><input id="phone" name="phone" required inputmode="tel" placeholder="08xxxxxxxxxx"></div>
+        <div class="field"><label for="message">Catatan singkat <span class="muted">(opsional)</span></label><textarea id="message" name="message" placeholder="Usia anak atau pertanyaan Anda"></textarea></div>
+        <label class="check-field"><input type="checkbox" required> <span>Saya bersedia dihubungi untuk keperluan informasi pendaftaran. Data tidak dipublikasikan.</span></label>
+        <button class="btn btn-primary" type="submit">Kirim minat pendaftaran <span class="arrow">&#8594;</span></button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="portal-modal" role="dialog" aria-modal="true" aria-labelledby="portal-title" hidden>
+    <div class="modal-card"><button class="modal-close" type="button" data-close aria-label="Tutup">&times;</button><span class="eyebrow">Portal keluarga</span><h2 id="portal-title">Ruang yang aman untuk terhubung.</h2><p>Masuk untuk melihat pengumuman, kehadiran, materi, dan agenda anak. Akses portal akan aktif setelah akun Anda diverifikasi oleh operator.</p><div class="portal-switch" role="tablist" aria-label="Jenis akun"><button class="active" type="button" data-role="Wali" role="tab">Wali</button><button type="button" data-role="Guru" role="tab">Guru</button><button type="button" data-role="Santri" role="tab">Santri</button></div>
+      <form class="form" id="portal-form"><div class="field"><label for="portal-id">Email atau nomor identitas</label><input id="portal-id" required placeholder="Masukkan email atau NIS"></div><div class="field"><label for="portal-password">Kata sandi</label><input id="portal-password" type="password" required placeholder="Masukkan kata sandi"></div><button class="btn btn-primary" type="submit">Lanjutkan <span class="arrow">&#8594;</span></button></form><div class="portal-message">Portal masih dalam tahap persiapan bersama perwakilan setiap lembaga. Untuk akses awal, silakan hubungi operator.</div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+    const body = document.body;
+    const menuButton = document.querySelector('.menu-toggle');
+    const mobilePanel = document.querySelector('#mobile-panel');
+    const toast = document.querySelector('#toast');
+    let toastTimer;
+    let activeModal = null;
+    let lastFocused = null;
+    const query = new URLSearchParams(window.location.search);
+    const apiBase = (query.get('api') || window.DARUSSOLAH_API_BASE || document.querySelector('meta[name="darussolah-api-base"]')?.content || '').replace(/\/+$/, '');
+    const tenantSlug = 'yayasan-darussolah-wal-jinan';
+    const unitSelect = document.querySelector('#unit');
+    let apiReady = false;
+
+    const showToast = message => {
+      toast.textContent = message;
+      toast.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.hidden = true; }, 4200);
+    };
+
+    const closeMenu = () => {
+      menuButton.setAttribute('aria-expanded', 'false');
+      mobilePanel.classList.remove('open');
+    };
+
+    menuButton.addEventListener('click', () => {
+      const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
+      menuButton.setAttribute('aria-expanded', String(!isOpen));
+      menuButton.setAttribute('aria-label', isOpen ? 'Buka menu' : 'Tutup menu');
+      mobilePanel.classList.toggle('open', !isOpen);
+    });
+
+    document.querySelectorAll('.mobile-panel a').forEach(link => link.addEventListener('click', closeMenu));
+
+    const openModal = (name, unit) => {
+      const modal = document.querySelector(`#${name}-modal`);
+      if (!modal) return;
+      lastFocused = document.activeElement;
+      modal.hidden = false;
+      activeModal = modal;
+      body.classList.add('modal-open');
+       if (name === 'admission' && unit) {
+         const option = [...unitSelect.options].find(item => item.textContent.trim() === unit || item.value === unit);
+         if (option) unitSelect.value = option.value;
+       }
+      const focusTarget = modal.querySelector('input, select, button');
+      if (focusTarget) setTimeout(() => focusTarget.focus(), 20);
+    };
+
+    const closeModal = modal => {
+      if (!modal) return;
+      modal.hidden = true;
+      activeModal = null;
+      body.classList.remove('modal-open');
+      if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+    };
+
+    document.querySelectorAll('[data-open]').forEach(trigger => trigger.addEventListener('click', () => {
+      closeMenu();
+      openModal(trigger.dataset.open, trigger.dataset.unit);
+    }));
+
+    document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => closeModal(button.closest('.modal'))));
+    document.querySelectorAll('.modal').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal) closeModal(modal); }));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && activeModal) closeModal(activeModal); });
+
+    const publicUrl = path => `${apiBase}/v1/public/${tenantSlug}/${path}`;
+    const loadPublicData = async () => {
+      if (!apiBase) return;
+      try {
+        const [foundationResponse, institutionsResponse] = await Promise.all([
+          fetch(publicUrl('foundation')),
+          fetch(publicUrl('institutions'))
+        ]);
+        if (!foundationResponse.ok || !institutionsResponse.ok) throw new Error('API tidak tersedia');
+        const foundation = await foundationResponse.json();
+        const institutions = (await institutionsResponse.json()).items || [];
+        if (!institutions.length) throw new Error('Belum ada lembaga terbit');
+        unitSelect.replaceChildren(new Option('Pilih lembaga', ''), ...institutions.map(item => new Option(item.name, item.id)));
+        if (foundation.tagline) document.querySelector('.hero-lead').textContent = foundation.tagline;
+        if (foundation.description) document.querySelector('.about-copy > p').textContent = foundation.description;
+        apiReady = true;
+        document.documentElement.dataset.api = 'connected';
+      } catch (error) {
+        document.documentElement.dataset.api = 'offline';
+        console.warn('Darussolah API belum tersedia:', error.message);
+      }
+    };
+
+    document.querySelector('#admission-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const unit = form.querySelector('#unit').value;
+      const studentName = form.querySelector('#student-name').value.trim();
+      const parentName = form.querySelector('#parent-name').value.trim();
+      const phone = form.querySelector('#phone').value.trim();
+      const notes = form.querySelector('#message').value.trim();
+      if (apiReady) {
+        const payload = {
+          institution_id: unit,
+          registration_type: 'new',
+          academic_year: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
+          student_full_name: studentName,
+          father_name: parentName,
+          father_phone: phone,
+          notes,
+          idempotency_key: window.crypto?.randomUUID?.() || `web-${Date.now()}-${Math.random().toString(16).slice(2)}`
+        };
+        try {
+          const response = await fetch(publicUrl('registrations'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const result = await response.json();
+          closeModal(form.closest('.modal'));
+          form.reset();
+          showToast(`Pendaftaran terkirim. Nomor: ${result.application_no}`);
+          return;
+        } catch (error) {
+          showToast('Pendaftaran belum terkirim. Periksa koneksi API.');
+          console.warn('Registration API unavailable:', error.message);
+          return;
+        }
+      }
+      try { localStorage.setItem('dwj-interest', JSON.stringify({ unit, parentName, studentName, phone, notes, savedAt: new Date().toISOString() })); } catch (error) { /* storage may be unavailable in a preview tab */ }
+      closeModal(form.closest('.modal'));
+      form.reset();
+      showToast('Terima kasih. Minat Anda tersimpan di mode demo.');
+    });
+
+    document.querySelector('#portal-form').addEventListener('submit', event => {
+      event.preventDefault();
+      if (apiBase) {
+        window.location.href = 'login.html';
+        return;
+      }
+      closeModal(event.currentTarget.closest('.modal'));
+      event.currentTarget.reset();
+      showToast('Akses portal akan aktif setelah akun keluarga diverifikasi operator.');
+    });
+
+    document.querySelectorAll('.portal-switch button').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.portal-switch button').forEach(item => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
+      button.classList.add('active');
+      button.setAttribute('aria-selected', 'true');
+      document.querySelector('#portal-title').textContent = `Ruang aman untuk ${button.dataset.role.toLowerCase()}.`;
+    }));
+
+    const sectionLinks = [...document.querySelectorAll('.nav-links a')];
+    const observedSections = sectionLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+    const updateActiveNav = () => {
+      const marker = window.scrollY + 150;
+      let current;
+      observedSections.forEach(section => { if (section.offsetTop <= marker) current = section; });
+      sectionLinks.forEach(link => link.classList.toggle('active', Boolean(current) && link.getAttribute('href') === `#${current.id}`));
+    };
+    window.addEventListener('scroll', updateActiveNav, { passive: true });
+    updateActiveNav();
+
+    document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', event => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (!target) return;
+      event.preventDefault();
+      closeMenu();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', link.getAttribute('href'));
+    }));
+
+    document.querySelectorAll('img').forEach(image => image.addEventListener('error', () => {
+      image.style.display = 'none';
+      if (image.parentElement) image.parentElement.setAttribute('data-image-missing', 'true');
+    }));
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(error => console.warn('PWA belum aktif:', error.message));
+    loadPublicData();
+  </script>
+</body>
+</html>

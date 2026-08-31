@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="Modul progres tahfidz, tahsin, dan kenaikan jilid TPQ Darul Jinan." />
+  <title>Tahfidz & Tahsin | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pine: #0d4433;
+      --pine-deep: #082e25;
+      --pine-light: #155641;
+      --gold: #c99435;
+      --gold-light: #e8c879;
+      --cream: #f5f6f0;
+      --paper: #fffdf9;
+      --sand: #ecefe7;
+      --ink: #1e2c26;
+      --muted: #748079;
+      --line: #e0e4dc;
+      --green: #3f8b62;
+      --blue: #557e9e;
+      --clay: #ae5b47;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; color: var(--ink); background: var(--cream); font-family: "DM Sans", system-ui, sans-serif; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .serif { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .app-shell { display: grid; min-height: 100svh; grid-template-columns: 246px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; display: flex; min-height: 100svh; flex-direction: column; padding: 26px 17px 18px; color: rgba(255,255,255,.74); background: var(--pine-deep); }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 9px; }
+    .brand-logo { display: grid; width: 38px; height: 38px; place-items: center; color: var(--pine); border-radius: 50%; background: #fff; }
+    .brand-symbol { width: 100%; height: 100%; padding: 5px; }
+    .brand-name { display: block; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.1; }
+    .brand-caption { display: block; margin-top: 4px; color: rgba(255,255,255,.43); font-size: 8px; letter-spacing: .12em; text-transform: uppercase; }
+    .sidebar-context { margin: 35px 9px 25px; padding: 13px 12px; border: 1px solid rgba(255,255,255,.11); border-radius: 10px; background: rgba(255,255,255,.045); }
+    .context-label { display: block; margin-bottom: 5px; color: var(--gold-light); font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .context-name { display: block; color: #fff; font-size: 11px; font-weight: 600; }
+    .context-meta { display: block; margin-top: 3px; color: rgba(255,255,255,.48); font-size: 10px; }
+    .nav-label { display: block; margin: 0 11px 9px; color: rgba(255,255,255,.34); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    .side-nav { display: grid; gap: 3px; }
+    .side-link { display: flex; align-items: center; gap: 11px; min-height: 41px; padding: 0 11px; color: rgba(255,255,255,.59); border-radius: 9px; font-size: 11px; font-weight: 600; transition: color .2s ease, background .2s ease; }
+    .side-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+    .side-link.active { color: #fff; background: var(--pine-light); box-shadow: inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display: grid; width: 21px; height: 21px; place-items: center; color: var(--gold-light); border: 1px solid rgba(232,200,121,.24); border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .side-link:not(.active) .nav-icon { color: rgba(255,255,255,.55); border-color: rgba(255,255,255,.12); }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-footer { padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.1); }
+    .user-card { display: flex; align-items: center; gap: 9px; }
+    .user-avatar { display: grid; width: 29px; height: 29px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 10px; font-weight: 700; }
+    .user-card strong { display: block; color: #fff; font-size: 10px; font-weight: 600; }
+    .user-card span { display: block; margin-top: 2px; color: rgba(255,255,255,.43); font-size: 9px; }
+    .main-content { min-width: 0; background: var(--cream); }
+    .topbar { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 42px; border-bottom: 1px solid var(--line); background: rgba(255,253,249,.72); }
+    .breadcrumbs { color: var(--muted); font-size: 10px; }
+    .breadcrumbs strong { color: var(--pine); font-weight: 700; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .connection { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 10px; font-weight: 600; }
+    .connection::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; box-shadow: 0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color: var(--muted); font-size: 10px; }
+    .top-avatar { display: grid; width: 32px; height: 32px; place-items: center; color: var(--pine); border: 1px solid rgba(13,68,51,.15); border-radius: 50%; background: #e4eee8; font-size: 10px; font-weight: 700; }
+    .content { width: min(1180px, calc(100% - 84px)); margin: 0 auto; padding: 42px 0 55px; }
+    .content-header { display: flex; align-items: end; justify-content: space-between; gap: 25px; margin-bottom: 29px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { width: 23px; height: 1px; background: currentColor; content: ""; }
+    .content-header h1 { margin: 12px 0 7px; color: var(--pine-deep); font-size: clamp(36px, 4vw, 51px); letter-spacing: -.035em; line-height: 1; }
+    .content-header p { margin: 0; color: var(--muted); font-size: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 9px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 15px; border: 1px solid transparent; border-radius: 9px; font-size: 11px; font-weight: 700; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #fff; background: var(--pine); box-shadow: 0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background: var(--pine-deep); box-shadow: 0 10px 20px rgba(13,68,51,.18); }
+    .btn-ghost { color: var(--pine); border-color: var(--line); background: var(--paper); }
+    .btn-ghost:hover { border-color: rgba(13,68,51,.28); background: #fff; }
+    .arrow { font-size: 15px; line-height: 0; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric-card { position: relative; min-height: 119px; padding: 19px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .metric-card::after { position: absolute; right: -28px; bottom: -47px; width: 115px; height: 115px; border: 1px solid rgba(13,68,51,.1); border-radius: 50%; content: ""; }
+    .metric-card.highlight { color: #fff; border-color: var(--pine); background: var(--pine); }
+    .metric-card.highlight::after { border-color: rgba(232,200,121,.26); }
+    .metric-label { display: block; color: var(--muted); font-size: 10px; }
+    .highlight .metric-label { color: rgba(255,255,255,.65); }
+    .metric-value { display: block; margin-top: 11px; color: var(--pine-deep); font-family: "DM Serif Display", Georgia, serif; font-size: 32px; line-height: 1; }
+    .highlight .metric-value { color: var(--gold-light); }
+    .metric-foot { display: block; margin-top: 8px; color: var(--green); font-size: 9px; font-weight: 700; }
+    .highlight .metric-foot { color: rgba(255,255,255,.58); }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(310px, .82fr); gap: 17px; align-items: start; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .panel-header { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 21px 22px 17px; border-bottom: 1px solid var(--line); }
+    .panel-heading h2 { margin: 0; color: var(--pine-deep); font-size: 15px; font-weight: 700; }
+    .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .data-chip { padding: 6px 8px; color: var(--pine); border-radius: 7px; background: #e4eee8; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .progress-tools { display: flex; align-items: center; justify-content: space-between; gap: 13px; padding: 14px 22px; }
+    .filter-tabs { display: flex; align-items: center; gap: 5px; }
+    .filter-tab { padding: 7px 9px; color: var(--muted); border: 0; border-radius: 6px; background: transparent; font-size: 10px; font-weight: 600; }
+    .filter-tab:hover { color: var(--pine); background: var(--sand); }
+    .filter-tab.active { color: var(--pine); background: #e4eee8; }
+    .search-wrap { position: relative; }
+    .search-wrap::before { position: absolute; top: 50%; left: 10px; color: var(--muted); content: "⌕"; font-size: 15px; transform: translateY(-54%); }
+    .search-input { width: 155px; height: 31px; padding: 0 9px 0 27px; color: var(--ink); outline: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--cream); font-size: 10px; }
+    .search-input:focus { border-color: var(--pine); }
+    .student-list { display: grid; gap: 9px; padding: 0 22px 22px; }
+    .student-card { display: grid; grid-template-columns: 35px minmax(0, 1fr) 140px auto; gap: 12px; align-items: center; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; transition: border .2s ease, transform .2s ease; }
+    .student-card:hover { border-color: rgba(13,68,51,.28); transform: translateY(-1px); }
+    .student-card[hidden] { display: none; }
+    .student-avatar { display: grid; width: 34px; height: 34px; place-items: center; color: var(--pine); border-radius: 50%; background: #dce9df; font-size: 9px; font-weight: 700; }
+    .student-card:nth-child(2n) .student-avatar { background: #f1dfb3; }
+    .student-card:nth-child(3n) .student-avatar { background: #ecd0c3; }
+    .student-name { display: block; color: var(--pine-deep); font-size: 11px; font-weight: 700; }
+    .student-sub { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .progress-copy { min-width: 0; }
+    .progress-line { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 9px; }
+    .progress-line strong { color: var(--pine); font-size: 10px; }
+    .track { height: 6px; margin-top: 7px; overflow: hidden; border-radius: 8px; background: var(--sand); }
+    .fill { height: 100%; border-radius: inherit; background: var(--gold); }
+    .fill.green { background: var(--green); }
+    .fill.blue { background: var(--blue); }
+    .stage-chip { display: inline-block; margin-top: 7px; padding: 4px 6px; color: var(--pine); border-radius: 5px; background: #e4eee8; font-size: 8px; font-weight: 700; }
+    .stage-chip.warn { color: #876226; background: #f8edcf; }
+    .stage-chip.blue { color: #536d8d; background: #e3edf4; }
+    .student-action { padding: 7px 8px; color: var(--pine); border: 0; border-radius: 6px; background: var(--sand); font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .student-action:hover { color: #fff; background: var(--pine); }
+    .empty-progress { grid-column: 1 / -1; padding: 30px 15px; color: var(--muted); font-size: 11px; text-align: center; }
+    .right-stack { display: grid; gap: 15px; }
+    .record-panel { padding-bottom: 21px; }
+    .record-panel .panel-header { padding-bottom: 18px; }
+    .record-form { display: grid; gap: 14px; padding: 20px 22px 0; }
+    .form-field { display: grid; gap: 7px; }
+    .form-field label { color: #53615a; font-size: 10px; font-weight: 700; }
+    .form-field select, .form-field input, .form-field textarea { width: 100%; min-height: 39px; padding: 0 11px; color: var(--ink); outline: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 11px; }
+    .form-field textarea { min-height: 58px; padding-top: 10px; resize: vertical; }
+    .form-field select:focus, .form-field input:focus, .form-field textarea:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgba(13,68,51,.07); }
+    .kind-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .kind-button { min-height: 34px; color: var(--muted); border: 1px solid var(--line); border-radius: 7px; background: #fff; font-size: 10px; font-weight: 700; }
+    .kind-button.active { color: var(--pine); border-color: rgba(13,68,51,.35); background: #e4eee8; }
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .score-button { min-height: 34px; color: var(--muted); border: 1px solid var(--line); border-radius: 7px; background: #fff; font-size: 10px; font-weight: 700; }
+    .score-button.active { color: #75541b; border-color: #ddbd68; background: #fbf1d9; }
+    .save-record { width: 100%; margin-top: 2px; }
+    .target-panel { padding: 19px; }
+    .mini-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--pine-deep); font-size: 12px; font-weight: 700; }
+    .mini-heading a { color: var(--gold); font-size: 10px; }
+    .target-summary { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-top: 22px; }
+    .target-summary strong { display: block; color: var(--pine-deep); font-family: "DM Serif Display", Georgia, serif; font-size: 33px; line-height: .9; }
+    .target-summary span { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .target-percent { color: var(--gold); font-size: 11px; font-weight: 700; }
+    .target-track { height: 7px; margin-top: 12px; overflow: hidden; border-radius: 8px; background: var(--sand); }
+    .target-fill { width: 68%; height: 100%; border-radius: inherit; background: var(--gold); }
+    .target-list { display: grid; gap: 11px; margin-top: 20px; }
+    .target-row { display: grid; grid-template-columns: 20px 1fr auto; gap: 8px; align-items: center; color: var(--muted); font-size: 10px; }
+    .target-row > span:first-child { display: grid; width: 20px; height: 20px; place-items: center; color: var(--pine); border-radius: 50%; background: #e4eee8; font-size: 9px; font-weight: 700; }
+    .target-row strong { color: var(--pine); font-size: 10px; }
+    .target-row em { color: var(--green); font-style: normal; font-size: 9px; font-weight: 700; }
+    .timeline-panel { padding: 19px; }
+    .timeline { display: grid; gap: 15px; margin-top: 19px; }
+    .timeline-item { position: relative; display: grid; grid-template-columns: 20px 1fr; gap: 10px; }
+    .timeline-item:not(:last-child)::after { position: absolute; top: 19px; bottom: -15px; left: 9px; width: 1px; background: var(--line); content: ""; }
+    .timeline-dot { position: relative; z-index: 1; display: grid; width: 19px; height: 19px; place-items: center; color: var(--pine); border-radius: 50%; background: var(--gold-light); font-size: 9px; }
+    .timeline-copy strong { display: block; color: var(--pine-deep); font-size: 10px; }
+    .timeline-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 30; display: flex; align-items: center; gap: 10px; width: min(350px, calc(100% - 44px)); padding: 13px 15px; color: #fff; border-radius: 11px; background: var(--pine-deep); box-shadow: 0 18px 40px rgba(8,46,37,.23); opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .25s ease, transform .25s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast > span { display: grid; width: 23px; height: 23px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 11px; }
+    .toast strong { display: block; font-size: 11px; }
+    .toast small { display: block; margin-top: 2px; color: rgba(255,255,255,.6); font-size: 9px; }
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 214px minmax(0, 1fr); }
+      .topbar { padding: 0 28px; }
+      .content { width: min(100% - 56px, 1180px); }
+      .workspace-grid { grid-template-columns: minmax(0, 1fr) 290px; }
+    }
+    @media (max-width: 820px) {
+      .app-shell { display: block; }
+      .sidebar { position: relative; display: grid; min-height: auto; grid-template-columns: 1fr auto; gap: 14px; padding: 17px 18px 12px; }
+      .sidebar-brand { padding: 0; }
+      .sidebar-context { display: none; }
+      .sidebar-spacer, .sidebar-footer { display: none; }
+      .nav-label { display: none; }
+      .side-nav { grid-column: 1 / -1; display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .side-nav::-webkit-scrollbar { display: none; }
+      .side-link { min-width: fit-content; min-height: 36px; padding: 0 10px; font-size: 10px; white-space: nowrap; }
+      .side-link.active { box-shadow: inset 0 -3px 0 var(--gold-light); }
+      .nav-icon { width: 19px; height: 19px; }
+      .topbar { min-height: 65px; padding: 0 18px; }
+      .help-link { display: none; }
+      .content { width: calc(100% - 36px); padding-top: 30px; }
+      .content-header { align-items: start; flex-direction: column; gap: 17px; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .workspace-grid { grid-template-columns: 1fr; }
+      .right-stack { grid-template-columns: 1fr 1fr; }
+      .record-panel, .target-panel, .timeline-panel { min-height: 200px; }
+    }
+    @media (max-width: 620px) {
+      .topbar { align-items: center; }
+      .breadcrumbs { font-size: 9px; }
+      .connection { font-size: 0; }
+      .connection::before { margin-right: 2px; }
+      .content-header h1 { font-size: 39px; }
+      .header-actions { gap: 7px; }
+      .header-actions .btn { padding: 0 9px; font-size: 10px; }
+      .progress-tools { align-items: start; flex-direction: column-reverse; padding: 13px 14px; }
+      .filter-tabs { width: 100%; overflow-x: auto; }
+      .filter-tab { white-space: nowrap; }
+      .search-wrap, .search-input { width: 100%; }
+      .search-wrap { width: 100%; }
+      .student-list { padding: 0 14px 14px; }
+      .student-card { grid-template-columns: 35px minmax(0, 1fr) auto; }
+      .student-card .progress-copy { grid-column: 2 / -1; }
+      .student-action { grid-column: 2 / -1; width: fit-content; }
+      .right-stack { grid-template-columns: 1fr; }
+      .record-panel, .target-panel, .timeline-panel { min-height: auto; }
+    }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="guru">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="index.html" aria-label="Kembali ke situs TPQ Darul Jinan">
+        <span class="brand-logo"><svg class="brand-symbol" viewBox="0 0 48 48" role="img" aria-label="Emblem TPQ Darul Jinan"><path d="M9 28.5V22C9 13.2 15.8 6 24 6s15 7.2 15 16v6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M7 28.5h34l-1.5 13H8.5l-1.5-13Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 29.5 24 34l14-4.5-14 8-14-8Z" fill="none" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 34v4" stroke="currentColor" stroke-width="1.5"/><path d="M22 11.5a4.6 4.6 0 1 0 5.7 5.7A5.1 5.1 0 0 1 22 11.5Z" fill="currentColor"/></svg></span>
+        <span><span class="brand-name">TPQ Darul Jinan</span><span class="brand-caption">Ruang kerja guru</span></span>
+      </a>
+      <div class="sidebar-context"><span class="context-label">Lembaga aktif</span><span class="context-name">TPQ Darul Jinan</span><span class="context-meta">Tahun ajaran 2026 / 2027</span></div>
+      <nav class="side-nav" aria-label="Menu dashboard">
+        <span class="nav-label">Workspace</span>
+        <a class="side-link" href="absensi.html"><span class="nav-icon">01</span>Absensi</a>
+        <a class="side-link" href="materi.html"><span class="nav-icon">02</span>Materi &amp; tugas</a>
+        <a class="side-link active" href="tahfidz.html"><span class="nav-icon">03</span>Tahfidz</a>
+        <a class="side-link" href="nilai.html"><span class="nav-icon">04</span>Nilai &amp; rapor</a>
+          <a class="side-link" href="absensi.html#santri"><span class="nav-icon">05</span>Data santri</a>
+          <a class="side-link" href="pengaturan.html"><span class="nav-icon">06</span>Pengaturan</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NS</span><span><strong>Ustadzah Nisa</strong><span>Guru TPQ &bull; Sore</span></span></div></div>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><a href="index.html">TPQ Darul Jinan</a><span> / </span><strong>Tahfidz &amp; tahsin</strong></div><div class="topbar-actions"><span class="connection">Offline-first aktif</span><a class="help-link" href="index.html#faq">Butuh bantuan?</a><span class="top-avatar">NS</span></div></header>
+      <main class="content">
+        <div class="content-header"><div><span class="eyebrow">Perkembangan / Al-Qur'an</span><h1 class="serif">Tahfidz &amp; tahsin.</h1><p>Rawat hafalan, perbaiki bacaan, dan lihat langkah berikutnya setiap santri.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="progress-button">Bagikan progres</button><button class="btn btn-primary" type="button" id="record-top">Catat setoran <span class="arrow">&nearr;</span></button></div></div>
+        <section class="metrics-grid" aria-label="Ringkasan tahfidz"><article class="metric-card"><span class="metric-label">Santri aktif</span><span class="metric-value">24</span><span class="metric-foot">Di 3 kelompok belajar</span></article><article class="metric-card highlight"><span class="metric-label">Setoran pekan ini</span><span class="metric-value">38</span><span class="metric-foot">+12% dari pekan lalu</span></article><article class="metric-card"><span class="metric-label">Perlu murojaah</span><span class="metric-value" id="review-count">06</span><span class="metric-foot">Jadwalkan pengulangan</span></article><article class="metric-card"><span class="metric-label">Progres kelas</span><span class="metric-value">68%</span><span class="metric-foot">Target semester berjalan</span></article></section>
+        <div class="workspace-grid">
+          <section class="panel" aria-labelledby="progress-title"><div class="panel-header"><div class="panel-heading"><h2 id="progress-title">Kartu progres santri</h2><p>Ringkasan setoran dan tahsin yang terakhir dicatat.</p></div><span class="data-chip">DATA CONTOH</span></div><div class="progress-tools"><div class="filter-tabs" role="group" aria-label="Filter progres"><button class="filter-tab active" type="button" data-stage="all">Semua <span>(6)</span></button><button class="filter-tab" type="button" data-stage="murojaah">Perlu murojaah</button><button class="filter-tab" type="button" data-stage="naik-jilid">Naik jilid</button></div><div class="search-wrap"><input class="search-input" id="student-search" type="search" placeholder="Cari nama santri" /></div></div><div class="student-list" id="student-list">
+            <article class="student-card" data-name="aisyah zahra" data-stage="setoran" data-student="Aisyah Zahra"><span class="student-avatar">AZ</span><span><strong class="student-name">Aisyah Zahra</strong><span class="student-sub">Juz Amma &bull; Al-Fil ayat 1-5</span><span class="stage-chip">Setoran hari ini</span></span><span class="progress-copy"><span class="progress-line"><span>Progres Juz Amma</span><strong>68%</strong></span><span class="track"><span class="fill" style="width:68%"></span></span></span><button class="student-action" type="button" data-record-student="Aisyah Zahra">Catat <span>&rarr;</span></button></article>
+            <article class="student-card" data-name="naufal akbar" data-stage="murojaah" data-student="Naufal Akbar"><span class="student-avatar">NA</span><span><strong class="student-name">Naufal Akbar</strong><span class="student-sub">Juz Amma &bull; Al-Qari'ah ayat 1-5</span><span class="stage-chip warn">Perlu murojaah</span></span><span class="progress-copy"><span class="progress-line"><span>Progres Juz Amma</span><strong>54%</strong></span><span class="track"><span class="fill" style="width:54%"></span></span></span><button class="student-action" type="button" data-record-student="Naufal Akbar">Catat <span>&rarr;</span></button></article>
+            <article class="student-card" data-name="fathimah nabila" data-stage="naik-jilid" data-student="Fathimah Nabila"><span class="student-avatar">FN</span><span><strong class="student-name">Fathimah Nabila</strong><span class="student-sub">Iqra 3 &bull; Jilid 3</span><span class="stage-chip blue">Siap ujian jilid</span></span><span class="progress-copy"><span class="progress-line"><span>Penguasaan jilid</span><strong>82%</strong></span><span class="track"><span class="fill blue" style="width:82%"></span></span></span><button class="student-action" type="button" data-record-student="Fathimah Nabila">Catat <span>&rarr;</span></button></article>
+            <article class="student-card" data-name="rayyan hakim" data-stage="setoran" data-student="Rayyan Hakim"><span class="student-avatar">RH</span><span><strong class="student-name">Rayyan Hakim</strong><span class="student-sub">Iqra 2 &bull; Jilid 2</span><span class="stage-chip">Setoran hari ini</span></span><span class="progress-copy"><span class="progress-line"><span>Penguasaan jilid</span><strong>41%</strong></span><span class="track"><span class="fill green" style="width:41%"></span></span></span><button class="student-action" type="button" data-record-student="Rayyan Hakim">Catat <span>&rarr;</span></button></article>
+            <article class="student-card" data-name="salwa nurdini" data-stage="setoran" data-student="Salwa Nurdini"><span class="student-avatar">SN</span><span><strong class="student-name">Salwa Nurdini</strong><span class="student-sub">Juz Amma &bull; Al-Lahab ayat 1-5</span><span class="stage-chip">Stabil</span></span><span class="progress-copy"><span class="progress-line"><span>Progres Juz Amma</span><strong>76%</strong></span><span class="track"><span class="fill" style="width:76%"></span></span></span><button class="student-action" type="button" data-record-student="Salwa Nurdini">Catat <span>&rarr;</span></button></article>
+            <article class="student-card" data-name="maryam safira" data-stage="murojaah" data-student="Maryam Safira"><span class="student-avatar">MS</span><span><strong class="student-name">Maryam Safira</strong><span class="student-sub">Juz Amma &bull; Al-Kafirun ayat 1-6</span><span class="stage-chip warn">Perlu murojaah</span></span><span class="progress-copy"><span class="progress-line"><span>Progres Juz Amma</span><strong>63%</strong></span><span class="track"><span class="fill" style="width:63%"></span></span></span><button class="student-action" type="button" data-record-student="Maryam Safira">Catat <span>&rarr;</span></button></article>
+            <div class="empty-progress" id="empty-progress" hidden>Tidak ada santri yang sesuai dengan filter.</div>
+          </div></section>
+          <aside class="right-stack"><section class="panel record-panel" id="record-panel"><div class="panel-header"><div class="panel-heading"><h2>Catat capaian</h2><p>Setoran hari ini tersimpan ke kartu progres.</p></div><span class="data-chip">FORM</span></div><form class="record-form" id="record-form"><div class="form-field"><label for="record-student">Nama santri</label><select id="record-student"><option>Aisyah Zahra</option><option>Naufal Akbar</option><option>Fathimah Nabila</option><option>Rayyan Hakim</option><option>Salwa Nurdini</option><option>Maryam Safira</option></select></div><div class="form-field"><label>Jenis pencatatan</label><div class="kind-toggle"><button class="kind-button active" type="button" data-kind="tahfidz">Tahfidz</button><button class="kind-button" type="button" data-kind="tahsin">Tahsin / jilid</button></div></div><div class="form-field"><label for="record-target" id="target-label">Surat / ayat yang disetor</label><input id="record-target" type="text" value="Al-Fil, ayat 1-5" /></div><div class="form-field"><label>Hasil setoran</label><div class="score-grid"><button class="score-button active" type="button" data-score="lancar">Lancar</button><button class="score-button" type="button" data-score="cukup">Cukup</button><button class="score-button" type="button" data-score="bimbingan">Perlu bimbingan</button><button class="score-button" type="button" data-score="ulang">Ulangi besok</button></div></div><div class="form-field"><label for="record-note">Catatan koreksi <span>(opsional)</span></label><textarea id="record-note" placeholder="Contoh: Perhatikan panjang mad pada ayat 3."></textarea></div><button class="btn btn-primary save-record" type="submit">Simpan capaian <span class="arrow">&nearr;</span></button></form></section><section class="panel target-panel"><div class="mini-heading"><span>Target murojaah pekan ini</span><a href="#target">Lihat target &rarr;</a></div><div class="target-summary"><div><strong><span id="target-done">17</span> / 25</strong><span>santri menyelesaikan target</span></div><span class="target-percent">68%</span></div><div class="target-track"><div class="target-fill" id="target-fill"></div></div><div class="target-list"><div class="target-row"><span>01</span><span><strong>Al-Fil &amp; Quraisy</strong></span><em>Selesai</em></div><div class="target-row"><span>02</span><span><strong>Al-Ma'un &amp; Al-Kautsar</strong></span><em>Berjalan</em></div><div class="target-row"><span>03</span><span><strong>Al-Kafirun &amp; An-Nasr</strong></span><em>Besok</em></div></div></section><section class="panel timeline-panel"><div class="mini-heading"><span>Pencapaian terbaru</span><a href="#riwayat">Riwayat &rarr;</a></div><div class="timeline"><div class="timeline-item"><span class="timeline-dot">&#10003;</span><span class="timeline-copy"><strong>Fathimah siap ujian jilid</strong><span>Jilid 3 &bull; dicatat hari ini</span></span></div><div class="timeline-item"><span class="timeline-dot">&#10022;</span><span class="timeline-copy"><strong>Aisyah menambah 5 ayat</strong><span>Surat Al-Fil &bull; kemarin</span></span></div><div class="timeline-item"><span class="timeline-dot">&#10003;</span><span class="timeline-copy"><strong>Target murojaah kelas tercapai</strong><span>17 dari 25 santri &bull; pekan ini</span></span></div></div></section></aside>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span>&#10003;</span><div><strong id="toast-title">Capaian tersimpan.</strong><small id="toast-detail">Kartu progres sudah diperbarui.</small></div></div>
+  <script>
+    (() => {
+      const cards = [...document.querySelectorAll('.student-card')];
+       const search = document.querySelector('#student-search');
+       search.setAttribute('aria-label', 'Cari nama santri');
+      const empty = document.querySelector('#empty-progress');
+      const studentSelect = document.querySelector('#record-student');
+       const recordForm = document.querySelector('#record-form');
+       const toast = document.querySelector('#toast');
+       document.querySelector('.target-panel')?.setAttribute('id', 'target');
+       document.querySelector('.timeline-panel')?.setAttribute('id', 'riwayat');
+       let activeStage = 'all';
+      let toastTimer;
+
+      const showToast = (title, detail) => {
+        document.querySelector('#toast-title').textContent = title;
+        document.querySelector('#toast-detail').textContent = detail;
+        toast.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3600);
+      };
+      const renderCards = () => {
+        const query = search.value.trim().toLowerCase();
+        let shown = 0;
+        cards.forEach((card) => {
+          const matchesStage = activeStage === 'all' || card.dataset.stage === activeStage;
+          const matchesSearch = !query || card.dataset.name.includes(query);
+          card.hidden = !(matchesStage && matchesSearch);
+          if (!card.hidden) shown += 1;
+        });
+        empty.hidden = shown > 0;
+      };
+      const scrollToRecord = (student) => {
+        studentSelect.value = student;
+        document.querySelector('#record-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
+      cards.forEach((card) => card.querySelector('[data-record-student]').addEventListener('click', () => scrollToRecord(card.dataset.student)));
+       const stageFilters = document.querySelectorAll('.filter-tab[data-stage]');
+       stageFilters.forEach((button) => {
+         button.addEventListener('click', () => {
+           activeStage = button.dataset.stage;
+           stageFilters.forEach((item) => item.classList.toggle('active', item === button));
+           renderCards();
+         });
+       });
+      search.addEventListener('input', renderCards);
+
+      document.querySelectorAll('[data-kind]').forEach((button) => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-kind]').forEach((item) => item.classList.toggle('active', item === button));
+        const isTahsin = button.dataset.kind === 'tahsin';
+        document.querySelector('#target-label').textContent = isTahsin ? 'Jilid / halaman yang dilatih' : 'Surat / ayat yang disetor';
+        document.querySelector('#record-target').value = isTahsin ? 'Jilid 3, halaman 12' : 'Al-Fil, ayat 1-5';
+      }));
+      document.querySelectorAll('[data-score]').forEach((button) => button.addEventListener('click', () => document.querySelectorAll('[data-score]').forEach((item) => item.classList.toggle('active', item === button))));
+
+       recordForm.addEventListener('submit', (event) => {
+         event.preventDefault();
+         const student = studentSelect.value;
+         const kind = document.querySelector('.kind-button.active')?.dataset.kind || 'tahfidz';
+         const score = document.querySelector('.score-button.active')?.dataset.score || 'lancar';
+         const target = document.querySelector('#record-target').value.trim() || 'Target belum diisi';
+         const note = document.querySelector('#record-note').value.trim();
+         const card = cards.find((item) => item.dataset.student === student);
+         const previousStage = card?.dataset.stage;
+         if (card) {
+           const percentage = card.querySelector('.progress-line strong');
+           const current = Number.parseInt(percentage.textContent, 10) || 0;
+           const increment = { lancar: 4, cukup: 2, bimbingan: 1, ulang: 0 }[score] ?? 0;
+           const next = Math.min(100, current + increment);
+           percentage.textContent = `${next}%`;
+           card.querySelector('.fill').style.width = `${next}%`;
+           card.querySelector('.student-sub').textContent = target;
+           card.querySelector('.stage-chip').textContent = score === 'ulang' ? 'Perlu murojaah' : kind === 'tahsin' ? 'Tahsin baru' : 'Baru disetor';
+           if (kind === 'tahfidz') card.dataset.stage = score === 'ulang' ? 'murojaah' : 'setoran';
+           if (kind === 'tahfidz' && previousStage !== card.dataset.stage) {
+             const reviewCount = document.querySelector('#review-count');
+             const delta = card.dataset.stage === 'murojaah' ? 1 : -1;
+             reviewCount.textContent = String(Math.max(0, Number(reviewCount.textContent) + delta)).padStart(2, '0');
+           }
+         }
+         if (kind === 'tahfidz' && score !== 'ulang') {
+           const targetDone = document.querySelector('#target-done');
+           const nextDone = Math.min(25, Number(targetDone.textContent) + 1);
+           targetDone.textContent = nextDone;
+           document.querySelector('.target-percent').textContent = `${Math.round((nextDone / 25) * 100)}%`;
+           document.querySelector('#target-fill').style.width = `${(nextDone / 25) * 100}%`;
+         }
+         const kindLabel = kind === 'tahsin' ? 'Tahsin' : 'Tahfidz';
+         const scoreLabel = document.querySelector('.score-button.active')?.textContent.trim() || 'Lancar';
+         renderCards();
+         showToast(`${kindLabel} ${student} tersimpan.`, `${target}${note ? ' · Catatan disimpan' : ''} · ${scoreLabel}.`);
+       });
+      document.querySelector('#record-top').addEventListener('click', () => document.querySelector('#record-panel').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      document.querySelector('#progress-button').addEventListener('click', () => showToast('Kartu progres siap dibagikan.', 'Tautan ringkasan akan tersedia setelah portal wali aktif.'));
+      renderCards();
+    })();
+  </script>
+</body>
+</html>

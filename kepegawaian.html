@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="Modul kepegawaian guru dan beban kerja JTM TPQ Darul Jinan." />
+  <title>Kepegawaian &amp; JTM | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pine:#0d4433; --pine-deep:#082e25; --pine-light:#155641; --gold:#c99435; --gold-light:#e8c879; --cream:#f5f6f0; --paper:#fffdf9; --sand:#ecefe7; --ink:#1e2c26; --muted:#748079; --line:#e0e4dc; --green:#3f8b62; --red:#ae5b47; --blue:#557e9e; }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; }
+    body { margin:0; color:var(--ink); background:var(--cream); font-family:"DM Sans",system-ui,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased; }
+    button, input, select, textarea { font:inherit; }
+    button { cursor:pointer; }
+    a { color:inherit; text-decoration:none; }
+    .serif { font-family:"DM Serif Display",Georgia,serif; font-weight:400; }
+    .app-shell { display:grid; min-height:100svh; grid-template-columns:246px minmax(0,1fr); }
+    .sidebar { position:sticky; top:0; display:flex; min-height:100svh; flex-direction:column; padding:26px 17px 18px; color:rgba(255,255,255,.74); background:var(--pine-deep); }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 9px; }
+    .brand-logo { display:grid; width:38px; height:38px; place-items:center; color:var(--pine); border-radius:50%; background:#fff; }
+    .brand-symbol { width:100%; height:100%; padding:5px; }
+    .brand-name { display:block; color:#fff; font-size:12px; font-weight:700; line-height:1.1; }
+    .brand-caption { display:block; margin-top:4px; color:rgba(255,255,255,.43); font-size:8px; letter-spacing:.12em; text-transform:uppercase; }
+    .sidebar-context { margin:35px 9px 25px; padding:13px 12px; border:1px solid rgba(255,255,255,.11); border-radius:10px; background:rgba(255,255,255,.045); }
+    .context-label { display:block; margin-bottom:5px; color:var(--gold-light); font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+    .context-name { display:block; color:#fff; font-size:11px; font-weight:600; }
+    .context-meta { display:block; margin-top:3px; color:rgba(255,255,255,.48); font-size:10px; }
+    .nav-label { display:block; margin:0 11px 9px; color:rgba(255,255,255,.34); font-size:9px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; }
+    .side-nav { display:grid; gap:3px; }
+    .side-link { display:flex; align-items:center; gap:11px; min-height:41px; padding:0 11px; color:rgba(255,255,255,.59); border-radius:9px; font-size:11px; font-weight:600; transition:color .2s ease,background .2s ease; }
+    .side-link:hover { color:#fff; background:rgba(255,255,255,.07); }
+    .side-link.active { color:#fff; background:var(--pine-light); box-shadow:inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display:grid; width:21px; height:21px; place-items:center; color:var(--gold-light); border:1px solid rgba(232,200,121,.24); border-radius:6px; font-size:10px; font-weight:700; }
+    .side-link:not(.active) .nav-icon { color:rgba(255,255,255,.55); border-color:rgba(255,255,255,.12); }
+    .sidebar-spacer { flex:1; }
+    .sidebar-footer { padding:14px 10px 0; border-top:1px solid rgba(255,255,255,.1); }
+    .user-card { display:flex; align-items:center; gap:9px; }
+    .user-avatar { display:grid; width:29px; height:29px; place-items:center; color:var(--pine-deep); border-radius:50%; background:var(--gold-light); font-size:10px; font-weight:700; }
+    .user-card strong { display:block; color:#fff; font-size:10px; font-weight:600; }
+    .user-card span { display:block; margin-top:2px; color:rgba(255,255,255,.43); font-size:9px; }
+    .main-content { min-width:0; background:var(--cream); }
+    .topbar { display:flex; min-height:76px; align-items:center; justify-content:space-between; gap:20px; padding:0 42px; border-bottom:1px solid var(--line); background:rgba(255,253,249,.72); }
+    .breadcrumbs { color:var(--muted); font-size:10px; }
+    .breadcrumbs strong { color:var(--pine); font-weight:700; }
+    .topbar-actions { display:flex; align-items:center; gap:12px; }
+    .status-online { display:inline-flex; align-items:center; gap:7px; color:var(--green); font-size:10px; font-weight:600; }
+    .status-online::before { width:6px; height:6px; border-radius:50%; background:currentColor; content:""; box-shadow:0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color:var(--muted); font-size:10px; }
+    .top-avatar { display:grid; width:32px; height:32px; place-items:center; color:var(--pine); border:1px solid rgba(13,68,51,.15); border-radius:50%; background:#e4eee8; font-size:10px; font-weight:700; }
+    .content { width:min(1180px,calc(100% - 84px)); margin:0 auto; padding:42px 0 58px; }
+    .content-header { display:flex; align-items:end; justify-content:space-between; gap:25px; margin-bottom:24px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; color:var(--gold); font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; }
+    .eyebrow::before { width:23px; height:1px; background:currentColor; content:""; }
+    .content-header h1 { margin:12px 0 7px; color:var(--pine-deep); font-size:clamp(36px,4vw,51px); letter-spacing:-.035em; line-height:1; }
+    .content-header p { margin:0; color:var(--muted); font-size:12px; }
+    .header-actions { display:flex; align-items:center; gap:9px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:41px; padding:0 14px; border:1px solid transparent; border-radius:8px; font-size:10px; font-weight:700; transition:transform .2s ease,box-shadow .2s ease,background .2s ease; }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-primary { color:#fff; background:var(--pine); box-shadow:0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background:var(--pine-deep); }
+    .btn-ghost { color:var(--pine); border-color:var(--line); background:var(--paper); }
+    .btn-ghost:hover { border-color:rgba(13,68,51,.25); background:#fff; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:17px; }
+    .metric-card { position:relative; min-height:119px; padding:19px; overflow:hidden; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+    .metric-card::after { position:absolute; right:-28px; bottom:-47px; width:115px; height:115px; border:1px solid rgba(13,68,51,.1); border-radius:50%; content:""; }
+    .metric-card.highlight { color:#fff; border-color:var(--pine); background:var(--pine); }
+    .metric-card.highlight::after { border-color:rgba(232,200,121,.26); }
+    .metric-label { display:block; color:var(--muted); font-size:10px; }
+    .highlight .metric-label { color:rgba(255,255,255,.64); }
+    .metric-value { display:block; margin-top:11px; color:var(--pine-deep); font-family:"DM Serif Display",Georgia,serif; font-size:31px; line-height:1; }
+    .highlight .metric-value { color:var(--gold-light); }
+    .metric-foot { display:block; margin-top:8px; color:var(--green); font-size:9px; font-weight:700; }
+    .highlight .metric-foot { color:rgba(255,255,255,.58); }
+    .staff-layout { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); gap:17px; align-items:start; }
+    .left-stack, .right-stack { display:grid; gap:15px; min-width:0; }
+    .panel { min-width:0; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+    .panel-header { display:flex; align-items:start; justify-content:space-between; gap:15px; padding:20px 22px 16px; border-bottom:1px solid var(--line); }
+    .panel-heading h2 { margin:0; color:var(--pine-deep); font-size:15px; font-weight:700; }
+    .panel-heading p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .data-chip { padding:6px 8px; color:var(--pine); border-radius:7px; background:#e4eee8; font-size:9px; font-weight:700; white-space:nowrap; }
+    .staff-tools { display:grid; grid-template-columns:minmax(0,1fr) 150px; align-items:center; gap:13px; padding:14px 22px; }
+    .filter-tabs { display:flex; min-width:0; gap:5px; }
+    .filter-tab { padding:7px 9px; color:var(--muted); border:0; border-radius:6px; background:transparent; font-size:10px; font-weight:600; }
+    .filter-tab:hover { color:var(--pine); background:var(--sand); }
+    .filter-tab.active { color:var(--pine); background:#e4eee8; }
+    .search-wrap { position:relative; }
+    .search-wrap::before { position:absolute; top:50%; left:10px; color:var(--muted); content:"⌕"; font-size:15px; transform:translateY(-54%); }
+    .search-input { width:150px; height:31px; padding:0 9px 0 27px; color:var(--ink); outline:0; border:1px solid var(--line); border-radius:7px; background:var(--cream); font-size:10px; }
+    .staff-tools .search-wrap { width:150px; justify-self:end; }
+    .search-input:focus { border-color:var(--pine); }
+    .table-scroll { overflow-x:auto; }
+    .staff-table { width:100%; min-width:750px; border-collapse:collapse; }
+    .staff-table th { padding:10px 13px; color:#929b94; border-top:1px solid var(--line); border-bottom:1px solid var(--line); font-size:9px; font-weight:700; letter-spacing:.07em; text-align:left; text-transform:uppercase; }
+    .staff-table th:first-child, .staff-table td:first-child { padding-left:22px; }
+    .staff-table th:last-child, .staff-table td:last-child { padding-right:22px; }
+    .staff-table td { padding:13px; border-bottom:1px solid #edf0ea; color:var(--muted); font-size:10px; vertical-align:middle; }
+    .staff-table tbody tr:last-child td { border-bottom:0; }
+    .staff-table tr[hidden] { display:none; }
+    .teacher-cell { display:flex; align-items:center; gap:9px; min-width:175px; color:var(--pine-deep); font-weight:700; }
+    .teacher-avatar { display:grid; width:29px; height:29px; place-items:center; flex:0 0 auto; color:var(--pine); border-radius:50%; background:#dce9df; font-size:9px; font-weight:700; }
+    .staff-table tr:nth-child(2n) .teacher-avatar { background:#f1dfb3; }
+    .staff-table tr:nth-child(3n) .teacher-avatar { background:#ecd0c3; }
+    .teacher-detail small { display:block; margin-top:2px; color:#9ba39d; font-size:9px; font-weight:400; }
+    .qualification { display:block; color:var(--pine); font-size:9px; font-weight:700; }
+    .qualification small { display:block; margin-top:2px; color:var(--muted); font-size:8px; font-weight:400; }
+    .employment { display:inline-block; padding:5px 7px; color:#397452; border-radius:6px; background:#e5f1e7; font-size:9px; font-weight:700; white-space:nowrap; }
+    .employment.honor { color:#876226; background:#f8edcf; }
+    .jtm-number { color:var(--pine-deep); font-weight:700; white-space:nowrap; }
+    .attendance-good { color:var(--green); font-weight:700; white-space:nowrap; }
+    .row-action { padding:6px 8px; color:var(--pine); border:0; border-radius:6px; background:var(--sand); font-size:9px; font-weight:700; white-space:nowrap; }
+    .row-action:hover { color:#fff; background:var(--pine); }
+    .jtm-card { padding:20px; color:#fff; border-radius:13px; background:var(--pine); }
+    .jtm-card .panel-heading h2 { color:#fff; }
+    .jtm-card .panel-heading p { color:rgba(255,255,255,.58); }
+    .jtm-total { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-top:22px; }
+    .jtm-total strong { color:var(--gold-light); font-family:"DM Serif Display",Georgia,serif; font-size:34px; font-weight:400; line-height:.9; }
+    .jtm-total span { color:rgba(255,255,255,.58); font-size:9px; }
+    .jtm-track { height:7px; margin-top:16px; overflow:hidden; border-radius:4px; background:rgba(255,255,255,.16); }
+    .jtm-track i { display:block; width:78%; height:100%; border-radius:inherit; background:var(--gold-light); }
+    .jtm-caption { display:flex; justify-content:space-between; gap:10px; margin-top:7px; color:rgba(255,255,255,.48); font-size:8px; }
+    .jtm-breakdown { margin-top:18px; border-top:1px solid rgba(255,255,255,.13); }
+    .jtm-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.11); }
+    .jtm-row:last-child { border-bottom:0; }
+    .jtm-row span { color:rgba(255,255,255,.63); font-size:9px; }
+    .jtm-row strong { color:#fff; font-size:10px; }
+    .jtm-note { margin-top:15px; padding:10px; color:rgba(255,255,255,.64); border:1px solid rgba(255,255,255,.13); border-radius:8px; font-size:8px; line-height:1.5; }
+    .schedule-card { padding:20px; }
+    .schedule-title { display:flex; align-items:start; justify-content:space-between; gap:12px; }
+    .schedule-title h2 { margin:0; color:var(--pine-deep); font-size:15px; }
+    .schedule-title button { color:var(--gold); border:0; background:transparent; font-size:9px; font-weight:700; }
+    .schedule-list { margin-top:15px; }
+    .schedule-item { display:grid; grid-template-columns:52px 9px 1fr; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid #edf0ea; }
+    .schedule-item:last-child { border-bottom:0; }
+    .schedule-time { color:var(--muted); font-size:9px; font-weight:700; }
+    .schedule-dot { width:7px; height:7px; border-radius:50%; background:var(--gold); }
+    .schedule-item:nth-child(2) .schedule-dot { background:var(--green); }
+    .schedule-item:nth-child(3) .schedule-dot { background:var(--blue); }
+    .schedule-copy strong { display:block; color:var(--pine-deep); font-size:10px; }
+    .schedule-copy span { display:block; margin-top:2px; color:var(--muted); font-size:8px; }
+    .attendance-panel { margin-top:17px; }
+    .attendance-list { padding:3px 22px 9px; }
+    .attendance-row { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid #edf0ea; }
+    .attendance-row:last-child { border-bottom:0; }
+    .attendance-copy { min-width:0; flex:1; }
+    .attendance-copy strong { display:block; color:var(--pine-deep); font-size:10px; }
+    .attendance-copy span { display:block; margin-top:2px; color:var(--muted); font-size:8px; }
+    .attendance-percent { color:var(--green); font-size:10px; font-weight:700; }
+    .modal[hidden] { display:none; }
+    .modal { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:22px; }
+    .modal-backdrop { position:absolute; inset:0; background:rgba(8,46,37,.64); backdrop-filter:blur(5px); }
+    .dialog { position:relative; width:min(100%,480px); padding:26px; border-radius:16px; background:var(--paper); box-shadow:0 25px 70px rgba(0,0,0,.22); }
+    .dialog-close { position:absolute; top:13px; right:14px; display:grid; width:28px; height:28px; place-items:center; color:var(--muted); border:0; border-radius:50%; background:var(--sand); font-size:19px; }
+    .dialog h2 { margin:13px 0 7px; color:var(--pine-deep); font-size:28px; line-height:1; }
+    .dialog > p { margin:0 0 18px; color:var(--muted); font-size:11px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    .form-field { display:grid; gap:7px; }
+    .form-field.full { grid-column:1 / -1; }
+    .form-field label { color:#53615a; font-size:10px; font-weight:700; }
+    .form-field input, .form-field select, .form-field textarea { width:100%; color:var(--ink); outline:0; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:11px; }
+    .form-field input, .form-field select { height:40px; padding:0 11px; }
+    .form-field textarea { min-height:92px; padding:11px; resize:vertical; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:var(--pine); }
+    .dialog-actions { display:flex; gap:8px; margin-top:18px; }
+    .dialog-actions .btn { flex:1; }
+    .toast { position:fixed; right:22px; bottom:22px; z-index:30; display:flex; align-items:center; gap:10px; width:min(350px,calc(100% - 44px)); padding:13px 15px; color:#fff; border-radius:11px; background:var(--pine-deep); box-shadow:0 18px 40px rgba(8,46,37,.23); opacity:0; pointer-events:none; transform:translateY(12px); transition:opacity .25s ease,transform .25s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast > span { display:grid; width:23px; height:23px; place-items:center; color:var(--pine-deep); border-radius:50%; background:var(--gold-light); font-size:11px; }
+    .toast strong { display:block; font-size:11px; }
+    .toast small { display:block; margin-top:2px; color:rgba(255,255,255,.6); font-size:9px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media (max-width:1100px) { .app-shell { grid-template-columns:214px minmax(0,1fr); } .topbar { padding:0 28px; } .content { width:min(100% - 56px,1180px); } .staff-layout { grid-template-columns:minmax(0,1fr) 290px; } }
+    @media (max-width:820px) { .app-shell { display:block; } .sidebar { position:relative; display:grid; min-height:auto; grid-template-columns:1fr auto; gap:14px; padding:17px 18px 12px; } .sidebar-brand { padding:0; } .sidebar-context,.sidebar-spacer,.sidebar-footer { display:none; } .nav-label { display:none; } .side-nav { grid-column:1 / -1; display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; } .side-nav::-webkit-scrollbar { display:none; } .side-link { min-width:fit-content; min-height:36px; padding:0 10px; font-size:10px; white-space:nowrap; } .side-link.active { box-shadow:inset 0 -3px 0 var(--gold-light); } .topbar { min-height:65px; padding:0 18px; } .help-link { display:none; } .content { width:calc(100% - 36px); padding-top:30px; } .content-header { align-items:start; flex-direction:column; gap:17px; } .header-actions { width:100%; } .header-actions .btn { flex:1; } .metrics-grid { grid-template-columns:1fr 1fr; } .staff-layout { grid-template-columns:1fr; } }
+    @media (max-width:620px) { .status-online { font-size:0; } .status-online::before { margin-right:2px; } .content-header h1 { font-size:39px; } .header-actions { gap:7px; } .header-actions .btn { padding:0 8px; font-size:9px; } .metrics-grid { gap:8px; } .metric-card { min-height:112px; padding:15px; } .metric-value { font-size:26px; } .staff-tools { display:flex; align-items:start; flex-direction:column; padding:13px 16px; } .filter-tabs { width:100%; overflow-x:auto; } .filter-tab { white-space:nowrap; } .staff-tools .search-wrap,.search-input { width:100%; } .staff-tools .search-wrap { order:-1; } .panel-header,.jtm-card,.schedule-card { padding-left:16px; padding-right:16px; } .form-grid { grid-template-columns:1fr; } .form-field.full { grid-column:auto; } }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="admin">
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navigasi kepegawaian">
+      <a class="sidebar-brand" href="index.html"><span class="brand-logo" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 21.5 25 10l16 11.5v18A3.5 3.5 0 0 1 37.5 43h-25A3.5 3.5 0 0 1 9 39.5v-18Z" fill="#0D4433"/><path d="M25 10v33M9 21.5h32M14 27h22M17 43V27h16v16" stroke="#C99435" stroke-width="2"/><path d="m19 19 6-4 6 4-6 4-6-4Z" fill="#E8C879"/></svg></span><span><strong class="brand-name">TPQ Darul Jinan</strong><small class="brand-caption">Portal pengelola</small></span></a>
+      <div class="sidebar-context"><span class="context-label">Yayasan aktif</span><span class="context-name">Darussolah Wal Jinan</span><span class="context-meta">4 lembaga terhubung</span></div>
+      <nav class="side-nav" aria-label="Menu kepegawaian"><span class="nav-label">Ruang kerja</span><a class="side-link" href="analitik.html"><span class="nav-icon">01</span>Analitik</a><a class="side-link" href="notifikasi.html"><span class="nav-icon">02</span>Komunikasi</a><a class="side-link" href="cms.html"><span class="nav-icon">03</span>CMS &amp; konten</a><a class="side-link active" href="kepegawaian.html" aria-current="page"><span class="nav-icon">04</span>Kepegawaian</a><a class="side-link" href="#jadwal"><span class="nav-icon">05</span>Jadwal mengajar</a><a class="side-link" href="pengaturan.html"><span class="nav-icon">06</span>Pengaturan</a></nav>
+      <div class="sidebar-spacer"></div><div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NA</span><span><strong>Nadia Aulia</strong><span>Admin yayasan</span></span></div></div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><span>Yayasan Darussolah Wal Jinan</span><span> / </span><strong>Kepegawaian &amp; JTM</strong></div><div class="topbar-actions"><span class="status-online">Data tersimpan</span><a class="help-link" href="#bantuan">Pusat bantuan</a><span class="top-avatar">NA</span></div></header>
+      <div class="content">
+        <div class="content-header"><div><span class="eyebrow">Ruang tumbuh para pengajar</span><h1 class="serif">Kepegawaian.</h1><p>Data guru, jadwal, dan beban mengajar yang lebih mudah dipantau.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="exportStaff">Unduh rekap</button><button class="btn btn-primary" type="button" data-modal="staffModal">+ Tambah guru</button></div></div>
+        <section class="metrics-grid" aria-label="Ringkasan kepegawaian"><article class="metric-card highlight"><span class="metric-label">Guru aktif</span><strong class="metric-value">18</strong><span class="metric-foot">14 tetap · 4 honorer</span></article><article class="metric-card"><span class="metric-label">JTM terjadwal</span><strong class="metric-value" id="jtmMetric">246</strong><span class="metric-foot">Dari target 288 jam</span></article><article class="metric-card"><span class="metric-label">Kehadiran mengajar</span><strong class="metric-value">96%</strong><span class="metric-foot">Dalam 30 hari terakhir</span></article><article class="metric-card"><span class="metric-label">Perlu ditinjau</span><strong class="metric-value">02</strong><span class="metric-foot" style="color:var(--red)">Jadwal belum lengkap</span></article></section>
+        <div class="staff-layout">
+          <section class="panel" aria-labelledby="staffHeading"><div class="panel-header"><div class="panel-heading"><h2 id="staffHeading">Data induk guru</h2><p>Identitas, kualifikasi, status, dan beban mengajar · data contoh</p></div><span class="data-chip">18 guru aktif</span></div><div class="staff-tools"><div class="filter-tabs" role="tablist" aria-label="Filter guru"><button class="filter-tab active" type="button" data-staff-filter="all">Semua <span>(18)</span></button><button class="filter-tab" type="button" data-staff-filter="fixed">Tetap <span>(14)</span></button><button class="filter-tab" type="button" data-staff-filter="honor">Honorer <span>(4)</span></button></div><label class="search-wrap"><span class="sr-only">Cari guru</span><input class="search-input" id="staffSearch" type="search" placeholder="Cari nama..." /></label></div><div class="table-scroll"><table class="staff-table"><thead><tr><th>Guru / ustadz</th><th>Kualifikasi</th><th>Status</th><th>JTM</th><th>Hadir</th><th>Aksi</th></tr></thead><tbody id="staffRows"><tr data-staff="fixed"><td><div class="teacher-cell"><span class="teacher-avatar">NS</span><span class="teacher-detail">Ustadzah Nisa<small>TPQ · sore</small></span></div></td><td><span class="qualification">S.Pd.I<small>8 th mengajar</small></span></td><td><span class="employment">Tetap</span></td><td class="jtm-number">24 jam</td><td class="attendance-good">100%</td><td><button class="row-action" type="button" data-staff-action="Ustadzah Nisa">Detail</button></td></tr><tr data-staff="fixed"><td><div class="teacher-cell"><span class="teacher-avatar">AR</span><span class="teacher-detail">Ustadz Ahmad Rasyid<small>MDT · malam</small></span></div></td><td><span class="qualification">S.Ag.<small>6 th mengajar</small></span></td><td><span class="employment">Tetap</span></td><td class="jtm-number">20 jam</td><td class="attendance-good">96%</td><td><button class="row-action" type="button" data-staff-action="Ustadz Ahmad Rasyid">Detail</button></td></tr><tr data-staff="honor"><td><div class="teacher-cell"><span class="teacher-avatar">LF</span><span class="teacher-detail">Ustadzah Laila Fitria<small>RA · pagi</small></span></div></td><td><span class="qualification">P.GTK<small>4 th mengajar</small></span></td><td><span class="employment honor">Honorer</span></td><td class="jtm-number">18 jam</td><td class="attendance-good">94%</td><td><button class="row-action" type="button" data-staff-action="Ustadzah Laila Fitria">Detail</button></td></tr><tr data-staff="fixed"><td><div class="teacher-cell"><span class="teacher-avatar">FH</span><span class="teacher-detail">Ustadz Fikri Hidayat<small>TPQ · sore</small></span></div></td><td><span class="qualification">S.Pd.<small>5 th mengajar</small></span></td><td><span class="employment">Tetap</span></td><td class="jtm-number">22 jam</td><td class="attendance-good">98%</td><td><button class="row-action" type="button" data-staff-action="Ustadz Fikri Hidayat">Detail</button></td></tr><tr data-staff="honor"><td><div class="teacher-cell"><span class="teacher-avatar">SA</span><span class="teacher-detail">Ustadzah Salma Aini<small>MDT · malam</small></span></div></td><td><span class="qualification">MA<small>2 th mengajar</small></span></td><td><span class="employment honor">Honorer</span></td><td class="jtm-number">16 jam</td><td class="attendance-good">91%</td><td><button class="row-action" type="button" data-staff-action="Ustadzah Salma Aini">Detail</button></td></tr></tbody></table></div></section>
+          <div class="right-stack"><section class="jtm-card" aria-labelledby="jtmHeading"><div class="panel-heading"><h2 id="jtmHeading">Beban kerja JTM</h2><p>Ringkasan lintas lembaga · alat bantu internal</p></div><div class="jtm-total"><strong>246 jam</strong><span>Target 288 jam / minggu</span></div><div class="jtm-track"><i></i></div><div class="jtm-caption"><span>86% terisi</span><span>42 jam tersedia</span></div><div class="jtm-breakdown"><div class="jtm-row"><span>RA Darul Jinan</span><strong>54 jam</strong></div><div class="jtm-row"><span>TPQ Darul Jinan</span><strong>82 jam</strong></div><div class="jtm-row"><span>MDT Darul Jinan</span><strong>76 jam</strong></div><div class="jtm-row"><span>SMP Darul Jinan</span><strong>34 jam</strong></div></div><div class="jtm-note">Mengikuti kerangka ekuivalensi KMA Nomor 736 Tahun 2026. Bukan pengganti proses resmi sertifikasi atau perhitungan tunjangan.</div></section><section class="panel schedule-card" id="jadwal" aria-labelledby="scheduleHeading"><div class="schedule-title"><div><h2 id="scheduleHeading">Jadwal hari ini</h2></div><button type="button" id="scheduleButton">Kelola →</button></div><div class="schedule-list"><div class="schedule-item"><span class="schedule-time">07.30</span><i class="schedule-dot"></i><span class="schedule-copy"><strong>RA Bintang Kecil</strong><span>Ustadzah Laila · 2 JTM</span></span></div><div class="schedule-item"><span class="schedule-time">16.00</span><i class="schedule-dot"></i><span class="schedule-copy"><strong>TPQ Al-Fatih</strong><span>Ustadzah Nisa · 3 JTM</span></span></div><div class="schedule-item"><span class="schedule-time">18.30</span><i class="schedule-dot"></i><span class="schedule-copy"><strong>MDT Fiqih Dasar</strong><span>Ustadz Ahmad · 2 JTM</span></span></div></div></section></div>
+        </div>
+        <section class="panel attendance-panel" aria-labelledby="attendanceHeading"><div class="panel-header"><div class="panel-heading"><h2 id="attendanceHeading">Rekap kehadiran mengajar</h2><p>Terhubung dengan pencatatan absensi per sesi.</p></div><span class="data-chip">30 hari terakhir</span></div><div class="attendance-list"><div class="attendance-row"><span class="teacher-avatar">NS</span><span class="attendance-copy"><strong>Ustadzah Nisa</strong><span>24 sesi tercatat · 1 izin</span></span><b class="attendance-percent">100%</b></div><div class="attendance-row"><span class="teacher-avatar">AR</span><span class="attendance-copy"><strong>Ustadz Ahmad Rasyid</strong><span>23 sesi tercatat · 1 terlambat</span></span><b class="attendance-percent">96%</b></div><div class="attendance-row"><span class="teacher-avatar">LF</span><span class="attendance-copy"><strong>Ustadzah Laila Fitria</strong><span>18 sesi tercatat · 1 sakit</span></span><b class="attendance-percent">94%</b></div></div></section>
+      </div>
+    </main>
+  </div>
+  <div class="modal" id="staffModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="staffTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Data induk guru</span><h2 class="serif" id="staffTitle">Tambah guru</h2><p>Catat identitas dan status pengajar untuk kebutuhan administrasi internal.</p><form id="staffForm"><div class="form-grid"><div class="form-field full"><label for="staffName">Nama lengkap</label><input id="staffName" required placeholder="Contoh: Ustadzah Maryam" /></div><div class="form-field"><label for="staffQualification">Kualifikasi</label><input id="staffQualification" required placeholder="Contoh: S.Pd.I" /></div><div class="form-field"><label for="staffStatus">Status kepegawaian</label><select id="staffStatus"><option value="fixed">Tetap</option><option value="honor">Honorer</option></select></div><div class="form-field"><label for="staffUnit">Lembaga utama</label><select id="staffUnit"><option>TPQ Darul Jinan</option><option>RA Darul Jinan</option><option>MDT Darul Jinan</option><option>SMP Darul Jinan</option></select></div><div class="form-field"><label for="staffJtm">JTM per minggu</label><input id="staffJtm" required type="number" min="0" placeholder="18" /></div></div><button class="btn btn-primary" style="width:100%;margin-top:18px" type="submit">Simpan data guru</button></form></div></div>
+  <div class="modal" id="detailModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Profil pengajar</span><h2 class="serif" id="detailTitle">Detail guru</h2><p id="detailCopy">Riwayat mengajar, jadwal, dan rekap kehadiran tersimpan di sini.</p><div class="dialog-actions"><button class="btn btn-ghost" type="button" data-close-modal>Tutup</button><button class="btn btn-primary" type="button" id="detailSchedule">Lihat jadwal</button></div></div></div>
+  <div class="toast" id="toast" role="status"><span>✓</span><div><strong id="toastTitle">Perubahan tersimpan</strong><small id="toastText">Data kepegawaian berhasil diperbarui.</small></div></div>
+  <script>
+     let staffFilter='all'; let toastTimer; const toast=document.getElementById('toast');
+     document.querySelectorAll('.help-link[href="#bantuan"]').forEach(link=>link.href='index.html#faq');
+    function showToast(title,text){document.getElementById('toastTitle').textContent=title;document.getElementById('toastText').textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3200);}
+    function setModal(id,open){const modal=document.getElementById(id);modal.hidden=!open;modal.setAttribute('aria-hidden',String(!open));if(open)modal.querySelector('input,textarea')?.focus();}
+    function escapeHTML(value){return value.replace(/[&<>"']/g,(character)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));}
+    function refreshStaff(){const query=document.getElementById('staffSearch').value.toLowerCase().trim();document.querySelectorAll('#staffRows tr').forEach((row)=>{row.hidden=(staffFilter!=='all'&&row.dataset.staff!==staffFilter)||!row.textContent.toLowerCase().includes(query);});}
+    document.querySelectorAll('[data-staff-filter]').forEach((button)=>button.addEventListener('click',()=>{staffFilter=button.dataset.staffFilter;document.querySelectorAll('[data-staff-filter]').forEach((item)=>item.classList.toggle('active',item===button));refreshStaff();}));
+    document.getElementById('staffSearch').addEventListener('input',refreshStaff);
+    document.querySelectorAll('[data-modal]').forEach((button)=>button.addEventListener('click',()=>setModal(button.dataset.modal,true)));
+    document.querySelectorAll('[data-close-modal]').forEach((button)=>button.addEventListener('click',()=>setModal(button.closest('.modal').id,false)));
+    document.addEventListener('keydown',(event)=>{if(event.key==='Escape')document.querySelectorAll('.modal').forEach((modal)=>{if(!modal.hidden)setModal(modal.id,false);});});
+    document.querySelectorAll('[data-staff-action]').forEach((button)=>button.addEventListener('click',()=>{document.getElementById('detailTitle').textContent=button.dataset.staffAction;document.getElementById('detailCopy').textContent=`${button.dataset.staffAction} memiliki jadwal aktif dan rekap kehadiran yang siap ditinjau.`;setModal('detailModal',true);}));
+    document.getElementById('detailSchedule').addEventListener('click',()=>{setModal('detailModal',false);document.getElementById('jadwal').scrollIntoView({behavior:'smooth',block:'center'});showToast('Jadwal dibuka','Jadwal mengajar hari ini sudah ditampilkan.');});
+    document.getElementById('scheduleButton').addEventListener('click',()=>showToast('Mode jadwal dibuka','Gunakan daftar jadwal untuk meninjau sesi mengajar hari ini.'));
+     document.getElementById('exportStaff').addEventListener('click',()=>showToast('Rekap disiapkan','Data guru, JTM, dan kehadiran siap diunduh.'));
+     document.getElementById('staffForm').addEventListener('submit',(event)=>{event.preventDefault();const name=document.getElementById('staffName').value.trim();const qualification=document.getElementById('staffQualification').value.trim();const safeName=escapeHTML(name||'Guru baru');const safeQualification=escapeHTML(qualification||'-');const status=document.getElementById('staffStatus').value;const jtm=document.getElementById('staffJtm').value;const row=document.createElement('tr');row.dataset.staff=status;const initials=name.split(/\s+/).map((part)=>part[0]).join('').slice(0,2).toUpperCase();row.innerHTML=`<td><div class="teacher-cell"><span class="teacher-avatar">${initials||'GR'}</span><span class="teacher-detail">${safeName}<small>${document.getElementById('staffUnit').value}</small></span></div></td><td><span class="qualification">${safeQualification}<small>Data baru</small></span></td><td><span class="employment ${status==='honor'?'honor':''}">${status==='honor'?'Honorer':'Tetap'}</span></td><td class="jtm-number">${jtm||0} jam</td><td class="attendance-good">—</td><td><button class="row-action" type="button" data-staff-action="${safeName}">Detail</button></td>`;document.getElementById('staffRows').prepend(row);row.querySelector('[data-staff-action]').addEventListener('click',()=>{document.getElementById('detailTitle').textContent=name||'Guru baru';setModal('detailModal',true);});setModal('staffModal',false);event.target.reset();showToast('Data guru tersimpan','Guru baru sudah masuk ke data induk.');});
+     let addedJtm=0;const addedStaff={fixed:0,honor:0};
+     const refreshStaffSummary=()=>{const counts={all:18+addedStaff.fixed+addedStaff.honor,fixed:14+addedStaff.fixed,honor:4+addedStaff.honor};document.querySelectorAll('[data-staff-filter]').forEach(button=>{const count=button.querySelector('span');if(count)count.textContent=`(${counts[button.dataset.staffFilter]})`;});const chip=document.querySelector('[aria-labelledby="staffHeading"] .data-chip');if(chip)chip.textContent=`${counts.all} guru aktif`;document.getElementById('jtmMetric').textContent=246+addedJtm;};
+     document.getElementById('staffForm').addEventListener('submit',event=>{addedJtm+=Number(document.getElementById('staffJtm').value)||0;addedStaff[document.getElementById('staffStatus').value]+=1;},true);
+     document.getElementById('staffForm').addEventListener('submit',()=>setTimeout(()=>{refreshStaffSummary();refreshStaff();},0));
+   </script>
+</body>
+</html>

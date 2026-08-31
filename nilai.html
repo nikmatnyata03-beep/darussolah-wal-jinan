@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="Modul nilai, jurnal guru, dan rapor TPQ Darul Jinan." />
+  <title>Nilai & Rapor | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pine: #0d4433;
+      --pine-deep: #082e25;
+      --pine-light: #155641;
+      --gold: #c99435;
+      --gold-light: #e8c879;
+      --cream: #f5f6f0;
+      --paper: #fffdf9;
+      --sand: #ecefe7;
+      --ink: #1e2c26;
+      --muted: #748079;
+      --line: #e0e4dc;
+      --green: #3f8b62;
+      --red: #ae5b47;
+      --blue: #557e9e;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; color: var(--ink); background: var(--cream); font-family: "DM Sans", system-ui, sans-serif; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .serif { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .app-shell { display: grid; min-height: 100svh; grid-template-columns: 246px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; display: flex; min-height: 100svh; flex-direction: column; padding: 26px 17px 18px; color: rgba(255,255,255,.74); background: var(--pine-deep); }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 9px; }
+    .brand-logo { display: grid; width: 38px; height: 38px; place-items: center; color: var(--pine); border-radius: 50%; background: #fff; }
+    .brand-symbol { width: 100%; height: 100%; padding: 5px; }
+    .brand-name { display: block; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.1; }
+    .brand-caption { display: block; margin-top: 4px; color: rgba(255,255,255,.43); font-size: 8px; letter-spacing: .12em; text-transform: uppercase; }
+    .sidebar-context { margin: 35px 9px 25px; padding: 13px 12px; border: 1px solid rgba(255,255,255,.11); border-radius: 10px; background: rgba(255,255,255,.045); }
+    .context-label { display: block; margin-bottom: 5px; color: var(--gold-light); font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .context-name { display: block; color: #fff; font-size: 11px; font-weight: 600; }
+    .context-meta { display: block; margin-top: 3px; color: rgba(255,255,255,.48); font-size: 10px; }
+    .nav-label { display: block; margin: 0 11px 9px; color: rgba(255,255,255,.34); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    .side-nav { display: grid; gap: 3px; }
+    .side-link { display: flex; align-items: center; gap: 11px; min-height: 41px; padding: 0 11px; color: rgba(255,255,255,.59); border-radius: 9px; font-size: 11px; font-weight: 600; transition: color .2s ease, background .2s ease; }
+    .side-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+    .side-link.active { color: #fff; background: var(--pine-light); box-shadow: inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display: grid; width: 21px; height: 21px; place-items: center; color: var(--gold-light); border: 1px solid rgba(232,200,121,.24); border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .side-link:not(.active) .nav-icon { color: rgba(255,255,255,.55); border-color: rgba(255,255,255,.12); }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-footer { padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.1); }
+    .user-card { display: flex; align-items: center; gap: 9px; }
+    .user-avatar { display: grid; width: 29px; height: 29px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 10px; font-weight: 700; }
+    .user-card strong { display: block; color: #fff; font-size: 10px; font-weight: 600; }
+    .user-card span { display: block; margin-top: 2px; color: rgba(255,255,255,.43); font-size: 9px; }
+    .main-content { min-width: 0; background: var(--cream); }
+    .topbar { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 42px; border-bottom: 1px solid var(--line); background: rgba(255,253,249,.72); }
+    .breadcrumbs { color: var(--muted); font-size: 10px; }
+    .breadcrumbs strong { color: var(--pine); font-weight: 700; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .connection { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 10px; font-weight: 600; }
+    .connection::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; box-shadow: 0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color: var(--muted); font-size: 10px; }
+    .top-avatar { display: grid; width: 32px; height: 32px; place-items: center; color: var(--pine); border: 1px solid rgba(13,68,51,.15); border-radius: 50%; background: #e4eee8; font-size: 10px; font-weight: 700; }
+    .content { width: min(1180px, calc(100% - 84px)); margin: 0 auto; padding: 42px 0 55px; }
+    .content-header { display: flex; align-items: end; justify-content: space-between; gap: 25px; margin-bottom: 29px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { width: 23px; height: 1px; background: currentColor; content: ""; }
+    .content-header h1 { margin: 12px 0 7px; color: var(--pine-deep); font-size: clamp(36px, 4vw, 51px); letter-spacing: -.035em; line-height: 1; }
+    .content-header p { margin: 0; color: var(--muted); font-size: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 9px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 15px; border: 1px solid transparent; border-radius: 9px; font-size: 11px; font-weight: 700; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #fff; background: var(--pine); box-shadow: 0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background: var(--pine-deep); box-shadow: 0 10px 20px rgba(13,68,51,.18); }
+    .btn-ghost { color: var(--pine); border-color: var(--line); background: var(--paper); }
+    .btn-ghost:hover { border-color: rgba(13,68,51,.28); background: #fff; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric-card { position: relative; min-height: 119px; padding: 19px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .metric-card::after { position: absolute; right: -28px; bottom: -47px; width: 115px; height: 115px; border: 1px solid rgba(13,68,51,.1); border-radius: 50%; content: ""; }
+    .metric-card.highlight { color: #fff; border-color: var(--pine); background: var(--pine); }
+    .metric-card.highlight::after { border-color: rgba(232,200,121,.26); }
+    .metric-label { display: block; color: var(--muted); font-size: 10px; }
+    .highlight .metric-label { color: rgba(255,255,255,.65); }
+    .metric-value { display: block; margin-top: 11px; color: var(--pine-deep); font-family: "DM Serif Display", Georgia, serif; font-size: 32px; line-height: 1; }
+    .highlight .metric-value { color: var(--gold-light); }
+    .metric-foot { display: block; margin-top: 8px; color: var(--green); font-size: 9px; font-weight: 700; }
+    .highlight .metric-foot { color: rgba(255,255,255,.58); }
+    .grade-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(310px, .7fr); gap: 17px; align-items: start; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .panel-header { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 21px 22px 17px; border-bottom: 1px solid var(--line); }
+    .panel-heading h2 { margin: 0; color: var(--pine-deep); font-size: 15px; font-weight: 700; }
+    .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .data-chip { padding: 6px 8px; color: var(--pine); border-radius: 7px; background: #e4eee8; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .grade-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; }
+    .select-group { display: flex; align-items: center; gap: 8px; }
+    .select-group label { color: var(--muted); font-size: 10px; }
+    .select-group select { height: 32px; padding: 0 27px 0 9px; color: var(--pine); outline: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--cream); font-size: 10px; font-weight: 700; }
+    .grade-legend { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 9px; }
+    .legend-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .grade-legend span:nth-child(3) { margin-left: 4px; background: var(--red); }
+    .grade-scroll { overflow-x: auto; }
+    .grade-table { width: 100%; min-width: 700px; border-collapse: collapse; }
+    .grade-table th { padding: 10px 13px; color: #929b94; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 9px; font-weight: 700; letter-spacing: .07em; text-align: left; text-transform: uppercase; }
+    .grade-table th:first-child, .grade-table td:first-child { padding-left: 22px; }
+    .grade-table th:last-child, .grade-table td:last-child { padding-right: 22px; }
+    .grade-table td { padding: 12px 13px; border-bottom: 1px solid #edf0ea; color: var(--muted); font-size: 10px; vertical-align: middle; }
+    .grade-table tbody tr:last-child td { border-bottom: 0; }
+    .grade-table tr[hidden] { display: none; }
+    .student-cell { display: flex; align-items: center; gap: 9px; min-width: 150px; color: var(--pine-deep); font-weight: 700; }
+    .student-avatar { display: grid; width: 28px; height: 28px; place-items: center; flex: 0 0 auto; color: var(--pine); border-radius: 50%; background: #dce9df; font-size: 9px; font-weight: 700; }
+    .grade-table tr:nth-child(2n) .student-avatar { background: #f1dfb3; }
+    .grade-table tr:nth-child(3n) .student-avatar { background: #ecd0c3; }
+    .student-detail small { display: block; margin-top: 2px; color: #9ba39d; font-size: 9px; font-weight: 400; }
+    .score-input { width: 46px; height: 30px; padding: 0 5px; color: var(--pine-deep); outline: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--cream); font-size: 11px; font-weight: 700; text-align: center; }
+    .score-input:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgba(13,68,51,.07); }
+    .score-input.low { color: var(--red); border-color: #efc9bf; background: #fff3ef; }
+    .status-pill { display: inline-block; padding: 5px 7px; color: #397452; border-radius: 6px; background: #e5f1e7; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .status-pill.needs-review { color: #a04f40; background: #f6e3dc; }
+    .note-button { padding: 5px; color: var(--muted); border: 0; background: transparent; font-size: 16px; }
+    .note-button:hover { color: var(--pine); }
+    .right-stack { display: grid; gap: 15px; }
+    .report-panel { padding-bottom: 21px; overflow: hidden; }
+    .report-panel .panel-header { padding-bottom: 18px; }
+    .report-preview { position: relative; margin: 20px 22px 0; padding: 20px; overflow: hidden; border-radius: 10px; color: #fff; background: var(--pine); }
+    .report-preview::after { position: absolute; right: -66px; bottom: -86px; width: 215px; height: 215px; border: 1px solid rgba(232,200,121,.26); border-radius: 50%; content: ""; }
+    .report-kicker { position: relative; z-index: 1; color: var(--gold-light); font-size: 8px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .report-preview h3 { position: relative; z-index: 1; margin: 10px 0 3px; font-size: 21px; line-height: 1; }
+    .report-preview p { position: relative; z-index: 1; margin: 0; color: rgba(255,255,255,.62); font-size: 9px; }
+    .report-score { position: relative; z-index: 1; display: flex; align-items: end; justify-content: space-between; gap: 10px; margin-top: 24px; }
+    .report-score strong { color: var(--gold-light); font-family: "DM Serif Display", Georgia, serif; font-size: 42px; font-weight: 400; line-height: .8; }
+    .report-score span { color: rgba(255,255,255,.68); font-size: 9px; }
+    .report-progress { height: 5px; margin-top: 12px; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,.15); }
+    .report-progress span { display: block; width: 82%; height: 100%; border-radius: inherit; background: var(--gold-light); }
+    .report-points { display: grid; gap: 10px; padding: 19px 22px 0; }
+    .report-point { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 10px; }
+    .report-point strong { color: var(--pine); font-size: 11px; }
+    .report-point span:last-child { color: var(--green); font-weight: 700; }
+    .mini-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--pine-deep); font-size: 12px; font-weight: 700; }
+    .mini-heading a { color: var(--gold); font-size: 10px; }
+    .approval-panel { padding: 19px; }
+    .approval-status { display: flex; align-items: center; gap: 8px; margin-top: 17px; padding: 10px; color: #7c5c24; border-radius: 8px; background: #fbf1d9; font-size: 10px; }
+    .approval-status::before { display: grid; width: 19px; height: 19px; place-items: center; flex: 0 0 auto; border-radius: 50%; background: #e8cb81; content: "!"; font-size: 10px; font-weight: 700; }
+    .approval-panel p { margin: 11px 0 16px; color: var(--muted); font-size: 10px; }
+    .approval-button { width: 100%; }
+    .journal-strip { display: flex; align-items: center; justify-content: space-between; gap: 13px; margin-top: 17px; padding: 13px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); }
+    .journal-strip strong { display: block; color: var(--pine-deep); font-size: 10px; }
+    .journal-strip span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .journal-strip button { padding: 7px 9px; color: var(--pine); border: 0; border-radius: 6px; background: var(--sand); font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .journal-strip button:hover { color: #fff; background: var(--pine); }
+    .modal[hidden] { display: none; }
+    .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 22px; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(8,46,37,.64); backdrop-filter: blur(5px); }
+    .report-modal { position: relative; width: min(100%, 480px); padding: 26px; border-radius: 16px; background: var(--paper); box-shadow: 0 25px 70px rgba(0,0,0,.22); }
+    .modal-close { position: absolute; top: 13px; right: 14px; display: grid; width: 28px; height: 28px; place-items: center; color: var(--muted); border: 0; border-radius: 50%; background: var(--sand); font-size: 19px; }
+    .modal-close:hover { color: var(--pine); background: #e4eee8; }
+    .report-modal h2 { margin: 13px 0 7px; color: var(--pine-deep); font-size: 28px; line-height: 1; }
+    .report-modal > p { margin: 0 0 18px; color: var(--muted); font-size: 11px; }
+    .modal-sheet { padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    .sheet-head { display: flex; align-items: start; justify-content: space-between; gap: 10px; padding-bottom: 13px; border-bottom: 1px solid var(--line); }
+    .sheet-head strong { display: block; color: var(--pine); font-size: 12px; }
+    .sheet-head span { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .sheet-mark { color: var(--gold); font-family: Georgia, serif; font-size: 23px; }
+    .sheet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+    .sheet-cell { padding: 10px; border-radius: 7px; background: var(--cream); }
+    .sheet-cell span { display: block; color: var(--muted); font-size: 8px; }
+    .sheet-cell strong { display: block; margin-top: 4px; color: var(--pine); font-family: "DM Serif Display", Georgia, serif; font-size: 21px; font-weight: 400; line-height: 1; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 17px; }
+    .modal-actions .btn { flex: 1; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 30; display: flex; align-items: center; gap: 10px; width: min(350px, calc(100% - 44px)); padding: 13px 15px; color: #fff; border-radius: 11px; background: var(--pine-deep); box-shadow: 0 18px 40px rgba(8,46,37,.23); opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .25s ease, transform .25s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast > span { display: grid; width: 23px; height: 23px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 11px; }
+    .toast strong { display: block; font-size: 11px; }
+    .toast small { display: block; margin-top: 2px; color: rgba(255,255,255,.6); font-size: 9px; }
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 214px minmax(0, 1fr); }
+      .topbar { padding: 0 28px; }
+      .content { width: min(100% - 56px, 1180px); }
+      .grade-layout { grid-template-columns: minmax(0, 1fr) 290px; }
+    }
+    @media (max-width: 820px) {
+      .app-shell { display: block; }
+      .sidebar { position: relative; display: grid; min-height: auto; grid-template-columns: 1fr auto; gap: 14px; padding: 17px 18px 12px; }
+      .sidebar-brand { padding: 0; }
+      .sidebar-context { display: none; }
+      .sidebar-spacer, .sidebar-footer { display: none; }
+      .nav-label { display: none; }
+      .side-nav { grid-column: 1 / -1; display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .side-nav::-webkit-scrollbar { display: none; }
+      .side-link { min-width: fit-content; min-height: 36px; padding: 0 10px; font-size: 10px; white-space: nowrap; }
+      .side-link.active { box-shadow: inset 0 -3px 0 var(--gold-light); }
+      .nav-icon { width: 19px; height: 19px; }
+      .topbar { min-height: 65px; padding: 0 18px; }
+      .help-link { display: none; }
+      .content { width: calc(100% - 36px); padding-top: 30px; }
+      .content-header { align-items: start; flex-direction: column; gap: 17px; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .grade-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .topbar { align-items: center; }
+      .breadcrumbs { font-size: 9px; }
+      .connection { font-size: 0; }
+      .connection::before { margin-right: 2px; }
+      .content-header h1 { font-size: 39px; }
+      .header-actions { gap: 7px; }
+      .header-actions .btn { padding: 0 9px; font-size: 10px; }
+      .grade-controls { align-items: start; flex-direction: column; padding: 13px 14px; }
+      .select-group { width: 100%; justify-content: space-between; }
+      .select-group select { flex: 1; }
+      .grade-legend { padding-left: 1px; }
+      .grade-table th:first-child, .grade-table td:first-child { padding-left: 14px; }
+      .grade-table th:last-child, .grade-table td:last-child { padding-right: 14px; }
+      .journal-strip { align-items: start; flex-direction: column; }
+      .journal-strip button { width: 100%; }
+      .sheet-grid { grid-template-columns: 1fr 1fr; }
+      .modal-actions { flex-direction: column; }
+    }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="guru">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="index.html" aria-label="Kembali ke situs TPQ Darul Jinan">
+        <span class="brand-logo"><svg class="brand-symbol" viewBox="0 0 48 48" role="img" aria-label="Emblem TPQ Darul Jinan"><path d="M9 28.5V22C9 13.2 15.8 6 24 6s15 7.2 15 16v6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M7 28.5h34l-1.5 13H8.5l-1.5-13Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 29.5 24 34l14-4.5-14 8-14-8Z" fill="none" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 34v4" stroke="currentColor" stroke-width="1.5"/><path d="M22 11.5a4.6 4.6 0 1 0 5.7 5.7A5.1 5.1 0 0 1 22 11.5Z" fill="currentColor"/></svg></span>
+        <span><span class="brand-name">TPQ Darul Jinan</span><span class="brand-caption">Ruang kerja guru</span></span>
+      </a>
+      <div class="sidebar-context"><span class="context-label">Lembaga aktif</span><span class="context-name">TPQ Darul Jinan</span><span class="context-meta">Tahun ajaran 2026 / 2027</span></div>
+      <nav class="side-nav" aria-label="Menu dashboard">
+        <span class="nav-label">Workspace</span>
+        <a class="side-link" href="absensi.html"><span class="nav-icon">01</span>Absensi</a>
+        <a class="side-link" href="materi.html"><span class="nav-icon">02</span>Materi &amp; tugas</a>
+         <a class="side-link" href="tahfidz.html"><span class="nav-icon">03</span>Tahfidz</a>
+         <a class="side-link active" href="nilai.html"><span class="nav-icon">04</span>Nilai &amp; rapor</a>
+         <a class="side-link" href="keuangan.html"><span class="nav-icon">05</span>Keuangan</a>
+          <a class="side-link" href="absensi.html#santri"><span class="nav-icon">06</span>Data santri</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NS</span><span><strong>Ustadzah Nisa</strong><span>Guru TPQ &bull; Sore</span></span></div></div>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><a href="index.html">TPQ Darul Jinan</a><span> / </span><strong>Nilai &amp; rapor</strong></div><div class="topbar-actions"><span class="connection">Offline-first aktif</span><a class="help-link" href="index.html#faq">Butuh bantuan?</a><span class="top-avatar">NS</span></div></header>
+      <main class="content">
+        <div class="content-header"><div><span class="eyebrow">Akademik / Evaluasi</span><h1 class="serif">Nilai &amp; rapor.</h1><p>Catat capaian dengan konteks yang utuh, bukan sekadar angka.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="journal-button">Isi jurnal</button><button class="btn btn-primary" type="button" data-open-report>Pratinjau rapor <span class="arrow">&nearr;</span></button></div></div>
+        <section class="metrics-grid" aria-label="Ringkasan nilai"><article class="metric-card"><span class="metric-label">Nilai tersimpan</span><span class="metric-value" id="saved-count">18</span><span class="metric-foot">Dari 24 kolom nilai</span></article><article class="metric-card highlight"><span class="metric-label">Rapor siap</span><span class="metric-value" id="ready-count">03</span><span class="metric-foot">Menunggu persetujuan</span></article><article class="metric-card"><span class="metric-label">KKM tercapai</span><span class="metric-value" id="kkm-rate">75%</span><span class="metric-foot">Rata-rata kelas</span></article><article class="metric-card"><span class="metric-label">Jurnal pertemuan</span><span class="metric-value">05/06</span><span class="metric-foot">Pertemuan terdokumentasi</span></article></section>
+        <div class="grade-layout">
+          <section class="panel" aria-labelledby="gradebook-title"><div class="panel-header"><div class="panel-heading"><h2 id="gradebook-title">Gradebook kelas Iqra 2</h2><p>KKM kelas: <strong>75</strong> &bull; Semester berjalan</p></div><span class="data-chip">DATA CONTOH</span></div><div class="grade-controls"><div class="select-group"><label for="class-select">Kelas</label><select id="class-select"><option>Iqra 2 &bull; Sore</option><option>Iqra 1 &bull; Sore</option><option>Iqra 3 &bull; Sore</option></select><label for="term-select">Periode</label><select id="term-select"><option>Semester 1</option><option>Semester 2</option></select></div><div class="grade-legend"><span class="legend-dot"></span>Tuntas<span class="legend-dot"></span>Perlu perhatian</div></div><div class="grade-scroll"><table class="grade-table"><thead><tr><th>Santri</th><th>Tahsin</th><th>Tahfidz</th><th>Adab</th><th>Hadir</th><th>Status</th><th></th></tr></thead><tbody id="grade-rows">
+            <tr data-name="aisyah zahra" data-needs="false"><td><div class="student-cell"><span class="student-avatar">AZ</span><span class="student-detail">Aisyah Zahra<small>Iqra 2</small></span></div></td><td><input class="score-input" type="number" min="0" max="100" value="88" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="90" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="92" data-score /></td><td>96%</td><td><span class="status-pill">Tuntas</span></td><td><button class="note-button" type="button" aria-label="Catatan Aisyah">&hellip;</button></td></tr>
+            <tr data-name="naufal akbar" data-needs="true"><td><div class="student-cell"><span class="student-avatar">NA</span><span class="student-detail">Naufal Akbar<small>Iqra 2</small></span></div></td><td><input class="score-input low" type="number" min="0" max="100" value="72" data-score /></td><td><input class="score-input low" type="number" min="0" max="100" value="68" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="84" data-score /></td><td>90%</td><td><span class="status-pill needs-review">Perlu perhatian</span></td><td><button class="note-button" type="button" aria-label="Catatan Naufal">&hellip;</button></td></tr>
+            <tr data-name="fathimah nabila" data-needs="false"><td><div class="student-cell"><span class="student-avatar">FN</span><span class="student-detail">Fathimah Nabila<small>Iqra 2</small></span></div></td><td><input class="score-input" type="number" min="0" max="100" value="91" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="86" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="95" data-score /></td><td>98%</td><td><span class="status-pill">Tuntas</span></td><td><button class="note-button" type="button" aria-label="Catatan Fathimah">&hellip;</button></td></tr>
+            <tr data-name="rayyan hakim" data-needs="true"><td><div class="student-cell"><span class="student-avatar">RH</span><span class="student-detail">Rayyan Hakim<small>Iqra 2</small></span></div></td><td><input class="score-input low" type="number" min="0" max="100" value="74" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="79" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="80" data-score /></td><td>92%</td><td><span class="status-pill needs-review">Perlu perhatian</span></td><td><button class="note-button" type="button" aria-label="Catatan Rayyan">&hellip;</button></td></tr>
+            <tr data-name="salwa nurdini" data-needs="false"><td><div class="student-cell"><span class="student-avatar">SN</span><span class="student-detail">Salwa Nurdini<small>Iqra 2</small></span></div></td><td><input class="score-input" type="number" min="0" max="100" value="84" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="82" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="91" data-score /></td><td>96%</td><td><span class="status-pill">Tuntas</span></td><td><button class="note-button" type="button" aria-label="Catatan Salwa">&hellip;</button></td></tr>
+            <tr data-name="maryam safira" data-needs="true"><td><div class="student-cell"><span class="student-avatar">MS</span><span class="student-detail">Maryam Safira<small>Iqra 2</small></span></div></td><td><input class="score-input" type="number" min="0" max="100" value="78" data-score /></td><td><input class="score-input low" type="number" min="0" max="100" value="73" data-score /></td><td><input class="score-input" type="number" min="0" max="100" value="88" data-score /></td><td>89%</td><td><span class="status-pill needs-review">Perlu perhatian</span></td><td><button class="note-button" type="button" aria-label="Catatan Maryam">&hellip;</button></td></tr>
+          </tbody></table></div><div class="journal-strip"><span><strong>Nilai non-akademik</strong><span>Tambahkan catatan akhlak dan kedisiplinan pada rapor.</span></span><button type="button" id="akhlak-button">Tambah catatan &rarr;</button></div></section>
+          <aside class="right-stack"><section class="panel report-panel"><div class="panel-header"><div class="panel-heading"><h2>Rapor semester</h2><p>Ringkasan siap dibagikan ke wali.</p></div><span class="data-chip">DRAFT</span></div><div class="report-preview"><span class="report-kicker">TPQ Darul Jinan &bull; Semester 1</span><h3 class="serif">Rania Azzahra</h3><p>Iqra 2 &bull; Tahun ajaran 2026 / 2027</p><div class="report-score"><strong>84,6</strong><span>Nilai akhir<br />Baik sekali</span></div><div class="report-progress"><span></span></div></div><div class="report-points"><div class="report-point"><span>Akademik</span><strong>83</strong></div><div class="report-point"><span>Tahfidz &amp; tahsin</span><strong>78</strong></div><div class="report-point"><span>Kehadiran</span><strong>96%</strong></div><div class="report-point"><span>Akhlak</span><span>Sangat baik</span></div></div><button class="btn btn-primary approval-button" type="button" id="approval-button">Ajukan persetujuan <span class="arrow">&nearr;</span></button></section><section class="panel approval-panel"><div class="mini-heading"><span>Status persetujuan</span><a href="#approval">Riwayat &rarr;</a></div><div class="approval-status" id="approval-status">Belum diajukan ke kepala lembaga</div><p>Setelah disetujui, rapor dapat dilihat dan diunduh oleh wali.</p><button class="btn btn-ghost approval-button" type="button" data-open-report>Lihat pratinjau rapor</button></section></aside>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div class="modal" id="report-modal" role="dialog" aria-modal="true" aria-labelledby="report-title" hidden><div class="modal-backdrop" data-close-report></div><div class="report-modal"><button class="modal-close" type="button" aria-label="Tutup pratinjau" data-close-report>&times;</button><span class="eyebrow">Pratinjau dokumen</span><h2 id="report-title" class="serif">Rapor semester.</h2><p>Dokumen ini akan menggabungkan nilai, tahfidz, tahsin, kehadiran, dan catatan akhlak.</p><div class="modal-sheet"><div class="sheet-head"><span><strong>Rania Azzahra</strong><span>TPQ Darul Jinan &bull; Semester 1</span></span><span class="sheet-mark">DJ</span></div><div class="sheet-grid"><div class="sheet-cell"><span>Nilai akhir</span><strong>84,6</strong></div><div class="sheet-cell"><span>Hadir</span><strong>96%</strong></div><div class="sheet-cell"><span>Status</span><strong>Baik</strong></div></div></div><div class="modal-actions"><button class="btn btn-ghost" type="button" data-close-report>Tutup</button><button class="btn btn-primary" type="button" id="download-report">Siapkan PDF <span class="arrow">&nearr;</span></button></div></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span>&#10003;</span><div><strong id="toast-title">Nilai tersimpan.</strong><small id="toast-detail">Rapor siap diperbarui.</small></div></div>
+  <script>
+    (() => {
+       const rows = [...document.querySelectorAll('#grade-rows tr')];
+       const modal = document.querySelector('#report-modal');
+       const toast = document.querySelector('#toast');
+       document.querySelector('.approval-panel')?.setAttribute('id', 'approval');
+       const previewStudent = rows[0]?.querySelector('.student-detail')?.childNodes[0]?.textContent.trim();
+       if (previewStudent) { document.querySelector('.report-preview h3').textContent = previewStudent; document.querySelector('.sheet-head strong').textContent = previewStudent; }
+       let toastTimer;
+      const showToast = (title, detail) => {
+        document.querySelector('#toast-title').textContent = title;
+        document.querySelector('#toast-detail').textContent = detail;
+        toast.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3600);
+      };
+      const updateClassSummary = () => {
+        const inputs = [...document.querySelectorAll('.score-input')];
+        const passed = inputs.filter((input) => Number(input.value) >= 75).length;
+        const rate = inputs.length ? Math.round((passed / inputs.length) * 100) : 0;
+        document.querySelector('#saved-count').textContent = inputs.filter((input) => input.value !== '').length;
+        document.querySelector('#kkm-rate').textContent = `${rate}%`;
+        document.querySelector('#ready-count').textContent = String(rows.filter((row) => row.dataset.needs === 'false').length).padStart(2, '0');
+      };
+      const updateRow = (input) => {
+        let score = Number(input.value);
+        if (Number.isNaN(score)) score = 0;
+        score = Math.max(0, Math.min(100, score));
+        input.value = score;
+        input.classList.toggle('low', score < 75);
+        const row = input.closest('tr');
+        const needsReview = [...row.querySelectorAll('.score-input')].some((item) => Number(item.value) < 75);
+        row.dataset.needs = String(needsReview);
+        const status = row.querySelector('.status-pill');
+        status.textContent = needsReview ? 'Perlu perhatian' : 'Tuntas';
+        status.classList.toggle('needs-review', needsReview);
+        updateClassSummary();
+      };
+      document.querySelectorAll('.score-input').forEach((input) => input.addEventListener('change', () => updateRow(input)));
+      document.querySelectorAll('select').forEach((select) => select.addEventListener('change', () => showToast('Tampilan diperbarui.', `${select.value} sedang ditampilkan.`)));
+      document.querySelectorAll('.note-button').forEach((button) => button.addEventListener('click', () => showToast('Catatan santri.', 'Kolom catatan akhlak siap diisi pada detail rapor.')));
+      document.querySelector('#journal-button').addEventListener('click', () => showToast('Jurnal guru siap.', 'Tambahkan ringkasan materi dan catatan pertemuan hari ini.'));
+      document.querySelector('#akhlak-button').addEventListener('click', () => showToast('Catatan akhlak siap.', 'Kolom penilaian non-akademik akan terbuka di detail rapor.'));
+      document.querySelectorAll('[data-open-report]').forEach((button) => button.addEventListener('click', () => { modal.hidden = false; }));
+      document.querySelectorAll('[data-close-report]').forEach((button) => button.addEventListener('click', () => { modal.hidden = true; }));
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') modal.hidden = true; });
+      document.querySelector('#approval-button').addEventListener('click', (event) => {
+        event.currentTarget.textContent = 'Menunggu persetujuan';
+        event.currentTarget.disabled = true;
+        document.querySelector('#approval-status').textContent = 'Diajukan ke kepala lembaga';
+        document.querySelector('#approval-status').style.color = 'var(--green)';
+        document.querySelector('#approval-status').style.background = '#e5f1e7';
+        showToast('Rapor diajukan.', 'Kepala lembaga dapat meninjau dan memberi persetujuan.');
+      });
+       document.querySelector('#download-report').addEventListener('click', () => { modal.hidden = true; showToast('PDF siap disiapkan.', 'Generator rapor akan membuat dokumen setelah backend aktif.'); });
+       const noteModal=document.createElement('div');noteModal.className='modal';noteModal.hidden=true;noteModal.setAttribute('aria-hidden','true');noteModal.innerHTML='<div class="modal-backdrop"></div><div class="report-modal"><button class="modal-close" type="button" aria-label="Tutup catatan">&times;</button><span class="eyebrow">Catatan santri</span><h2 class="serif">Catatan perkembangan.</h2><p>Tambahkan konteks yang dapat membantu wali memahami capaian santri.</p><label class="form-field" for="student-note"><span>Catatan</span><textarea id="student-note" rows="5" placeholder="Tulis catatan guru..."></textarea></label><div class="modal-actions"><button class="btn btn-ghost" type="button" data-close-note>Batal</button><button class="btn btn-primary" type="button" id="save-student-note">Simpan catatan</button></div></div>';document.body.append(noteModal);let activeNoteRow=null;const closeNote=()=>{noteModal.hidden=true;noteModal.setAttribute('aria-hidden','true');};document.querySelectorAll('.note-button').forEach(button=>button.addEventListener('click',()=>{activeNoteRow=button.closest('tr');document.getElementById('student-note').value=activeNoteRow.dataset.note||'';noteModal.hidden=false;noteModal.setAttribute('aria-hidden','false');document.getElementById('student-note').focus();}));noteModal.querySelector('.modal-backdrop').addEventListener('click',closeNote);noteModal.querySelector('[data-close-note]').addEventListener('click',closeNote);noteModal.querySelector('#save-student-note').addEventListener('click',()=>{if(activeNoteRow){activeNoteRow.dataset.note=document.getElementById('student-note').value.trim();activeNoteRow.querySelector('.note-button').title=activeNoteRow.dataset.note?'Catatan tersimpan':'Tambah catatan';}closeNote();showToast('Catatan tersimpan','Catatan santri akan ikut dalam pratinjau rapor.');});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!noteModal.hidden)closeNote();});
+       updateClassSummary();
+    })();
+  </script>
+</body>
+</html>

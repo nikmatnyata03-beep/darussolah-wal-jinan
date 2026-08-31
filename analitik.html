@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="Dashboard analitik, laporan, dan kesiapan data EMIS TPQ Darul Jinan." />
+  <title>Analitik &amp; Laporan | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pine:#0d4433; --pine-deep:#082e25; --pine-light:#155641; --gold:#c99435; --gold-light:#e8c879; --cream:#f5f6f0; --paper:#fffdf9; --sand:#ecefe7; --ink:#1e2c26; --muted:#748079; --line:#e0e4dc; --green:#3f8b62; --red:#ae5b47; --blue:#557e9e; }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; }
+    body { margin:0; color:var(--ink); background:var(--cream); font-family:"DM Sans",system-ui,sans-serif; line-height:1.45; -webkit-font-smoothing:antialiased; }
+    button, input, select, textarea { font:inherit; }
+    button { cursor:pointer; }
+    a { color:inherit; text-decoration:none; }
+    .serif { font-family:"DM Serif Display",Georgia,serif; font-weight:400; }
+    .app-shell { display:grid; min-height:100svh; grid-template-columns:246px minmax(0,1fr); }
+    .sidebar { position:sticky; top:0; display:flex; min-height:100svh; flex-direction:column; padding:26px 17px 18px; color:rgba(255,255,255,.74); background:var(--pine-deep); }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; padding:0 9px; }
+    .brand-logo { display:grid; width:38px; height:38px; place-items:center; color:var(--pine); border-radius:50%; background:#fff; }
+    .brand-symbol { width:100%; height:100%; padding:5px; }
+    .brand-name { display:block; color:#fff; font-size:12px; font-weight:700; line-height:1.1; }
+    .brand-caption { display:block; margin-top:4px; color:rgba(255,255,255,.43); font-size:8px; letter-spacing:.12em; text-transform:uppercase; }
+    .sidebar-context { margin:35px 9px 25px; padding:13px 12px; border:1px solid rgba(255,255,255,.11); border-radius:10px; background:rgba(255,255,255,.045); }
+    .context-label { display:block; margin-bottom:5px; color:var(--gold-light); font-size:9px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+    .context-name { display:block; color:#fff; font-size:11px; font-weight:600; }
+    .context-meta { display:block; margin-top:3px; color:rgba(255,255,255,.48); font-size:10px; }
+    .nav-label { display:block; margin:0 11px 9px; color:rgba(255,255,255,.34); font-size:9px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; }
+    .side-nav { display:grid; gap:3px; }
+    .side-link { display:flex; align-items:center; gap:11px; min-height:41px; padding:0 11px; color:rgba(255,255,255,.59); border-radius:9px; font-size:11px; font-weight:600; transition:color .2s ease,background .2s ease; }
+    .side-link:hover { color:#fff; background:rgba(255,255,255,.07); }
+    .side-link.active { color:#fff; background:var(--pine-light); box-shadow:inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display:grid; width:21px; height:21px; place-items:center; color:var(--gold-light); border:1px solid rgba(232,200,121,.24); border-radius:6px; font-size:10px; font-weight:700; }
+    .side-link:not(.active) .nav-icon { color:rgba(255,255,255,.55); border-color:rgba(255,255,255,.12); }
+    .sidebar-spacer { flex:1; }
+    .sidebar-footer { padding:14px 10px 0; border-top:1px solid rgba(255,255,255,.1); }
+    .user-card { display:flex; align-items:center; gap:9px; }
+    .user-avatar { display:grid; width:29px; height:29px; place-items:center; color:var(--pine-deep); border-radius:50%; background:var(--gold-light); font-size:10px; font-weight:700; }
+    .user-card strong { display:block; color:#fff; font-size:10px; font-weight:600; }
+    .user-card span { display:block; margin-top:2px; color:rgba(255,255,255,.43); font-size:9px; }
+    .main-content { min-width:0; background:var(--cream); }
+    .topbar { display:flex; min-height:76px; align-items:center; justify-content:space-between; gap:20px; padding:0 42px; border-bottom:1px solid var(--line); background:rgba(255,253,249,.72); }
+    .breadcrumbs { color:var(--muted); font-size:10px; }
+    .breadcrumbs strong { color:var(--pine); font-weight:700; }
+    .topbar-actions { display:flex; align-items:center; gap:12px; }
+    .status-online { display:inline-flex; align-items:center; gap:7px; color:var(--green); font-size:10px; font-weight:600; }
+    .status-online::before { width:6px; height:6px; border-radius:50%; background:currentColor; content:""; box-shadow:0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color:var(--muted); font-size:10px; }
+    .top-avatar { display:grid; width:32px; height:32px; place-items:center; color:var(--pine); border:1px solid rgba(13,68,51,.15); border-radius:50%; background:#e4eee8; font-size:10px; font-weight:700; }
+    .content { width:min(1180px,calc(100% - 84px)); margin:0 auto; padding:42px 0 58px; }
+    .content-header { display:flex; align-items:end; justify-content:space-between; gap:25px; margin-bottom:29px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; color:var(--gold); font-size:9px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; }
+    .eyebrow::before { width:23px; height:1px; background:currentColor; content:""; }
+    .content-header h1 { margin:12px 0 7px; color:var(--pine-deep); font-size:clamp(36px,4vw,51px); letter-spacing:-.035em; line-height:1; }
+    .content-header p { margin:0; color:var(--muted); font-size:12px; }
+    .header-actions { display:flex; align-items:center; gap:9px; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:41px; padding:0 14px; border:1px solid transparent; border-radius:8px; font-size:10px; font-weight:700; transition:transform .2s ease,box-shadow .2s ease,background .2s ease; }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-primary { color:#fff; background:var(--pine); box-shadow:0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background:var(--pine-deep); }
+    .btn-ghost { color:var(--pine); border-color:var(--line); background:var(--paper); }
+    .btn-ghost:hover { border-color:rgba(13,68,51,.25); background:#fff; }
+    .metrics-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:17px; }
+    .metric-card { position:relative; min-height:119px; padding:19px; overflow:hidden; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+    .metric-card::after { position:absolute; right:-28px; bottom:-47px; width:115px; height:115px; border:1px solid rgba(13,68,51,.1); border-radius:50%; content:""; }
+    .metric-card.highlight { color:#fff; border-color:var(--pine); background:var(--pine); }
+    .metric-card.highlight::after { border-color:rgba(232,200,121,.26); }
+    .metric-label { display:block; color:var(--muted); font-size:10px; }
+    .highlight .metric-label { color:rgba(255,255,255,.64); }
+    .metric-value { display:block; margin-top:11px; color:var(--pine-deep); font-family:"DM Serif Display",Georgia,serif; font-size:31px; line-height:1; }
+    .highlight .metric-value { color:var(--gold-light); }
+    .metric-foot { display:block; margin-top:8px; color:var(--green); font-size:9px; font-weight:700; }
+    .highlight .metric-foot { color:rgba(255,255,255,.58); }
+    .control-strip { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:17px; padding:13px 16px; border:1px solid var(--line); border-radius:11px; background:var(--paper); }
+    .scope-control { display:flex; align-items:center; gap:10px; }
+    .scope-control label { color:var(--muted); font-size:9px; font-weight:700; }
+    .scope-control select, .period-tabs button { height:32px; padding:0 10px; color:var(--pine); outline:0; border:1px solid var(--line); border-radius:7px; background:var(--cream); font-size:10px; font-weight:700; }
+    .period-tabs { display:flex; gap:4px; }
+    .period-tabs button { color:var(--muted); border-color:transparent; }
+    .period-tabs button.active { color:var(--pine); border-color:#b9d0bf; background:#e4eee8; }
+    .analytics-grid { display:grid; grid-template-columns:minmax(0,1.22fr) minmax(300px,.78fr); gap:17px; align-items:start; }
+    .left-stack, .right-stack { display:grid; gap:15px; min-width:0; }
+    .panel { min-width:0; border:1px solid var(--line); border-radius:13px; background:var(--paper); }
+    .panel-header { display:flex; align-items:start; justify-content:space-between; gap:15px; padding:20px 22px 16px; border-bottom:1px solid var(--line); }
+    .panel-heading h2 { margin:0; color:var(--pine-deep); font-size:15px; font-weight:700; }
+    .panel-heading p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .data-chip { padding:6px 8px; color:var(--pine); border-radius:7px; background:#e4eee8; font-size:9px; font-weight:700; white-space:nowrap; }
+    .chart-body { padding:19px 22px 20px; }
+    .chart-legend { display:flex; align-items:center; gap:13px; margin-bottom:18px; color:var(--muted); font-size:9px; }
+    .chart-legend span { display:inline-flex; align-items:center; gap:5px; }
+    .legend-dot { width:7px; height:7px; border-radius:50%; background:var(--gold); }
+    .legend-dot.green { background:var(--green); }
+    .trend-chart { display:grid; height:205px; grid-template-columns:28px 1fr; gap:11px; }
+    .y-axis { display:flex; flex-direction:column; justify-content:space-between; padding-bottom:20px; color:#a1aaa4; font-size:8px; text-align:right; }
+    .plot-area { position:relative; display:grid; grid-template-rows:1fr 20px; }
+    .grid-lines { position:absolute; inset:0 0 20px; display:grid; grid-template-rows:repeat(4,1fr); }
+    .grid-lines i { display:block; border-top:1px dashed #e5e9e3; }
+    .plot-columns { position:relative; z-index:1; display:flex; height:100%; align-items:end; justify-content:space-around; padding:0 5px 20px; }
+    .plot-column { display:flex; height:100%; align-items:end; gap:4px; }
+    .plot-bar { width:14px; min-height:5px; border-radius:4px 4px 0 0; background:var(--gold); }
+    .plot-bar.alt { background:#a8c7b1; }
+    .x-axis { display:flex; justify-content:space-around; color:#9ba49e; font-size:8px; }
+    .institution-card { padding:20px; }
+    .institution-title { display:flex; align-items:start; justify-content:space-between; gap:15px; }
+    .institution-title h2 { margin:0; color:var(--pine-deep); font-size:15px; }
+    .institution-title p { margin:4px 0 0; color:var(--muted); font-size:10px; }
+    .institution-list { margin-top:18px; }
+    .institution-row { display:grid; grid-template-columns:1fr auto; gap:10px; padding:11px 0; border-bottom:1px solid #edf0ea; }
+    .institution-row:last-child { border-bottom:0; }
+    .institution-copy { display:flex; align-items:center; gap:9px; }
+    .institution-mark { display:grid; width:29px; height:29px; place-items:center; color:var(--pine); border-radius:8px; background:#e4eee8; font-size:9px; font-weight:700; }
+    .institution-row:nth-child(2) .institution-mark { color:#8b6829; background:#f8edcf; }
+    .institution-row:nth-child(3) .institution-mark { color:#557e9e; background:#e3edf2; }
+    .institution-row:nth-child(4) .institution-mark { color:#9b5949; background:#f6e3dc; }
+    .institution-copy strong { display:block; color:var(--pine-deep); font-size:10px; }
+    .institution-copy span { display:block; margin-top:2px; color:var(--muted); font-size:8px; }
+    .institution-total { align-self:center; color:var(--pine); font-family:"DM Serif Display",Georgia,serif; font-size:20px; }
+    .bar-line { grid-column:1 / -1; height:5px; overflow:hidden; border-radius:3px; background:var(--sand); }
+    .bar-line i { display:block; height:100%; border-radius:inherit; background:var(--green); }
+    .attendance-chart { padding:18px 22px 21px; }
+    .attendance-head { display:flex; align-items:end; justify-content:space-between; gap:12px; }
+    .attendance-head strong { color:var(--pine-deep); font-family:"DM Serif Display",Georgia,serif; font-size:29px; font-weight:400; line-height:1; }
+    .attendance-head span { color:var(--green); font-size:9px; font-weight:700; }
+    .mini-line-chart { position:relative; display:flex; height:88px; align-items:end; gap:8px; margin-top:17px; padding:0 5px 17px; border-bottom:1px solid var(--line); }
+    .mini-line-chart::before, .mini-line-chart::after { position:absolute; right:0; left:0; border-top:1px dashed #e6eae4; content:""; }
+    .mini-line-chart::before { top:21px; }
+    .mini-line-chart::after { top:48px; }
+    .line-point { position:relative; z-index:1; flex:1; min-width:4px; border-radius:4px 4px 0 0; background:var(--green); }
+    .line-labels { display:flex; justify-content:space-between; margin-top:7px; color:var(--muted); font-size:8px; }
+    .emis-card { padding:20px; color:#fff; border-radius:13px; background:var(--pine); }
+    .emis-card .panel-heading h2 { color:#fff; }
+    .emis-card .panel-heading p { color:rgba(255,255,255,.58); }
+    .emis-progress { display:flex; align-items:end; justify-content:space-between; gap:12px; margin-top:21px; }
+    .emis-progress strong { color:var(--gold-light); font-family:"DM Serif Display",Georgia,serif; font-size:33px; font-weight:400; line-height:.9; }
+    .emis-progress span { color:rgba(255,255,255,.57); font-size:9px; }
+    .emis-track { height:7px; margin-top:16px; overflow:hidden; border-radius:4px; background:rgba(255,255,255,.16); }
+    .emis-track i { display:block; width:86%; height:100%; border-radius:inherit; background:var(--gold-light); }
+    .emis-list { margin-top:16px; border-top:1px solid rgba(255,255,255,.13); }
+    .emis-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.11); }
+    .emis-row:last-child { border-bottom:0; }
+    .emis-row span { color:rgba(255,255,255,.62); font-size:9px; }
+    .emis-row strong { color:#fff; font-size:9px; }
+    .emis-row strong.ready { color:#b9d9bb; }
+    .emis-action { width:100%; margin-top:15px; color:var(--pine-deep); background:var(--gold-light); }
+    .report-panel { margin-top:17px; }
+    .report-tools { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 22px; }
+    .report-list { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:0 22px 22px; }
+    .report-card { padding:14px; border:1px solid var(--line); border-radius:9px; background:var(--cream); }
+    .report-card b { display:grid; width:29px; height:29px; place-items:center; color:var(--red); border-radius:7px; background:#f6e3dc; font-size:9px; }
+    .report-card strong { display:block; margin-top:12px; color:var(--pine-deep); font-size:10px; }
+    .report-card span { display:block; min-height:28px; margin-top:4px; color:var(--muted); font-size:9px; }
+    .report-card button { margin-top:11px; padding:6px 8px; color:var(--pine); border:0; border-radius:6px; background:var(--sand); font-size:9px; font-weight:700; }
+    .report-card button:hover { color:#fff; background:var(--pine); }
+    .modal[hidden] { display:none; }
+    .modal { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:22px; }
+    .modal-backdrop { position:absolute; inset:0; background:rgba(8,46,37,.64); backdrop-filter:blur(5px); }
+    .dialog { position:relative; width:min(100%,490px); padding:26px; border-radius:16px; background:var(--paper); box-shadow:0 25px 70px rgba(0,0,0,.22); }
+    .dialog-close { position:absolute; top:13px; right:14px; display:grid; width:28px; height:28px; place-items:center; color:var(--muted); border:0; border-radius:50%; background:var(--sand); font-size:19px; }
+    .dialog h2 { margin:13px 0 7px; color:var(--pine-deep); font-size:28px; line-height:1; }
+    .dialog > p { margin:0 0 18px; color:var(--muted); font-size:11px; }
+    .dialog-actions { display:flex; gap:8px; margin-top:18px; }
+    .dialog-actions .btn { flex:1; }
+    .toast { position:fixed; right:22px; bottom:22px; z-index:30; display:flex; align-items:center; gap:10px; width:min(350px,calc(100% - 44px)); padding:13px 15px; color:#fff; border-radius:11px; background:var(--pine-deep); box-shadow:0 18px 40px rgba(8,46,37,.23); opacity:0; pointer-events:none; transform:translateY(12px); transition:opacity .25s ease,transform .25s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast > span { display:grid; width:23px; height:23px; place-items:center; color:var(--pine-deep); border-radius:50%; background:var(--gold-light); font-size:11px; }
+    .toast strong { display:block; font-size:11px; }
+    .toast small { display:block; margin-top:2px; color:rgba(255,255,255,.6); font-size:9px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media (max-width:1100px) { .app-shell { grid-template-columns:214px minmax(0,1fr); } .topbar { padding:0 28px; } .content { width:min(100% - 56px,1180px); } .analytics-grid { grid-template-columns:minmax(0,1fr) 290px; } }
+    @media (max-width:820px) { .app-shell { display:block; } .sidebar { position:relative; display:grid; min-height:auto; grid-template-columns:1fr auto; gap:14px; padding:17px 18px 12px; } .sidebar-brand { padding:0; } .sidebar-context,.sidebar-spacer,.sidebar-footer { display:none; } .nav-label { display:none; } .side-nav { grid-column:1 / -1; display:flex; gap:5px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; } .side-nav::-webkit-scrollbar { display:none; } .side-link { min-width:fit-content; min-height:36px; padding:0 10px; font-size:10px; white-space:nowrap; } .side-link.active { box-shadow:inset 0 -3px 0 var(--gold-light); } .topbar { min-height:65px; padding:0 18px; } .help-link { display:none; } .content { width:calc(100% - 36px); padding-top:30px; } .content-header { align-items:start; flex-direction:column; gap:17px; } .header-actions { width:100%; } .header-actions .btn { flex:1; } .metrics-grid { grid-template-columns:1fr 1fr; } .analytics-grid { grid-template-columns:1fr; } }
+    @media (max-width:620px) { .status-online { font-size:0; } .status-online::before { margin-right:2px; } .content-header h1 { font-size:40px; } .control-strip { align-items:start; flex-direction:column; } .scope-control { width:100%; justify-content:space-between; } .scope-control select { width:65%; } .period-tabs { width:100%; } .period-tabs button { flex:1; } .metrics-grid { gap:8px; } .metric-card { min-height:112px; padding:15px; } .metric-value { font-size:26px; } .panel-header,.chart-body,.attendance-chart,.institution-card,.emis-card { padding-left:16px; padding-right:16px; } .report-tools { align-items:start; flex-direction:column; padding:13px 16px; } .report-list { grid-template-columns:1fr; padding:0 16px 16px; } }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="admin">
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navigasi analitik">
+      <a class="sidebar-brand" href="index.html"><span class="brand-logo" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 21.5 25 10l16 11.5v18A3.5 3.5 0 0 1 37.5 43h-25A3.5 3.5 0 0 1 9 39.5v-18Z" fill="#0D4433"/><path d="M25 10v33M9 21.5h32M14 27h22M17 43V27h16v16" stroke="#C99435" stroke-width="2"/><path d="m19 19 6-4 6 4-6 4-6-4Z" fill="#E8C879"/></svg></span><span><strong class="brand-name">TPQ Darul Jinan</strong><small class="brand-caption">Portal pengelola</small></span></a>
+      <div class="sidebar-context"><span class="context-label">Yayasan aktif</span><span class="context-name">Darussolah Wal Jinan</span><span class="context-meta">4 lembaga terhubung</span></div>
+      <nav class="side-nav" aria-label="Menu analitik"><span class="nav-label">Ruang kerja</span><a class="side-link" href="keuangan.html"><span class="nav-icon">01</span>Keuangan</a><a class="side-link" href="notifikasi.html"><span class="nav-icon">02</span>Komunikasi</a><a class="side-link" href="cms.html"><span class="nav-icon">03</span>CMS &amp; konten</a><a class="side-link active" href="analitik.html" aria-current="page"><span class="nav-icon">04</span>Analitik</a><a class="side-link" href="kepegawaian.html"><span class="nav-icon">05</span>Kepegawaian</a><a class="side-link" href="#emis"><span class="nav-icon">06</span>Data EMIS</a></nav>
+      <div class="sidebar-spacer"></div><div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NA</span><span><strong>Nadia Aulia</strong><span>Super admin yayasan</span></span></div></div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><span>Yayasan Darussolah Wal Jinan</span><span> / </span><strong>Analitik &amp; laporan</strong></div><div class="topbar-actions"><span class="status-online">Data diperbarui</span><a class="help-link" href="#bantuan">Pusat bantuan</a><span class="top-avatar">NA</span></div></header>
+      <div class="content">
+        <div class="content-header"><div><span class="eyebrow">Membaca arah bersama</span><h1 class="serif">Analitik &amp; laporan.</h1><p>Satu pandangan untuk memahami pertumbuhan empat lembaga dan menyiapkan data yang rapi.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="printButton">Cetak laporan</button><button class="btn btn-primary" type="button" id="exportTopButton">Ekspor data EMIS</button></div></div>
+        <div class="control-strip"><div class="scope-control"><label for="scopeSelect">Lingkup analitik</label><select id="scopeSelect"><option value="all">Seluruh yayasan · 4 lembaga</option><option value="ra">RA Darul Jinan</option><option value="tpq">TPQ Darul Jinan</option><option value="mdt">MDT Darul Jinan</option><option value="smp">SMP Darul Jinan</option></select></div><div class="period-tabs" role="tablist" aria-label="Periode analitik"><button class="active" type="button" data-period="month">Bulan ini</button><button type="button" data-period="term">Semester</button><button type="button" data-period="year">Tahun ajaran</button></div></div>
+        <section class="metrics-grid" aria-label="Ringkasan yayasan"><article class="metric-card highlight"><span class="metric-label">Total santri aktif</span><strong class="metric-value" id="studentTotal">440</strong><span class="metric-foot">↑ 8,4% dari tahun lalu</span></article><article class="metric-card"><span class="metric-label">Kehadiran rata-rata</span><strong class="metric-value" id="attendanceTotal">93,8%</strong><span class="metric-foot">Target yayasan 90%</span></article><article class="metric-card"><span class="metric-label">Pendaftar gelombang ini</span><strong class="metric-value" id="admissionTotal">86</strong><span class="metric-foot">54 sudah diverifikasi</span></article><article class="metric-card"><span class="metric-label">Pemasukan bulan ini</span><strong class="metric-value" id="incomeTotal">Rp 31,6 jt</strong><span class="metric-foot">82% tagihan SPP lunas</span></article></section>
+        <div class="analytics-grid">
+          <div class="left-stack">
+            <section class="panel" aria-labelledby="admissionHeading"><div class="panel-header"><div class="panel-heading"><h2 id="admissionHeading">Tren pendaftaran</h2><p>Perbandingan pendaftar per gelombang · data contoh</p></div><span class="data-chip" id="admissionPeriod">2026 / 2027</span></div><div class="chart-body"><div class="chart-legend"><span><i class="legend-dot"></i>Pendaftar baru</span><span><i class="legend-dot green"></i>Diverifikasi</span></div><div class="trend-chart"><div class="y-axis"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div><div class="plot-area"><div class="grid-lines"><i></i><i></i><i></i><i></i></div><div class="plot-columns"><div class="plot-column"><i class="plot-bar" style="height:48%"></i><i class="plot-bar alt" style="height:31%"></i></div><div class="plot-column"><i class="plot-bar" style="height:63%"></i><i class="plot-bar alt" style="height:44%"></i></div><div class="plot-column"><i class="plot-bar" style="height:82%"></i><i class="plot-bar alt" style="height:59%"></i></div><div class="plot-column"><i class="plot-bar" style="height:67%"></i><i class="plot-bar alt" style="height:51%"></i></div></div><div class="x-axis"><span>Gel. 1</span><span>Gel. 2</span><span>Gel. 3</span><span>Gel. 4</span></div></div></div></div></section>
+            <section class="panel" aria-labelledby="attendanceHeading"><div class="panel-header"><div class="panel-heading"><h2 id="attendanceHeading">Tren kehadiran</h2><p>Rata-rata kehadiran seluruh lembaga dalam 6 bulan terakhir</p></div><span class="data-chip">Target ≥ 90%</span></div><div class="attendance-chart"><div class="attendance-head"><strong id="attendanceChartValue">93,8%</strong><span>↑ 2,1% dibanding semester lalu</span></div><div class="mini-line-chart" aria-label="Grafik tren kehadiran"><i class="line-point" style="height:52%"></i><i class="line-point" style="height:59%"></i><i class="line-point" style="height:57%"></i><i class="line-point" style="height:68%"></i><i class="line-point" style="height:76%"></i><i class="line-point" style="height:88%"></i></div><div class="line-labels"><span>Mar</span><span>Apr</span><span>Mei</span><span>Jun</span><span>Jul</span><span>Agu</span></div></div></section>
+          </div>
+          <div class="right-stack"><section class="panel institution-card" aria-labelledby="institutionHeading"><div class="institution-title"><div><h2 id="institutionHeading">Sebaran santri</h2><p>Per lembaga · <span class="data-chip">data contoh</span></p></div><button class="btn btn-ghost" style="min-height:30px;padding:0 9px;font-size:9px" type="button" id="institutionDetail">Detail</button></div><div class="institution-list"><div class="institution-row"><div class="institution-copy"><span class="institution-mark">RA</span><span><strong>RA Darul Jinan</strong><span>Usia dini</span></span></div><b class="institution-total">86</b><div class="bar-line"><i style="width:39%"></i></div></div><div class="institution-row"><div class="institution-copy"><span class="institution-mark">TQ</span><span><strong>TPQ Darul Jinan</strong><span>Al-Qur'an &amp; tahfidz</span></span></div><b class="institution-total">126</b><div class="bar-line"><i style="width:57%"></i></div></div><div class="institution-row"><div class="institution-copy"><span class="institution-mark">MD</span><span><strong>MDT Darul Jinan</strong><span>Diniyah sore</span></span></div><b class="institution-total">174</b><div class="bar-line"><i style="width:79%"></i></div></div><div class="institution-row"><div class="institution-copy"><span class="institution-mark">SM</span><span><strong>SMP Darul Jinan</strong><span>Pendidikan lanjutan</span></span></div><b class="institution-total">54</b><div class="bar-line"><i style="width:25%"></i></div></div></div></section><section class="emis-card" id="emis" aria-labelledby="emisHeading"><div class="panel-heading"><h2 id="emisHeading">Kesiapan data EMIS</h2><p>Validasi data sebelum diekspor untuk operator.</p></div><div class="emis-progress"><strong id="emisPercent">86%</strong><span>siap diekspor</span></div><div class="emis-track"><i></i></div><div class="emis-list"><div class="emis-row"><span>Data santri</span><strong class="ready">Lengkap</strong></div><div class="emis-row"><span>Data guru</span><strong class="ready">Lengkap</strong></div><div class="emis-row"><span>Data rombel &amp; jadwal</span><strong>Perlu 4 data</strong></div></div><button class="btn emis-action" type="button" id="emisButton">Validasi &amp; ekspor</button></section></div>
+        </div>
+        <section class="panel report-panel" id="laporan" aria-labelledby="reportHeading"><div class="panel-header"><div class="panel-heading"><h2 id="reportHeading">Laporan siap-cetak</h2><p>Ringkasan yang dapat digunakan untuk rapat, akreditasi, dan arsip lembaga.</p></div><button class="btn btn-ghost" type="button" id="printReport">Cetak semua laporan</button></div><div class="report-tools"><div class="period-tabs" role="tablist" aria-label="Jenis laporan"><button class="filter-tab active" type="button" data-report="all">Semua</button><button class="filter-tab" type="button" data-report="academic">Akademik</button><button class="filter-tab" type="button" data-report="finance">Keuangan</button><button class="filter-tab" type="button" data-report="accreditation">Akreditasi</button></div><span class="data-chip">Terakhir diperbarui hari ini</span></div><div class="report-list"><article class="report-card" data-report-type="academic"><b>PDF</b><strong>Rekap perkembangan santri</strong><span>Nilai, tahfidz, dan kehadiran · Semester 2</span><button type="button" data-report-action="Rekap perkembangan santri">Pratinjau</button></article><article class="report-card" data-report-type="finance"><b style="color:#8b6829;background:#f8edcf">Rp</b><strong>Laporan keuangan gabungan</strong><span>Pemasukan, pengeluaran, dan tunggakan · Agustus</span><button type="button" data-report-action="Laporan keuangan gabungan">Pratinjau</button></article><article class="report-card" data-report-type="accreditation"><b style="color:#557e9e;background:#e3edf2">EM</b><strong>Rekap sarana &amp; rasio guru</strong><span>Format ringkas untuk persiapan akreditasi</span><button type="button" data-report-action="Rekap sarana & rasio guru">Pratinjau</button></article></div></section>
+      </div>
+    </main>
+  </div>
+  <div class="modal" id="emisModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="emisModalTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Kesiapan EMIS</span><h2 class="serif" id="emisModalTitle">Validasi data</h2><p>Lengkapi data yang masih kurang sebelum file siap diunduh.</p><div class="emis-list" style="margin-top:0;border-top:1px solid var(--line)"><div class="emis-row" style="border-color:var(--line)"><span>Data santri &amp; identitas</span><strong class="ready">Lengkap</strong></div><div class="emis-row" style="border-color:var(--line)"><span>Data guru &amp; kualifikasi</span><strong class="ready">Lengkap</strong></div><div class="emis-row" style="border-color:var(--line)"><span>Rombel &amp; jadwal mengajar</span><strong style="color:var(--red)">4 belum lengkap</strong></div></div><div class="dialog-actions"><button class="btn btn-ghost" type="button" data-close-modal>Periksa nanti</button><button class="btn btn-primary" type="button" id="confirmEmis">Ekspor file</button></div></div></div>
+  <div class="toast" id="toast" role="status"><span>✓</span><div><strong id="toastTitle">Perubahan tersimpan</strong><small id="toastText">Laporan berhasil disiapkan.</small></div></div>
+  <script>
+    let toastTimer;
+     const toast=document.getElementById('toast');
+     document.querySelectorAll('.help-link[href="#bantuan"]').forEach(link=>link.href='index.html#faq');
+    function showToast(title,text){document.getElementById('toastTitle').textContent=title;document.getElementById('toastText').textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3200);}
+    function setModal(id,open){const modal=document.getElementById(id);modal.hidden=!open;modal.setAttribute('aria-hidden',String(!open));}
+     const scopes={all:{students:'440',attendance:'93,8%',admissions:'86',income:'Rp 31,6 jt'},ra:{students:'86',attendance:'95,1%',admissions:'21',income:'Rp 7,2 jt'},tpq:{students:'126',attendance:'93,4%',admissions:'32',income:'Rp 9,8 jt'},mdt:{students:'174',attendance:'92,9%',admissions:'24',income:'Rp 11,7 jt'},rtq:{students:'54',attendance:'94,2%',admissions:'09',income:'Rp 2,9 jt'}};
+     const institutionScope=document.querySelector('#scopeSelect option[value="smp"]');if(institutionScope){institutionScope.value='rtq';institutionScope.textContent='RTQ Darussolah';}document.querySelectorAll('.institution-copy strong').forEach(item=>{if(item.textContent.includes('SMP'))item.textContent='RTQ Darussolah';});
+    document.getElementById('scopeSelect').addEventListener('change',(event)=>{const data=scopes[event.target.value];document.getElementById('studentTotal').textContent=data.students;document.getElementById('attendanceTotal').textContent=data.attendance;document.getElementById('attendanceChartValue').textContent=data.attendance;document.getElementById('admissionTotal').textContent=data.admissions;document.getElementById('incomeTotal').textContent=data.income;showToast('Lingkup diperbarui',`Analitik ${event.target.selectedOptions[0].text} sedang ditampilkan.`);});
+    document.querySelectorAll('[data-period]').forEach((button)=>button.addEventListener('click',()=>{document.querySelectorAll('[data-period]').forEach((item)=>item.classList.toggle('active',item===button));document.getElementById('admissionPeriod').textContent=button.dataset.period==='month'?'Agustus 2026':button.dataset.period==='term'?'Semester 1':'2026 / 2027';showToast('Periode diperbarui',`Grafik kini menampilkan ${button.textContent.toLowerCase()}.`);}));
+    document.getElementById('emisButton').addEventListener('click',()=>setModal('emisModal',true));
+    document.getElementById('confirmEmis').addEventListener('click',()=>{setModal('emisModal',false);showToast('Ekspor EMIS disiapkan','File terformat siap diunduh setelah 4 data dilengkapi.');});
+    document.querySelectorAll('[data-close-modal]').forEach((button)=>button.addEventListener('click',()=>setModal(button.closest('.modal').id,false)));
+    document.addEventListener('keydown',(event)=>{if(event.key==='Escape')document.querySelectorAll('.modal').forEach((modal)=>{if(!modal.hidden)setModal(modal.id,false);});});
+    document.getElementById('exportTopButton').addEventListener('click',()=>setModal('emisModal',true));
+    document.querySelectorAll('[data-report-action]').forEach((button)=>button.addEventListener('click',()=>showToast('Pratinjau laporan',`${button.dataset.reportAction} siap dibuka.`)));
+    document.getElementById('printButton').addEventListener('click',()=>showToast('Laporan siap dicetak','Ringkasan analitik telah disiapkan untuk pencetakan.'));
+    document.getElementById('printReport').addEventListener('click',()=>showToast('Semua laporan siap','Tiga laporan siap dicetak atau disimpan sebagai PDF.'));
+    document.getElementById('institutionDetail').addEventListener('click',()=>showToast('Detail lembaga dibuka','Gunakan filter lingkup untuk melihat satu lembaga secara terpisah.'));
+    document.querySelectorAll('[data-report]').forEach((button)=>button.addEventListener('click',()=>{document.querySelectorAll('[data-report]').forEach((item)=>item.classList.toggle('active',item===button));document.querySelectorAll('.report-card').forEach((card)=>{card.hidden=button.dataset.report!=='all'&&card.dataset.reportType!==button.dataset.report;});}));
+  </script>
+</body>
+</html>

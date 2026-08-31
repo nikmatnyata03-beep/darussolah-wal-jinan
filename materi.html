@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a382c" />
+  <meta name="description" content="Modul materi pembelajaran dan tugas TPQ Darul Jinan." />
+  <title>Materi & Tugas | TPQ Darul Jinan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --pine: #0d4433;
+      --pine-deep: #082e25;
+      --pine-light: #155641;
+      --gold: #c99435;
+      --gold-light: #e8c879;
+      --cream: #f5f6f0;
+      --paper: #fffdf9;
+      --sand: #ecefe7;
+      --ink: #1e2c26;
+      --muted: #748079;
+      --line: #e0e4dc;
+      --green: #3f8b62;
+      --blue: #557e9e;
+      --clay: #ae5b47;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { margin: 0; color: var(--ink); background: var(--cream); font-family: "DM Sans", system-ui, sans-serif; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .serif { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; }
+    .app-shell { display: grid; min-height: 100svh; grid-template-columns: 246px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; display: flex; min-height: 100svh; flex-direction: column; padding: 26px 17px 18px; color: rgba(255,255,255,.74); background: var(--pine-deep); }
+    .sidebar-brand { display: flex; align-items: center; gap: 10px; padding: 0 9px; }
+    .brand-logo { display: grid; width: 38px; height: 38px; place-items: center; color: var(--pine); border-radius: 50%; background: #fff; }
+    .brand-symbol { width: 100%; height: 100%; padding: 5px; }
+    .brand-name { display: block; color: #fff; font-size: 12px; font-weight: 700; line-height: 1.1; }
+    .brand-caption { display: block; margin-top: 4px; color: rgba(255,255,255,.43); font-size: 8px; letter-spacing: .12em; text-transform: uppercase; }
+    .sidebar-context { margin: 35px 9px 25px; padding: 13px 12px; border: 1px solid rgba(255,255,255,.11); border-radius: 10px; background: rgba(255,255,255,.045); }
+    .context-label { display: block; margin-bottom: 5px; color: var(--gold-light); font-size: 9px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; }
+    .context-name { display: block; color: #fff; font-size: 11px; font-weight: 600; }
+    .context-meta { display: block; margin-top: 3px; color: rgba(255,255,255,.48); font-size: 10px; }
+    .nav-label { display: block; margin: 0 11px 9px; color: rgba(255,255,255,.34); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    .side-nav { display: grid; gap: 3px; }
+    .side-link { display: flex; align-items: center; gap: 11px; min-height: 41px; padding: 0 11px; color: rgba(255,255,255,.59); border-radius: 9px; font-size: 11px; font-weight: 600; transition: color .2s ease, background .2s ease; }
+    .side-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+    .side-link.active { color: #fff; background: var(--pine-light); box-shadow: inset 3px 0 0 var(--gold-light); }
+    .nav-icon { display: grid; width: 21px; height: 21px; place-items: center; color: var(--gold-light); border: 1px solid rgba(232,200,121,.24); border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .side-link:not(.active) .nav-icon { color: rgba(255,255,255,.55); border-color: rgba(255,255,255,.12); }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-footer { padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.1); }
+    .user-card { display: flex; align-items: center; gap: 9px; }
+    .user-avatar { display: grid; width: 29px; height: 29px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 10px; font-weight: 700; }
+    .user-card strong { display: block; color: #fff; font-size: 10px; font-weight: 600; }
+    .user-card span { display: block; margin-top: 2px; color: rgba(255,255,255,.43); font-size: 9px; }
+    .main-content { min-width: 0; background: var(--cream); }
+    .topbar { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 42px; border-bottom: 1px solid var(--line); background: rgba(255,253,249,.72); }
+    .breadcrumbs { color: var(--muted); font-size: 10px; }
+    .breadcrumbs strong { color: var(--pine); font-weight: 700; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .connection { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-size: 10px; font-weight: 600; }
+    .connection::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; box-shadow: 0 0 0 3px rgba(63,139,98,.12); }
+    .help-link { color: var(--muted); font-size: 10px; }
+    .top-avatar { display: grid; width: 32px; height: 32px; place-items: center; color: var(--pine); border: 1px solid rgba(13,68,51,.15); border-radius: 50%; background: #e4eee8; font-size: 10px; font-weight: 700; }
+    .content { width: min(1180px, calc(100% - 84px)); margin: 0 auto; padding: 42px 0 55px; }
+    .content-header { display: flex; align-items: end; justify-content: space-between; gap: 25px; margin-bottom: 29px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .eyebrow::before { width: 23px; height: 1px; background: currentColor; content: ""; }
+    .content-header h1 { margin: 12px 0 7px; color: var(--pine-deep); font-size: clamp(36px, 4vw, 51px); letter-spacing: -.035em; line-height: 1; }
+    .content-header p { margin: 0; color: var(--muted); font-size: 12px; }
+    .header-actions { display: flex; align-items: center; gap: 9px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 15px; border: 1px solid transparent; border-radius: 9px; font-size: 11px; font-weight: 700; transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { color: #fff; background: var(--pine); box-shadow: 0 7px 15px rgba(13,68,51,.12); }
+    .btn-primary:hover { background: var(--pine-deep); box-shadow: 0 10px 20px rgba(13,68,51,.18); }
+    .btn-ghost { color: var(--pine); border-color: var(--line); background: var(--paper); }
+    .btn-ghost:hover { border-color: rgba(13,68,51,.28); background: #fff; }
+    .arrow { font-size: 15px; line-height: 0; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric-card { position: relative; min-height: 119px; padding: 19px; overflow: hidden; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .metric-card::after { position: absolute; right: -28px; bottom: -47px; width: 115px; height: 115px; border: 1px solid rgba(13,68,51,.1); border-radius: 50%; content: ""; }
+    .metric-card.highlight { color: #fff; border-color: var(--pine); background: var(--pine); }
+    .metric-card.highlight::after { border-color: rgba(232,200,121,.26); }
+    .metric-label { display: block; color: var(--muted); font-size: 10px; }
+    .highlight .metric-label { color: rgba(255,255,255,.65); }
+    .metric-value { display: block; margin-top: 11px; color: var(--pine-deep); font-family: "DM Serif Display", Georgia, serif; font-size: 32px; line-height: 1; }
+    .highlight .metric-value { color: var(--gold-light); }
+    .metric-foot { display: block; margin-top: 8px; color: var(--green); font-size: 9px; font-weight: 700; }
+    .highlight .metric-foot { color: rgba(255,255,255,.58); }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr); gap: 17px; align-items: start; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 13px; background: var(--paper); }
+    .panel-header { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 21px 22px 17px; border-bottom: 1px solid var(--line); }
+    .panel-heading h2 { margin: 0; color: var(--pine-deep); font-size: 15px; font-weight: 700; }
+    .panel-heading p { margin: 4px 0 0; color: var(--muted); font-size: 10px; }
+    .data-chip { padding: 6px 8px; color: var(--pine); border-radius: 7px; background: var(--pine-soft, #e4eee8); font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .library-tools { display: flex; align-items: center; justify-content: space-between; gap: 13px; padding: 14px 22px; }
+    .filter-tabs { display: flex; align-items: center; gap: 5px; }
+    .filter-tab { padding: 7px 9px; color: var(--muted); border: 0; border-radius: 6px; background: transparent; font-size: 10px; font-weight: 600; }
+    .filter-tab:hover { color: var(--pine); background: var(--sand); }
+    .filter-tab.active { color: var(--pine); background: var(--pine-soft, #e4eee8); }
+    .search-wrap { position: relative; }
+    .search-wrap::before { position: absolute; top: 50%; left: 10px; color: var(--muted); content: "⌕"; font-size: 15px; transform: translateY(-54%); }
+    .search-input { width: 155px; height: 31px; padding: 0 9px 0 27px; color: var(--ink); outline: 0; border: 1px solid var(--line); border-radius: 7px; background: var(--cream); font-size: 10px; }
+    .search-input:focus { border-color: var(--pine); }
+    .resource-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 22px 22px; }
+    .resource-card { position: relative; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 11px; align-items: center; min-height: 102px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; transition: border .2s ease, transform .2s ease; }
+    .resource-card:hover { border-color: rgba(13,68,51,.28); transform: translateY(-2px); }
+    .resource-card[hidden] { display: none; }
+    .file-icon { display: grid; width: 39px; height: 47px; place-items: center; color: #fff; border-radius: 7px; font-size: 10px; font-weight: 700; }
+    .file-pdf { background: var(--clay); }
+    .file-audio { background: var(--blue); }
+    .file-image { background: var(--gold); }
+    .file-doc { background: var(--green); }
+    .resource-type { display: block; margin-bottom: 5px; color: var(--gold); font-size: 8px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .resource-card h3 { overflow: hidden; margin: 0; color: var(--pine-deep); font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .resource-meta { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .resource-action { padding: 6px; color: var(--muted); border: 0; border-radius: 6px; background: var(--sand); font-size: 15px; line-height: 1; }
+    .resource-action:hover { color: var(--pine); background: var(--pine-soft, #e4eee8); }
+    .empty-resource { grid-column: 1 / -1; padding: 32px 15px; color: var(--muted); font-size: 11px; text-align: center; }
+    .right-stack { display: grid; gap: 15px; }
+    .assignment-list { padding: 0 21px 8px; }
+    .assignment-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 0; border-bottom: 1px solid #edf0ea; }
+    .assignment-row:last-child { border-bottom: 0; }
+    .assignment-copy { min-width: 0; }
+    .assignment-copy strong { display: block; overflow: hidden; color: var(--pine-deep); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .assignment-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .assignment-status { padding: 6px 7px; color: #8b6422; border-radius: 6px; background: #f8edcf; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .assignment-status.done { color: #397452; background: #e5f1e7; }
+    .assignment-status.late { color: #a04f40; background: #f6e3dc; }
+    .assignment-open { padding: 5px 0; color: var(--gold); border: 0; background: transparent; font-size: 16px; }
+    .journal-card { padding: 20px; background: var(--pine); }
+    .journal-card .mini-heading { color: #fff; }
+    .journal-card .mini-heading a { color: var(--gold-light); }
+    .journal-date { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+    .journal-day { display: grid; width: 42px; height: 47px; place-items: center; color: var(--pine); border-radius: 8px; background: var(--gold-light); font-family: "DM Serif Display", Georgia, serif; font-size: 22px; line-height: 1; }
+    .journal-date strong { display: block; color: #fff; font-size: 12px; }
+    .journal-date span { display: block; margin-top: 4px; color: rgba(255,255,255,.57); font-size: 9px; }
+    .journal-copy { margin: 18px 0 15px; color: rgba(255,255,255,.67); font-size: 10px; }
+    .journal-button { width: 100%; color: var(--pine); background: #fff8e9; }
+    .mini-note { padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); }
+    .mini-note strong { display: block; color: var(--pine-deep); font-size: 11px; }
+    .mini-note p { margin: 6px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .mini-note a { display: inline-block; margin-top: 11px; color: var(--pine); font-size: 10px; font-weight: 700; }
+    .modal[hidden] { display: none; }
+    .modal { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 22px; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(8,46,37,.64); backdrop-filter: blur(5px); }
+    .upload-modal { position: relative; width: min(100%, 475px); padding: 26px; border-radius: 16px; background: var(--paper); box-shadow: 0 25px 70px rgba(0,0,0,.22); }
+    .modal-close { position: absolute; top: 13px; right: 14px; display: grid; width: 28px; height: 28px; place-items: center; color: var(--muted); border: 0; border-radius: 50%; background: var(--sand); font-size: 19px; }
+    .modal-close:hover { color: var(--pine); background: var(--pine-soft, #e4eee8); }
+    .upload-modal h2 { margin: 13px 0 7px; color: var(--pine-deep); font-size: 28px; line-height: 1; }
+    .upload-modal > p { margin: 0 0 19px; color: var(--muted); font-size: 11px; }
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .upload-field { display: grid; gap: 7px; }
+    .upload-field.full { grid-column: 1 / -1; }
+    .upload-field label { color: #53615a; font-size: 10px; font-weight: 700; }
+    .upload-field input, .upload-field select { width: 100%; height: 41px; padding: 0 11px; color: var(--ink); outline: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 11px; }
+    .upload-field input[type="file"] { padding-top: 11px; color: var(--muted); font-size: 10px; }
+    .upload-field input:focus, .upload-field select:focus { border-color: var(--pine); }
+    .upload-submit { width: 100%; margin-top: 19px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 30; display: flex; align-items: center; gap: 10px; width: min(350px, calc(100% - 44px)); padding: 13px 15px; color: #fff; border-radius: 11px; background: var(--pine-deep); box-shadow: 0 18px 40px rgba(8,46,37,.23); opacity: 0; pointer-events: none; transform: translateY(12px); transition: opacity .25s ease, transform .25s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast > span { display: grid; width: 23px; height: 23px; place-items: center; color: var(--pine-deep); border-radius: 50%; background: var(--gold-light); font-size: 11px; }
+    .toast strong { display: block; font-size: 11px; }
+    .toast small { display: block; margin-top: 2px; color: rgba(255,255,255,.6); font-size: 9px; }
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 214px minmax(0, 1fr); }
+      .topbar { padding: 0 28px; }
+      .content { width: min(100% - 56px, 1180px); }
+      .workspace-grid { grid-template-columns: minmax(0, 1fr) 270px; }
+    }
+    @media (max-width: 820px) {
+      .app-shell { display: block; }
+      .sidebar { position: relative; display: grid; min-height: auto; grid-template-columns: 1fr auto; gap: 14px; padding: 17px 18px 12px; }
+      .sidebar-brand { padding: 0; }
+      .sidebar-context { display: none; }
+      .sidebar-spacer, .sidebar-footer { display: none; }
+      .nav-label { display: none; }
+      .side-nav { grid-column: 1 / -1; display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+      .side-nav::-webkit-scrollbar { display: none; }
+      .side-link { min-width: fit-content; min-height: 36px; padding: 0 10px; font-size: 10px; white-space: nowrap; }
+      .side-link.active { box-shadow: inset 0 -3px 0 var(--gold-light); }
+      .nav-icon { width: 19px; height: 19px; }
+      .topbar { min-height: 65px; padding: 0 18px; }
+      .help-link { display: none; }
+      .content { width: calc(100% - 36px); padding-top: 30px; }
+      .content-header { align-items: start; flex-direction: column; gap: 17px; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .workspace-grid { grid-template-columns: 1fr; }
+      .right-stack { grid-template-columns: 1fr 1fr; }
+      .journal-card, .mini-note { min-height: 200px; }
+    }
+    @media (max-width: 620px) {
+      .topbar { align-items: center; }
+      .breadcrumbs { font-size: 9px; }
+      .connection { font-size: 0; }
+      .connection::before { margin-right: 2px; }
+      .content-header h1 { font-size: 39px; }
+      .header-actions { gap: 7px; }
+      .header-actions .btn { padding: 0 9px; font-size: 10px; }
+      .library-tools { align-items: start; flex-direction: column-reverse; padding: 13px 14px; }
+      .filter-tabs { width: 100%; overflow-x: auto; }
+      .filter-tab { white-space: nowrap; }
+      .search-wrap, .search-input { width: 100%; }
+      .search-wrap { width: 100%; }
+      .resource-list { grid-template-columns: 1fr; padding: 0 14px 14px; }
+      .right-stack { grid-template-columns: 1fr; }
+      .journal-card, .mini-note { min-height: auto; }
+      .upload-modal { padding: 22px 17px; }
+      .upload-grid { grid-template-columns: 1fr; }
+      .upload-field.full { grid-column: auto; }
+    }
+   </style>
+   <script src="darussolah-config.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+   <script src="darussolah-portal.js" defer></script>
+</head>
+<body data-portal-role="guru" data-portal-page="learning">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="sidebar-brand" href="index.html" aria-label="Kembali ke situs TPQ Darul Jinan">
+        <span class="brand-logo"><svg class="brand-symbol" viewBox="0 0 48 48" role="img" aria-label="Emblem TPQ Darul Jinan"><path d="M9 28.5V22C9 13.2 15.8 6 24 6s15 7.2 15 16v6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M7 28.5h34l-1.5 13H8.5l-1.5-13Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 29.5 24 34l14-4.5-14 8-14-8Z" fill="none" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 34v4" stroke="currentColor" stroke-width="1.5"/><path d="M22 11.5a4.6 4.6 0 1 0 5.7 5.7A5.1 5.1 0 0 1 22 11.5Z" fill="currentColor"/></svg></span>
+        <span><span class="brand-name">TPQ Darul Jinan</span><span class="brand-caption">Ruang kerja guru</span></span>
+      </a>
+      <div class="sidebar-context"><span class="context-label">Lembaga aktif</span><span class="context-name">TPQ Darul Jinan</span><span class="context-meta">Tahun ajaran 2026 / 2027</span></div>
+      <nav class="side-nav" aria-label="Menu dashboard">
+        <span class="nav-label">Workspace</span>
+        <a class="side-link" href="absensi.html"><span class="nav-icon">01</span>Absensi</a>
+        <a class="side-link active" href="materi.html"><span class="nav-icon">02</span>Materi &amp; tugas</a>
+        <a class="side-link" href="tahfidz.html"><span class="nav-icon">03</span>Tahfidz</a>
+         <a class="side-link" href="absensi.html#santri"><span class="nav-icon">04</span>Data santri</a>
+         <a class="side-link" href="pengaturan.html"><span class="nav-icon">05</span>Pengaturan</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer"><div class="user-card"><span class="user-avatar">NS</span><span><strong>Ustadzah Nisa</strong><span>Guru TPQ &bull; Sore</span></span></div></div>
+    </aside>
+    <div class="main-content">
+      <header class="topbar"><div class="breadcrumbs"><a href="index.html">TPQ Darul Jinan</a><span> / </span><strong>Materi &amp; tugas</strong></div><div class="topbar-actions"><span class="connection">Offline-first aktif</span><a class="help-link" href="index.html#faq">Butuh bantuan?</a><span class="top-avatar">NS</span></div></header>
+      <main class="content">
+        <div class="content-header"><div><span class="eyebrow">Workspace / Pembelajaran</span><h1 class="serif">Materi &amp; tugas.</h1><p>Bagikan bahan belajar, lalu lihat tugas yang perlu diberi umpan balik.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="journal-button">Isi jurnal</button><button class="btn btn-primary" type="button" data-open-upload>Unggah materi <span class="arrow">&nearr;</span></button></div></div>
+        <section class="metrics-grid" aria-label="Ringkasan materi"><article class="metric-card"><span class="metric-label">Materi aktif</span><span class="metric-value">18</span><span class="metric-foot">Di semua kelas</span></article><article class="metric-card highlight"><span class="metric-label">Tugas minggu ini</span><span class="metric-value">04</span><span class="metric-foot">2 mendekati tenggat</span></article><article class="metric-card"><span class="metric-label">Belum dinilai</span><span class="metric-value" id="ungraded-count">07</span><span class="metric-foot">Perlu umpan balik</span></article><article class="metric-card"><span class="metric-label">Kelas terhubung</span><span class="metric-value">03</span><span class="metric-foot">TPQ sore</span></article></section>
+        <div class="workspace-grid">
+          <section class="panel" aria-labelledby="library-title"><div class="panel-header"><div class="panel-heading"><h2 id="library-title">Perpustakaan belajar</h2><p>Materi tersusun sesuai kelas dan bidang pembelajaran.</p></div><span class="data-chip">DATA CONTOH</span></div><div class="library-tools"><div class="filter-tabs" role="group" aria-label="Filter materi"><button class="filter-tab active" type="button" data-kind="all">Semua <span>(6)</span></button><button class="filter-tab" type="button" data-kind="materi">Materi</button><button class="filter-tab" type="button" data-kind="tugas">Tugas</button><button class="filter-tab" type="button" data-kind="pengumuman">Pengumuman</button></div><div class="search-wrap"><input class="search-input" id="resource-search" type="search" placeholder="Cari materi" /></div></div><div class="resource-list" id="resource-list">
+            <article class="resource-card" data-kind="materi" data-name="mengenal mad thabi i"><span class="file-icon file-pdf">PDF</span><span><span class="resource-type">Materi &bull; Tahsin</span><h3>Mengenal mad thabi'i</h3><span class="resource-meta">Iqra 2 &bull; 2 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka materi Mengenal mad thabi'i">&nearr;</button></article>
+            <article class="resource-card" data-kind="materi" data-name="murottal surat an naba"><span class="file-icon file-audio">AUD</span><span><span class="resource-type">Audio &bull; Tahfidz</span><h3>Murottal surat An-Naba</h3><span class="resource-meta">Juz Amma &bull; 3 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka materi Murottal surat An-Naba">&nearr;</button></article>
+            <article class="resource-card" data-kind="materi" data-name="panduan wudhu"><span class="file-icon file-doc">DOC</span><span><span class="resource-type">Materi &bull; Adab</span><h3>Panduan wudhu untuk anak</h3><span class="resource-meta">Iqra 1 &bull; 5 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka materi Panduan wudhu">&nearr;</button></article>
+            <article class="resource-card" data-kind="tugas" data-name="latihan surat al fil"><span class="file-icon file-pdf">PDF</span><span><span class="resource-type">Tugas &bull; Tenggat 22 Agu</span><h3>Latihan surat Al-Fil</h3><span class="resource-meta">Iqra 2 &bull; 6 pengumpulan</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka tugas Latihan surat Al-Fil">&nearr;</button></article>
+            <article class="resource-card" data-kind="pengumuman" data-name="jadwal murojaah pekan ini"><span class="file-icon file-image">IMG</span><span><span class="resource-type">Pengumuman &bull; Kelas</span><h3>Jadwal murojaah pekan ini</h3><span class="resource-meta">Semua kelas &bull; 8 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka pengumuman Jadwal murojaah pekan ini">&nearr;</button></article>
+            <article class="resource-card" data-kind="tugas" data-name="hafalan surat al qariah"><span class="file-icon file-audio">AUD</span><span><span class="resource-type">Tugas &bull; Setoran</span><h3>Hafalan surat Al-Qari'ah</h3><span class="resource-meta">Iqra 3 &bull; 4 pengumpulan</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka tugas Hafalan surat Al-Qariah">&nearr;</button></article>
+            <div class="empty-resource" id="empty-resource" hidden>Tidak ada materi yang sesuai dengan filter.</div>
+          </div></section>
+          <aside class="right-stack"><section class="panel"><div class="panel-header"><div class="panel-heading"><h2>Tugas perlu diperiksa</h2><p>Umpan balik menjaga anak tetap bertumbuh.</p></div><span class="data-chip">07</span></div><div class="assignment-list"><div class="assignment-row"><span class="assignment-copy"><strong>Latihan surat Al-Fil</strong><span>Aisyah Zahra &bull; baru masuk</span></span><span class="assignment-status">Periksa</span><button class="assignment-open" type="button" data-review>&nearr;</button></div><div class="assignment-row"><span class="assignment-copy"><strong>Hafalan Al-Qari'ah</strong><span>Naufal Akbar &bull; 2 jam lalu</span></span><span class="assignment-status">Periksa</span><button class="assignment-open" type="button" data-review>&nearr;</button></div><div class="assignment-row"><span class="assignment-copy"><strong>Latihan huruf hijaiyah</strong><span>Salwa Nurdini &bull; kemarin</span></span><span class="assignment-status late">Terlambat</span><button class="assignment-open" type="button" data-review>&nearr;</button></div><div class="assignment-row"><span class="assignment-copy"><strong>Doa setelah wudhu</strong><span>Maryam Safira &bull; kemarin</span></span><span class="assignment-status">Periksa</span><button class="assignment-open" type="button" data-review>&nearr;</button></div></div></section><section class="journal-card"><div class="mini-heading"><span>Jurnal pertemuan</span><a href="#jurnal">Riwayat &rarr;</a></div><div class="journal-date"><span class="journal-day">30</span><span><strong>Agustus 2026</strong><span>Iqra 2 &bull; Sesi sore</span></span></div><p class="journal-copy">Catat realisasi materi hari ini agar perjalanan belajar tetap terdokumentasi.</p><button class="btn journal-button" type="button" id="journal-card-button">Tulis jurnal pertemuan <span class="arrow">&nearr;</span></button></section><div class="mini-note"><strong>Tips untuk materi baru</strong><p>Tambahkan tujuan belajar dan tenggat tugas agar wali mendapat konteks yang jelas.</p><a href="#unggah" data-open-upload>Unggah materi baru &rarr;</a></div></aside>
+        </div>
+      </main>
+    </div>
+  </div>
+  <div class="modal" id="upload-modal" role="dialog" aria-modal="true" aria-labelledby="upload-title" hidden><div class="modal-backdrop" data-close-upload></div><div class="upload-modal"><button class="modal-close" type="button" aria-label="Tutup formulir" data-close-upload>&times;</button><span class="eyebrow">Perpustakaan belajar</span><h2 id="upload-title" class="serif">Unggah materi baru.</h2><p>Bagikan bahan yang rapi agar mudah ditemukan kembali oleh wali dan santri.</p><form id="upload-form"><div class="upload-grid"><div class="upload-field full"><label for="material-title">Judul materi</label><input id="material-title" type="text" placeholder="Contoh: Latihan makhraj huruf" required /></div><div class="upload-field"><label for="material-type">Jenis</label><select id="material-type" required><option value="materi">Materi</option><option value="tugas">Tugas</option><option value="pengumuman">Pengumuman</option></select></div><div class="upload-field"><label for="material-class">Kelas</label><select id="material-class" required><option>Iqra 1</option><option>Iqra 2</option><option>Iqra 3</option><option>Semua kelas</option></select></div><div class="upload-field full"><label for="material-file">Berkas</label><input id="material-file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp3,.m4a" required /></div></div><button class="btn btn-primary upload-submit" type="submit">Simpan ke perpustakaan <span class="arrow">&nearr;</span></button></form></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span>&#10003;</span><div><strong id="toast-title">Materi tersimpan.</strong><small id="toast-detail">Siap dibagikan ke kelas.</small></div></div>
+  <script>
+    (() => {
+      const resourceList = document.querySelector('#resource-list');
+      const emptyResource = document.querySelector('#empty-resource');
+       const search = document.querySelector('#resource-search');
+       search.setAttribute('aria-label', 'Cari materi');
+      const uploadModal = document.querySelector('#upload-modal');
+       const toast = document.querySelector('#toast');
+       document.querySelector('.journal-card')?.setAttribute('id', 'jurnal');
+       document.querySelector('.mini-note')?.setAttribute('id', 'unggah');
+       let activeKind = 'all';
+      let toastTimer;
+
+      const showToast = (title, detail) => {
+        document.querySelector('#toast-title').textContent = title;
+        document.querySelector('#toast-detail').textContent = detail;
+        toast.classList.add('show');
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove('show'), 3500);
+      };
+       const resourceCards = () => [...resourceList.querySelectorAll('.resource-card')];
+       const liveResourceKind = { material: 'materi', assignment: 'tugas', announcement: 'pengumuman' };
+       const resourceIcon = item => {
+         const path = String(item.file_path || '').toLowerCase();
+         if (item.resource_type === 'announcement' || /\.(jpe?g|png|gif|webp)$/.test(path)) return ['file-image', 'IMG'];
+         if (/\.(mp3|m4a|wav|mp4|webm|mov)$/.test(path)) return ['file-audio', 'AUD'];
+         if (/\.(docx?|odt)$/.test(path)) return ['file-doc', 'DOC'];
+         return ['file-pdf', 'PDF'];
+       };
+       const renderLiveResources = (items) => {
+         resourceCards().forEach((card) => card.remove());
+         items.forEach((item) => {
+           const kind = liveResourceKind[item.resource_type] || 'materi';
+           const [iconClass, iconLabel] = resourceIcon(item);
+           const card = document.createElement('article');
+           card.className = 'resource-card';
+           card.dataset.kind = kind;
+           card.dataset.name = String(item.title || '').toLowerCase();
+           const meta = [item.class_name || item.institution_name, item.due_date ? `Tenggat ${item.due_date}` : 'Terbit'].filter(Boolean).join(' - ');
+           const label = item.subject ? `${kind === 'tugas' ? 'Tugas' : kind === 'pengumuman' ? 'Pengumuman' : 'Materi'} - ${item.subject}` : kind;
+           card.innerHTML = `<span class="file-icon ${iconClass}">${iconLabel}</span><span><span class="resource-type">${escapeHtml(label)}</span><h3>${escapeHtml(item.title || 'Tanpa judul')}</h3><span class="resource-meta">${escapeHtml(meta)}</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka ${escapeHtml(item.title || 'materi')}">&nearr;</button>`;
+           resourceList.insertBefore(card, emptyResource);
+           bindResourceButton(card.querySelector('[data-open-resource]'));
+         });
+         document.querySelector('[data-learning-data-label]')?.replaceChildren(document.createTextNode('DATA LIVE'));
+         document.querySelector('.metric-card .metric-value')?.replaceChildren(document.createTextNode(String(items.filter(item => item.resource_type === 'material').length).padStart(2, '0')));
+         document.querySelector('.metric-card.highlight .metric-value')?.replaceChildren(document.createTextNode(String(items.filter(item => item.resource_type === 'assignment').length).padStart(2, '0')));
+         document.querySelector('.metrics-grid .metric-card:nth-child(4) .metric-value')?.replaceChildren(document.createTextNode(String(window.DarussolahPortal?.classes?.length || 0).padStart(2, '0')));
+          renderResources();
+        };
+       const renderLiveSubmissions = (items) => {
+         const list = document.querySelector('.right-stack > .panel .assignment-list');
+         if (!list) return;
+         list.replaceChildren();
+         const pending = items.filter(item => !['reviewed'].includes(item.status)).length;
+         document.querySelector('.right-stack > .panel .data-chip')?.replaceChildren(document.createTextNode(String(pending).padStart(2, '0')));
+         document.querySelector('#ungraded-count')?.replaceChildren(document.createTextNode(String(pending).padStart(2, '0')));
+         if (!items.length) {
+           const empty = document.createElement('p');
+           empty.className = 'empty-resource';
+           empty.textContent = 'Belum ada pengumpulan tugas untuk kelas ini.';
+           list.append(empty);
+           return;
+         }
+         items.forEach(item => {
+           const row = document.createElement('div');
+           row.className = 'assignment-row';
+           row.dataset.submissionId = item.id;
+           const isReviewed = item.status === 'reviewed';
+           const statusClass = isReviewed ? 'done' : item.status === 'late' ? 'late' : '';
+           const statusLabel = isReviewed ? 'Selesai' : item.status === 'late' ? 'Terlambat' : 'Periksa';
+           row.innerHTML = `<span class="assignment-copy"><strong>${escapeHtml(item.resource_title || 'Tugas')}</strong><span>${escapeHtml(item.student_name || 'Santri')} - ${escapeHtml(item.submitted_at ? new Date(item.submitted_at).toLocaleDateString('id-ID') : 'Baru masuk')}</span></span><span class="assignment-status ${statusClass}">${statusLabel}</span><button class="assignment-open" type="button" data-review="live" ${isReviewed ? 'disabled' : ''} aria-label="Tandai ${escapeHtml(item.resource_title || 'tugas')} selesai">&nearr;</button>`;
+           list.append(row);
+           if (!isReviewed) bindLiveReviewButton(row.querySelector('[data-review]'), item.id, items);
+         });
+       };
+      const renderResources = () => {
+        const query = search.value.trim().toLowerCase();
+        let visible = 0;
+        resourceCards().forEach((card) => {
+          const matchesKind = activeKind === 'all' || card.dataset.kind === activeKind;
+          const matchesSearch = !query || card.dataset.name.includes(query);
+          card.hidden = !(matchesKind && matchesSearch);
+          if (!card.hidden) visible += 1;
+        });
+        emptyResource.hidden = visible > 0;
+      };
+      const bindResourceButton = (button) => button.addEventListener('click', () => {
+        const card = button.closest('.resource-card');
+        showToast('Materi dibuka.', `${card.querySelector('h3').textContent} siap dilihat.`);
+      });
+      document.querySelectorAll('[data-open-resource]').forEach(bindResourceButton);
+       const kindFilters = document.querySelectorAll('.filter-tab[data-kind]');
+       kindFilters.forEach((button) => {
+         button.addEventListener('click', () => {
+           activeKind = button.dataset.kind;
+           kindFilters.forEach((item) => item.classList.toggle('active', item === button));
+           renderResources();
+         });
+       });
+      search.addEventListener('input', renderResources);
+
+      const openUpload = (event) => {
+        event.preventDefault();
+        uploadModal.hidden = false;
+        document.querySelector('#material-title').focus();
+      };
+      document.querySelectorAll('[data-open-upload]').forEach((button) => button.addEventListener('click', openUpload));
+      document.querySelectorAll('[data-close-upload]').forEach((button) => button.addEventListener('click', () => { uploadModal.hidden = true; }));
+      document.addEventListener('keydown', (event) => { if (event.key === 'Escape') uploadModal.hidden = true; });
+
+       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character]);
+       const bindLiveReviewButton = (button, submissionId, items) => button.addEventListener('click', async () => {
+         const portal = window.DarussolahPortal;
+         if (!portal?.requestPrivate) return;
+         button.disabled = true;
+         try {
+           await portal.requestPrivate(
+             portal.client,
+             `learning/submissions/${encodeURIComponent(submissionId)}`,
+             portal.session,
+             { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'reviewed' }) }
+           );
+           const item = items.find(entry => entry.id === submissionId);
+           if (item) item.status = 'reviewed';
+           renderLiveSubmissions(items);
+           showToast('Tugas ditinjau.', 'Status pengumpulan tersimpan di server.');
+         } catch (error) {
+           button.disabled = false;
+           showToast('Review belum tersimpan.', error.message || 'Periksa koneksi API.');
+         }
+       });
+       document.querySelector('#upload-form').addEventListener('submit', (event) => {
+         event.preventDefault();
+         if (window.DarussolahPortal?.session) {
+           showToast('Upload belum diaktifkan.', 'Penyimpanan berkas Storage akan dihubungkan setelah endpoint upload tersedia.');
+           return;
+         }
+        const title = document.querySelector('#material-title').value.trim();
+        const type = document.querySelector('#material-type').value;
+        const className = document.querySelector('#material-class').value;
+        const file = document.querySelector('#material-file').files[0];
+        const kindLabel = type === 'tugas' ? 'Tugas' : type === 'pengumuman' ? 'Pengumuman' : 'Materi';
+        const fileLabel = file?.name.split('.').pop()?.toUpperCase() || 'FILE';
+        const card = document.createElement('article');
+        card.className = 'resource-card';
+        card.dataset.kind = type;
+        card.dataset.name = title.toLowerCase();
+        card.innerHTML = `<span class="file-icon ${type === 'pengumuman' ? 'file-image' : type === 'tugas' ? 'file-pdf' : 'file-doc'}">${escapeHtml(fileLabel.slice(0, 4))}</span><span><span class="resource-type">${kindLabel} &bull; Baru saja</span><h3>${escapeHtml(title)}</h3><span class="resource-meta">${escapeHtml(className)} &bull; Baru diunggah</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka ${escapeHtml(title)}">&nearr;</button>`;
+        resourceList.insertBefore(card, emptyResource);
+        bindResourceButton(card.querySelector('[data-open-resource]'));
+        uploadModal.hidden = true;
+        document.querySelector('#upload-form').reset();
+        activeKind = 'all';
+        document.querySelectorAll('[data-kind]').forEach((item) => item.classList.toggle('active', item.dataset.kind === 'all'));
+        renderResources();
+        showToast('Materi berhasil diunggah.', `${title} siap dibagikan ke ${className}.`);
+      });
+
+      document.querySelectorAll('[data-review]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const row = button.closest('.assignment-row');
+          if (row.dataset.reviewed === 'true') return;
+          row.dataset.reviewed = 'true';
+          const status = row.querySelector('.assignment-status');
+          status.textContent = 'Selesai';
+          status.classList.remove('late');
+          status.classList.add('done');
+           const count = Math.max(0, Number(document.querySelector('#ungraded-count').textContent) - 1);
+           document.querySelector('#ungraded-count').textContent = String(count).padStart(2, '0');
+           document.querySelector('.right-stack > .panel .data-chip').textContent = String(count).padStart(2, '0');
+           showToast('Tugas ditandai selesai.', 'Umpan balik siap ditambahkan pada detail tugas.');
+        });
+      });
+       document.querySelectorAll('#journal-button, #journal-card-button').forEach((button) => button.addEventListener('click', () => showToast('Jurnal pertemuan siap.', 'Tambahkan ringkasan materi dan catatan kelas hari ini.')));
+       window.addEventListener('darussolah:ready', (event) => {
+         renderLiveResources(event.detail.learning || []);
+         renderLiveSubmissions(event.detail.learningSubmissions || []);
+       }, { once: true });
+       renderResources();
+    })();
+  </script>
+</body>
+</html>
