@@ -45,12 +45,12 @@
       node.dataset.portalTone = tone;
     });
   };
-  const setIdentity = (context, session) => {
+  const setIdentity = (context, session, primaryClass) => {
     const profile = context?.profile || {};
     const name = profile.full_name || session?.user?.email || 'Pengguna portal';
     const roles = context?.roles || [];
     const activeRole = roles.find(item => (allowedRoles[role] || []).includes(item)) || roles[0] || role;
-    const membership = context?.memberships?.[0];
+    const membership = context?.memberships?.find(item => item.institution_id === primaryClass?.institution_id) || context?.memberships?.[0];
     document.querySelectorAll('.user-card strong, [data-portal-user-name]').forEach(node => { node.textContent = name; });
     document.querySelectorAll('.user-card strong + span, [data-portal-user-role]').forEach(node => { node.textContent = roleLabels[activeRole] || activeRole || 'Pengguna'; });
     document.querySelectorAll('.user-avatar, .top-avatar, [data-portal-user-initials]').forEach(node => { node.textContent = initials(name); });
@@ -59,6 +59,33 @@
     }
     document.querySelectorAll('[data-portal-student-count]').forEach(node => { node.textContent = String(context.studentCount ?? node.textContent); });
     document.querySelectorAll('[data-portal-class-count]').forEach(node => { node.textContent = String(context.classCount ?? node.textContent); });
+  };
+  const activeClassStorageKey = session => `dwj-active-class-${session?.user?.id || 'anonymous'}`;
+  const readActiveClassId = session => {
+    try { return sessionStorage.getItem(activeClassStorageKey(session)) || ''; } catch (error) { return ''; }
+  };
+  const rememberActiveClassId = (session, classId) => {
+    try { sessionStorage.setItem(activeClassStorageKey(session), classId); } catch (error) { /* Storage can be unavailable in private browsing. */ }
+  };
+  const addClassPicker = (classes, primaryClass, session) => {
+    const host = document.querySelector('.topbar-actions');
+    if (!host || role !== 'guru' || document.body.dataset.portalPage !== 'learning' || classes.length < 2) return;
+    let picker = host.querySelector('[data-portal-class-picker]');
+    if (!picker) {
+      picker = document.createElement('select');
+      picker.className = 'portal-runtime-class-picker';
+      picker.dataset.portalClassPicker = 'true';
+      picker.setAttribute('aria-label', 'Pilih kelas aktif');
+      picker.addEventListener('change', () => {
+        rememberActiveClassId(session, picker.value);
+        const url = new URL(window.location.href);
+        url.searchParams.set('class_id', picker.value);
+        window.location.assign(url.href);
+      });
+      host.prepend(picker);
+    }
+    picker.replaceChildren(...classes.map(item => new Option(`${item.institution_code || ''} - ${item.name || item.code}`, item.id)));
+    picker.value = primaryClass?.id || '';
   };
   const addSignOut = client => {
     if (document.querySelector('[data-portal-sign-out]')) return;
@@ -76,11 +103,13 @@
     });
     host.append(button);
   };
-  const showBlocked = (title, detail) => {
+  const showBlocked = (title, detail, { showLogin = false } = {}) => {
     document.documentElement.dataset.dwjPortalState = 'blocked';
+    document.querySelector('.portal-runtime-blocker')?.remove();
     const overlay = document.createElement('div');
     overlay.className = 'portal-runtime-blocker';
-    overlay.innerHTML = `<div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(detail)}</span><a href="login.html">Buka halaman login</a></div>`;
+    overlay.innerHTML = `<div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(detail)}</span><button type="button" data-portal-retry>Coba lagi</button>${showLogin ? '<a href="login.html">Buka halaman login</a>' : ''}</div>`;
+    overlay.querySelector('[data-portal-retry]').addEventListener('click', () => window.location.reload());
     document.body.append(overlay);
   };
   const injectStyles = () => {
@@ -90,29 +119,65 @@
       .portal-runtime-status[data-portal-tone="live"] { color: #3f8b62; }
       .portal-runtime-status[data-portal-tone="error"] { color: #ae5b47; }
       .portal-runtime-signout { padding: 6px 9px; color: #0d4433; border: 1px solid #e0e4dc; border-radius: 7px; background: #fffdf9; font: 700 10px/1 "DM Sans", sans-serif; }
-      .portal-runtime-signout:hover { border-color: #0d4433; }
+       .portal-runtime-signout:hover { border-color: #0d4433; }
+       .portal-runtime-class-picker { max-width: 175px; height: 29px; padding: 0 7px; color: #0d4433; border: 1px solid #e0e4dc; border-radius: 7px; background: #fffdf9; font: 600 10px "DM Sans", sans-serif; }
       html[data-dwj-portal-state="checking"] body > .app-shell { opacity: .35; pointer-events: none; }
       .portal-runtime-blocker { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: rgba(8,46,37,.96); color: #fff; text-align: center; }
       .portal-runtime-blocker div { width: min(100%, 380px); padding: 28px; border: 1px solid rgba(232,200,121,.3); border-radius: 16px; background: #0d4433; box-shadow: 0 22px 60px rgba(0,0,0,.25); }
       .portal-runtime-blocker strong, .portal-runtime-blocker span { display: block; }
       .portal-runtime-blocker strong { color: #e8c879; font: 400 28px/1.05 Georgia, serif; }
       .portal-runtime-blocker span { margin-top: 12px; color: rgba(255,255,255,.72); font: 12px/1.5 "DM Sans", sans-serif; }
-      .portal-runtime-blocker a { display: inline-flex; margin-top: 20px; padding: 11px 16px; border-radius: 8px; color: #082e25; background: #e8c879; font: 700 11px/1 "DM Sans", sans-serif; }
+       .portal-runtime-blocker button, .portal-runtime-blocker a { display: inline-flex; margin-top: 20px; padding: 11px 16px; border: 0; border-radius: 8px; color: #082e25; background: #e8c879; font: 700 11px/1 "DM Sans", sans-serif; }
+       .portal-runtime-blocker button { cursor: pointer; }
+       .portal-runtime-blocker a { margin-left: 8px; }
     `;
     document.head.append(style);
   };
   const privatePath = suffix => `${config.apiBase}/v1/private/${encodeURIComponent(config.tenantSlug)}/${suffix}`;
+  const wait = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
+  const retryableStatus = status => [408, 425, 429].includes(status) || status >= 500;
   const requestPrivate = async (client, suffix, session, options = {}) => {
-    const response = await fetch(privatePath(suffix), {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        Accept: 'application/json',
-        ...(options.headers || {})
+    let activeSession = session;
+    let refreshed = false;
+    let lastError = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const current = await client?.auth?.getSession?.();
+        activeSession = current?.data?.session || activeSession;
+      } catch (error) {
+        // The request below can still use the session captured during bootstrap.
       }
-    });
-    if (!response.ok) throw new Error(`private API returned ${response.status}`);
-    return response.json();
+      if (!activeSession?.access_token) throw new Error('sesi tidak tersedia');
+      try {
+        const response = await fetch(privatePath(suffix), {
+          ...options,
+          headers: {
+            Authorization: `Bearer ${activeSession.access_token}`,
+            Accept: 'application/json',
+            ...(options.headers || {})
+          }
+        });
+        if (response.status === 401 && !refreshed) {
+          const refreshedSession = await client.auth.refreshSession();
+          activeSession = refreshedSession.data?.session || null;
+          refreshed = true;
+          if (activeSession?.access_token) continue;
+        }
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          const error = new Error(body.detail || `private API returned ${response.status}`);
+          error.retryable = retryableStatus(response.status);
+          error.authRequired = response.status === 401;
+          throw error;
+        }
+        return response.json();
+      } catch (error) {
+        lastError = error;
+        if (!error.retryable && !(error instanceof TypeError)) throw error;
+        if (attempt < 2) await wait(250 * (attempt + 1));
+      }
+    }
+    throw lastError || new Error('koneksi ke API belum tersedia');
   };
   const fetchPrivate = (client, suffix, session) => requestPrivate(client, suffix, session);
   const start = async () => {
@@ -128,8 +193,21 @@
     }
     document.documentElement.dataset.dwjPortalState = 'checking';
     const client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-    const { data: sessionData, error: sessionError } = await client.auth.getSession();
-    if (sessionError || !sessionData.session) {
+    let sessionData;
+    let sessionError;
+    try {
+      ({ data: sessionData, error: sessionError } = await client.auth.getSession());
+    } catch (error) {
+      setStatus('Sesi belum siap', 'error');
+      showBlocked('Sesi belum siap', 'Koneksi sesi belum siap. Coba lagi tanpa keluar dari akun.');
+      return;
+    }
+    if (sessionError) {
+      setStatus('Sesi belum siap', 'error');
+      showBlocked('Sesi belum siap', 'Koneksi sesi belum siap. Coba lagi tanpa keluar dari akun.');
+      return;
+    }
+    if (!sessionData.session) {
       const redirect = `${window.location.pathname.split('/').pop() || 'index.html'}${window.location.search}`;
       window.location.replace(`login.html?redirect=${encodeURIComponent(redirect)}`);
       return;
@@ -144,7 +222,15 @@
       let attendanceResponse = null;
       let learningResponse = null;
       let learningSubmissionsResponse = null;
-      const primaryClass = classesResponse.items?.[0];
+       const classes = classesResponse.items || [];
+       const supportsClassSelection = role === 'guru' && document.body.dataset.portalPage === 'learning';
+       const requestedClassId = supportsClassSelection
+         ? new URLSearchParams(window.location.search).get('class_id') || readActiveClassId(session)
+         : '';
+       const primaryClass = classes.find(item => item.id === requestedClassId)
+         || classes.find(item => item.institution_code === 'TPQ')
+         || classes[0];
+       if (primaryClass && supportsClassSelection) rememberActiveClassId(session, primaryClass.id);
       if (document.body.dataset.portalPage === 'attendance' && primaryClass) {
         try {
           attendanceResponse = await fetchPrivate(
@@ -177,14 +263,14 @@
       if (role && actualRoles.length && !(allowedRoles[role] || []).some(item => actualRoles.includes(item))) {
         throw new Error('akun tidak memiliki peran untuk halaman ini');
       }
-      setIdentity(context, session);
-      setStatus('Akun terhubung', 'live');
-      addSignOut(client);
-      document.documentElement.dataset.dwjPortalState = 'live';
-      const students = studentsResponse.items || [];
-      const classes = classesResponse.items || [];
-      window.DarussolahPortal = Object.freeze({
-        client, config, session, context, students, classes, requestPrivate,
+       setIdentity(context, session, primaryClass);
+       setStatus('Akun terhubung', 'live');
+       addSignOut(client);
+       addClassPicker(classes, primaryClass, session);
+       document.documentElement.dataset.dwjPortalState = 'live';
+       const students = studentsResponse.items || [];
+       window.DarussolahPortal = Object.freeze({
+         client, config, session, context, students, classes, primaryClass, requestPrivate,
         attendance: attendanceResponse,
         learning: learningResponse?.items || [],
         learningSubmissions: learningSubmissionsResponse?.items || [],
@@ -201,7 +287,7 @@
     } catch (error) {
       document.documentElement.dataset.dwjPortalState = 'blocked';
       setStatus('Gagal memuat akun', 'error');
-      showBlocked('Data belum dapat dimuat', error.message || 'Periksa koneksi dan konfigurasi API.');
+       showBlocked('Data belum dapat dimuat', error.message || 'Periksa koneksi dan konfigurasi API.', { showLogin: Boolean(error.authRequired) });
     }
   };
 
