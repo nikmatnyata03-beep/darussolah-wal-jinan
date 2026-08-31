@@ -198,25 +198,27 @@
        const configuredFields = [apiBase, supabaseUrl, supabaseAnonKey].filter(Boolean);
        const partiallyConfigured = configuredFields.length > 0 && configuredFields.length < 3;
        const supabaseClient = configuredFields.length === 3 && window.supabase ? window.supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
-      const roleContent = {
-        wali: { helper: 'Wali santri dapat melihat ringkasan semua anak yang terhubung.', button: 'Masuk ke portal' },
-        guru: { helper: 'Guru dapat mengelola kehadiran, materi, tugas, dan catatan perkembangan.', button: 'Masuk ke ruang guru' },
-        admin: { helper: 'Admin lembaga mengelola data sesuai unit dan hak aksesnya.', button: 'Masuk ke panel admin' }
-      };
-       const roleDestinations = { wali: 'wali.html', guru: 'absensi.html', admin: 'keuangan.html' };
+       const roleContent = {
+         wali: { helper: 'Wali santri dapat melihat ringkasan semua anak yang terhubung.', button: 'Masuk ke portal' },
+         guru: { helper: 'Guru dapat mengelola kehadiran, materi, tugas, dan catatan perkembangan.', button: 'Masuk ke ruang guru' },
+         admin: { helper: 'Admin lembaga mengelola data sesuai unit dan hak aksesnya.', button: 'Masuk ke panel admin' }
+       };
+       const selectRole = (role) => {
+         roleInput.value = role;
+         roleButtons.forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.role === role)));
+         helper.textContent = roleContent[role].helper;
+         loginButton.innerHTML = `${roleContent[role].button} <span class="arrow">&nearr;</span>`;
+       };
+        const roleDestinations = { wali: 'wali.html', guru: 'absensi.html', admin: 'keuangan.html' };
        const allowedRedirects = new Set(['wali.html', 'absensi.html', 'materi.html', 'tahfidz.html', 'nilai.html', 'keuangan.html', 'kepegawaian.html', 'notifikasi.html', 'pengaturan.html', 'analitik.html', 'cms.html', 'santri.html']);
        const requestedRedirect = new URLSearchParams(window.location.search).get('redirect') || '';
        const redirectTarget = (() => { try { const url = new URL(requestedRedirect, window.location.href); const path = url.pathname.split('/').pop(); return url.origin === window.location.origin && allowedRedirects.has(path) ? `${path}${url.search}` : ''; } catch (error) { return ''; } })();
 
-      roleButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          const role = button.dataset.role;
-          roleInput.value = role;
-          roleButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
-          helper.textContent = roleContent[role].helper;
-          loginButton.innerHTML = `${roleContent[role].button} <span class="arrow">&nearr;</span>`;
-        });
-      });
+       roleButtons.forEach((button) => {
+         button.addEventListener('click', () => {
+           selectRole(button.dataset.role);
+         });
+       });
 
       togglePassword.addEventListener('click', () => {
         const visible = passwordInput.type === 'text';
@@ -264,23 +266,33 @@
                headers: { Authorization: `Bearer ${accessToken}` }
              });
              const roleBody = await roleResponse.json().catch(() => ({}));
-             if (roleResponse.ok) roles = (roleBody.user?.roles || []).map(role => ({ role }));
+              if (roleResponse.ok) roles = (roleBody.user?.roles || []).map(role => String(role));
              else roleError = new Error(roleBody.detail || `portal API returned ${roleResponse.status}`);
            } else {
              roleError = new Error('session token unavailable');
            }
-          const selectedRole = roleInput.value;
-          const allowed = {
-            wali: ['wali'],
-            guru: ['guru'],
-            admin: ['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran']
-          }[selectedRole] || [];
-           if (roleError || !roles.some(item => allowed.includes(item))) {
-            await supabaseClient.auth.signOut();
-            loginButton.classList.remove('is-loading');
-            showAuthMessage('Peran belum diizinkan.', 'Akun berhasil dikenali, tetapi belum memiliki akses untuk peran yang dipilih.');
-            return;
-          }
+           let selectedRole = roleInput.value;
+           const allowedRoles = {
+             wali: ['wali'],
+             guru: ['guru'],
+             admin: ['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran']
+           };
+           const allowed = allowedRoles[selectedRole] || [];
+           const availableRoles = Object.entries(allowedRoles)
+             .filter(([, roleValues]) => roleValues.some(item => roles.includes(item)))
+             .map(([role]) => role);
+            if (roleError || !roles.some(item => allowed.includes(item))) {
+             if (!roleError && availableRoles.length === 1) {
+               selectedRole = availableRoles[0];
+               selectRole(selectedRole);
+             } else {
+             await supabaseClient.auth.signOut();
+             loginButton.classList.remove('is-loading');
+             const available = availableRoles.map(role => roleContent[role].button.replace('Masuk ke ', '')).join(', ');
+             showAuthMessage('Peran belum diizinkan.', available ? `Akun ini tersedia untuk: ${available}.` : 'Akun berhasil dikenali, tetapi role belum dapat diverifikasi.');
+             return;
+             }
+           }
           loginButton.classList.remove('is-loading');
            const destination = redirectTarget || roleDestinations[selectedRole];
            showAuthMessage('Login berhasil.', 'Sesi aman tersimpan. Buka portal sesuai peran Anda.', `<a class="portal-link" href="${destination}">Buka portal &rarr;</a>`);
