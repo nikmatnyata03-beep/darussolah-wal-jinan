@@ -16,13 +16,18 @@
     wali: 'Wali santri',
     guru: 'Guru / ustadz',
     admin: 'Admin lembaga',
-    santri: 'Santri'
+    santri: 'Santri',
+    super_admin: 'Admin sistem',
+    yayasan_admin: 'Admin yayasan',
+    lembaga_admin: 'Admin lembaga',
+    operator_pendaftaran: 'Operator pendaftaran'
   };
+  const adminRoles = ['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran'];
   const allowedRoles = {
-    wali: ['wali'],
-    guru: ['guru'],
-    admin: ['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran'],
-    santri: ['santri']
+    wali: ['wali', ...adminRoles],
+    guru: ['guru', ...adminRoles],
+    admin: adminRoles,
+    santri: ['santri', ...adminRoles]
   };
 
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({
