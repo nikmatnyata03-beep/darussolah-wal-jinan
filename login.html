@@ -211,8 +211,29 @@
        };
         const roleDestinations = { wali: 'wali.html', guru: 'absensi.html', admin: 'keuangan.html' };
        const allowedRedirects = new Set(['wali.html', 'absensi.html', 'materi.html', 'tahfidz.html', 'nilai.html', 'keuangan.html', 'kepegawaian.html', 'notifikasi.html', 'pengaturan.html', 'analitik.html', 'cms.html', 'santri.html']);
-       const requestedRedirect = new URLSearchParams(window.location.search).get('redirect') || '';
-       const redirectTarget = (() => { try { const url = new URL(requestedRedirect, window.location.href); const path = url.pathname.split('/').pop(); return url.origin === window.location.origin && allowedRedirects.has(path) ? `${path}${url.search}` : ''; } catch (error) { return ''; } })();
+        const requestedRedirect = new URLSearchParams(window.location.search).get('redirect') || '';
+        const redirectTarget = (() => { try { const url = new URL(requestedRedirect, window.location.href); const path = url.pathname.split('/').pop(); return url.origin === window.location.origin && allowedRedirects.has(path) ? `${path}${url.search}` : ''; } catch (error) { return ''; } })();
+        const wait = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
+        const retryableStatus = status => [408, 425, 429].includes(status) || status >= 500;
+        const fetchRoles = async accessToken => {
+          let lastError = null;
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            try {
+              const response = await fetch(`${apiBase}/v1/private/${encodeURIComponent(tenantSlug)}/me`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+              });
+              const body = await response.json().catch(() => ({}));
+              if (response.ok) return { roles: (body.user?.roles || []).map(role => String(role)), error: null };
+              const error = new Error(body.detail || `portal API returned ${response.status}`);
+              if (!retryableStatus(response.status)) return { roles: [], error };
+              lastError = error;
+            } catch (error) {
+              lastError = error;
+            }
+            if (attempt < 2) await wait(250 * (attempt + 1));
+          }
+          return { roles: [], error: lastError || new Error('portal API unavailable') };
+        };
 
        roleButtons.forEach((button) => {
          button.addEventListener('click', () => {
@@ -259,18 +280,13 @@
             return;
           }
            const accessToken = data.session?.access_token || '';
-           let roles = [];
-           let roleError = null;
-           if (apiBase && accessToken) {
-             const roleResponse = await fetch(`${apiBase}/v1/private/${encodeURIComponent(tenantSlug)}/me`, {
-               headers: { Authorization: `Bearer ${accessToken}` }
-             });
-             const roleBody = await roleResponse.json().catch(() => ({}));
-              if (roleResponse.ok) roles = (roleBody.user?.roles || []).map(role => String(role));
-             else roleError = new Error(roleBody.detail || `portal API returned ${roleResponse.status}`);
-           } else {
-             roleError = new Error('session token unavailable');
-           }
+            let roles = [];
+            let roleError = null;
+            if (apiBase && accessToken) {
+              ({ roles, error: roleError } = await fetchRoles(accessToken));
+            } else {
+              roleError = new Error('session token unavailable');
+            }
            let selectedRole = roleInput.value;
            const allowedRoles = {
              wali: ['wali'],
@@ -281,12 +297,17 @@
            const availableRoles = Object.entries(allowedRoles)
              .filter(([, roleValues]) => roleValues.some(item => roles.includes(item)))
              .map(([role]) => role);
-            if (roleError || !roles.some(item => allowed.includes(item))) {
-             if (!roleError && availableRoles.length === 1) {
-               selectedRole = availableRoles[0];
-               selectRole(selectedRole);
-             } else {
-             await supabaseClient.auth.signOut();
+             if (roleError || !roles.some(item => allowed.includes(item))) {
+              if (!roleError && availableRoles.length === 1) {
+                selectedRole = availableRoles[0];
+                selectRole(selectedRole);
+              } else {
+              if (roleError) {
+                loginButton.classList.remove('is-loading');
+                showAuthMessage('Koneksi belum stabil.', 'Akun berhasil masuk, tetapi peran belum dapat diverifikasi. Tekan tombol masuk lagi.');
+                return;
+              }
+              await supabaseClient.auth.signOut();
              loginButton.classList.remove('is-loading');
              const available = availableRoles.map(role => roleContent[role].button.replace('Masuk ke ', '')).join(', ');
              showAuthMessage('Peran belum diizinkan.', available ? `Akun ini tersedia untuk: ${available}.` : 'Akun berhasil dikenali, tetapi role belum dapat diverifikasi.');
