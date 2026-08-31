@@ -468,7 +468,7 @@
            const response = await fetch(`${portal.config.apiBase}/v1/private/${encodeURIComponent(portal.config.tenantSlug)}/attendance`, {
              method: 'PUT',
              headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
-             body: JSON.stringify({class_id: portal.classes[0].id, attendance_date: new Date().toISOString().slice(0, 10), records})
+              body: JSON.stringify({class_id: portal.primaryClass?.id || portal.classes[0].id, attendance_date: new Date().toISOString().slice(0, 10), records})
            });
            if (!response.ok) {
              showToast('Absensi belum tersimpan.', `Server mengembalikan status ${response.status}.`);
