@@ -194,6 +194,7 @@
        const apiBase = String(config.apiBase || '').replace(/\/+$/, '');
        const supabaseUrl = String(config.supabaseUrl || document.querySelector('meta[name="darussolah-supabase-url"]')?.content.trim() || '').replace(/\/+$/, '');
        const supabaseAnonKey = String(config.supabaseAnonKey || document.querySelector('meta[name="darussolah-supabase-anon-key"]')?.content.trim() || '');
+       const tenantSlug = String(config.tenantSlug || 'yayasan-darussolah-wal-jinan').trim();
        const configuredFields = [apiBase, supabaseUrl, supabaseAnonKey].filter(Boolean);
        const partiallyConfigured = configuredFields.length > 0 && configuredFields.length < 3;
        const supabaseClient = configuredFields.length === 3 && window.supabase ? window.supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
@@ -255,18 +256,26 @@
             showAuthMessage('Login belum berhasil.', error?.message || 'Akun belum dapat diverifikasi.');
             return;
           }
-          const { data: roles, error: roleError } = await supabaseClient
-            .schema('darussolah')
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', data.user.id);
+           const accessToken = data.session?.access_token || '';
+           let roles = [];
+           let roleError = null;
+           if (apiBase && accessToken) {
+             const roleResponse = await fetch(`${apiBase}/v1/private/${encodeURIComponent(tenantSlug)}/me`, {
+               headers: { Authorization: `Bearer ${accessToken}` }
+             });
+             const roleBody = await roleResponse.json().catch(() => ({}));
+             if (roleResponse.ok) roles = (roleBody.user?.roles || []).map(role => ({ role }));
+             else roleError = new Error(roleBody.detail || `portal API returned ${roleResponse.status}`);
+           } else {
+             roleError = new Error('session token unavailable');
+           }
           const selectedRole = roleInput.value;
           const allowed = {
             wali: ['wali'],
             guru: ['guru'],
             admin: ['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran']
           }[selectedRole] || [];
-          if (roleError || !roles?.some(item => allowed.includes(item.role))) {
+           if (roleError || !roles.some(item => allowed.includes(item))) {
             await supabaseClient.auth.signOut();
             loginButton.classList.remove('is-loading');
             showAuthMessage('Peran belum diizinkan.', 'Akun berhasil dikenali, tetapi belum memiliki akses untuk peran yang dipilih.');
