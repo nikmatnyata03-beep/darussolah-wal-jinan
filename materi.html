@@ -245,7 +245,7 @@
         <div class="content-header"><div><span class="eyebrow">Workspace / Pembelajaran</span><h1 class="serif">Materi &amp; tugas.</h1><p>Bagikan bahan belajar, lalu lihat tugas yang perlu diberi umpan balik.</p></div><div class="header-actions"><button class="btn btn-ghost" type="button" id="journal-button">Isi jurnal</button><button class="btn btn-primary" type="button" data-open-upload>Unggah materi <span class="arrow">&nearr;</span></button></div></div>
         <section class="metrics-grid" aria-label="Ringkasan materi"><article class="metric-card"><span class="metric-label">Materi aktif</span><span class="metric-value">18</span><span class="metric-foot">Di semua kelas</span></article><article class="metric-card highlight"><span class="metric-label">Tugas minggu ini</span><span class="metric-value">04</span><span class="metric-foot">2 mendekati tenggat</span></article><article class="metric-card"><span class="metric-label">Belum dinilai</span><span class="metric-value" id="ungraded-count">07</span><span class="metric-foot">Perlu umpan balik</span></article><article class="metric-card"><span class="metric-label">Kelas terhubung</span><span class="metric-value">03</span><span class="metric-foot">TPQ sore</span></article></section>
         <div class="workspace-grid">
-          <section class="panel" aria-labelledby="library-title"><div class="panel-header"><div class="panel-heading"><h2 id="library-title">Perpustakaan belajar</h2><p>Materi tersusun sesuai kelas dan bidang pembelajaran.</p></div><span class="data-chip">DATA CONTOH</span></div><div class="library-tools"><div class="filter-tabs" role="group" aria-label="Filter materi"><button class="filter-tab active" type="button" data-kind="all">Semua <span>(6)</span></button><button class="filter-tab" type="button" data-kind="materi">Materi</button><button class="filter-tab" type="button" data-kind="tugas">Tugas</button><button class="filter-tab" type="button" data-kind="pengumuman">Pengumuman</button></div><div class="search-wrap"><input class="search-input" id="resource-search" type="search" placeholder="Cari materi" /></div></div><div class="resource-list" id="resource-list">
+           <section class="panel" aria-labelledby="library-title"><div class="panel-header"><div class="panel-heading"><h2 id="library-title">Perpustakaan belajar</h2><p>Materi tersusun sesuai kelas dan bidang pembelajaran.</p></div><span class="data-chip" data-learning-data-label>DATA CONTOH</span></div><div class="library-tools"><div class="filter-tabs" role="group" aria-label="Filter materi"><button class="filter-tab active" type="button" data-kind="all">Semua <span>(6)</span></button><button class="filter-tab" type="button" data-kind="materi">Materi</button><button class="filter-tab" type="button" data-kind="tugas">Tugas</button><button class="filter-tab" type="button" data-kind="pengumuman">Pengumuman</button></div><div class="search-wrap"><input class="search-input" id="resource-search" type="search" placeholder="Cari materi" /></div></div><div class="resource-list" id="resource-list">
             <article class="resource-card" data-kind="materi" data-name="mengenal mad thabi i"><span class="file-icon file-pdf">PDF</span><span><span class="resource-type">Materi &bull; Tahsin</span><h3>Mengenal mad thabi'i</h3><span class="resource-meta">Iqra 2 &bull; 2 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka materi Mengenal mad thabi'i">&nearr;</button></article>
             <article class="resource-card" data-kind="materi" data-name="murottal surat an naba"><span class="file-icon file-audio">AUD</span><span><span class="resource-type">Audio &bull; Tahfidz</span><h3>Murottal surat An-Naba</h3><span class="resource-meta">Juz Amma &bull; 3 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka materi Murottal surat An-Naba">&nearr;</button></article>
             <article class="resource-card" data-kind="materi" data-name="panduan wudhu"><span class="file-icon file-doc">DOC</span><span><span class="resource-type">Materi &bull; Adab</span><h3>Panduan wudhu untuk anak</h3><span class="resource-meta">Iqra 1 &bull; 5 hari lalu</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka materi Panduan wudhu">&nearr;</button></article>
@@ -272,6 +272,7 @@
        document.querySelector('.journal-card')?.setAttribute('id', 'jurnal');
        document.querySelector('.mini-note')?.setAttribute('id', 'unggah');
        let activeKind = 'all';
+       let liveResources = null;
       let toastTimer;
 
       const showToast = (title, detail) => {
@@ -290,7 +291,14 @@
          if (/\.(docx?|odt)$/.test(path)) return ['file-doc', 'DOC'];
          return ['file-pdf', 'PDF'];
        };
-       const renderLiveResources = (items) => {
+        const configureLiveClassSelect = (portal) => {
+          const select = document.querySelector('#material-class');
+          if (!select || !portal?.classes?.length) return;
+          select.replaceChildren(...portal.classes.map(item => new Option(`${item.institution_code || ''} - ${item.name || item.code}`, item.id)));
+          select.value = portal.primaryClass?.id || portal.classes[0].id;
+        };
+        const renderLiveResources = (items) => {
+          liveResources = items;
          resourceCards().forEach((card) => card.remove());
          items.forEach((item) => {
            const kind = liveResourceKind[item.resource_type] || 'materi';
@@ -393,13 +401,62 @@
            showToast('Review belum tersimpan.', error.message || 'Periksa koneksi API.');
          }
        });
-       document.querySelector('#upload-form').addEventListener('submit', (event) => {
+       document.querySelector('#upload-form').addEventListener('submit', async (event) => {
          event.preventDefault();
-         if (window.DarussolahPortal?.session) {
-           showToast('Upload belum diaktifkan.', 'Penyimpanan berkas Storage akan dihubungkan setelah endpoint upload tersedia.');
+         const portal = window.DarussolahPortal;
+         if (portal?.session) {
+           const title = document.querySelector('#material-title').value.trim();
+           const type = document.querySelector('#material-type').value;
+           const classId = document.querySelector('#material-class').value || portal.primaryClass?.id;
+           const selectedClass = portal.classes?.find(item => item.id === classId) || portal.primaryClass;
+           const file = document.querySelector('#material-file').files[0];
+           const submitButton = document.querySelector('#upload-form .upload-submit');
+           const typeMap = { materi: 'material', tugas: 'assignment', pengumuman: 'announcement' };
+           if (!selectedClass || !title) {
+             showToast('Data materi belum lengkap.', 'Pilih kelas dan isi judul materi terlebih dahulu.');
+            return;
+           }
+           submitButton.disabled = true;
+           let filePath = null;
+           try {
+             const tenantId = portal.context?.profile?.tenant_id;
+             if (!tenantId) throw new Error('tenant akun belum tersedia');
+             if (file) {
+               const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'berkas';
+               filePath = `resources/${tenantId}/${selectedClass.id}/${Date.now()}-${safeName}`;
+               const upload = await portal.client.storage.from(portal.config.storageBucket).upload(filePath, file, {
+                 contentType: file.type || 'application/octet-stream', upsert: false
+               });
+               if (upload.error) throw upload.error;
+             }
+             const created = await portal.requestPrivate(
+               portal.client,
+               'learning',
+               portal.session,
+               { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                 institution_id: selectedClass.institution_id,
+                 class_id: selectedClass.id,
+                 resource_type: typeMap[type],
+                 title,
+                 file_path: filePath,
+                 status: 'published'
+               }) }
+             );
+             liveResources = [created, ...(liveResources || [])];
+             renderLiveResources(liveResources);
+             uploadModal.hidden = true;
+             document.querySelector('#upload-form').reset();
+             configureLiveClassSelect(portal);
+             showToast('Materi berhasil disimpan.', `${title} sudah tersimpan di server.`);
+           } catch (error) {
+             if (filePath) await portal.client.storage.from(portal.config.storageBucket).remove([filePath]).catch(() => {});
+             showToast('Materi belum tersimpan.', error.message || 'Periksa koneksi API lalu coba lagi.');
+           } finally {
+             submitButton.disabled = false;
+           }
            return;
          }
-        const title = document.querySelector('#material-title').value.trim();
+         const title = document.querySelector('#material-title').value.trim();
         const type = document.querySelector('#material-type').value;
         const className = document.querySelector('#material-class').value;
         const file = document.querySelector('#material-file').files[0];
@@ -436,8 +493,9 @@
         });
       });
        document.querySelectorAll('#journal-button, #journal-card-button').forEach((button) => button.addEventListener('click', () => showToast('Jurnal pertemuan siap.', 'Tambahkan ringkasan materi dan catatan kelas hari ini.')));
-       window.addEventListener('darussolah:ready', (event) => {
-         renderLiveResources(event.detail.learning || []);
+        window.addEventListener('darussolah:ready', (event) => {
+          configureLiveClassSelect(window.DarussolahPortal);
+          renderLiveResources(event.detail.learning || []);
          renderLiveSubmissions(event.detail.learningSubmissions || []);
        }, { once: true });
        renderResources();
