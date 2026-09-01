@@ -319,11 +319,26 @@
         document.querySelector('#target-label').textContent = isTahsin ? 'Jilid / halaman yang dilatih' : 'Surat / ayat yang disetor';
         document.querySelector('#record-target').value = isTahsin ? 'Jilid 3, halaman 12' : 'Al-Fil, ayat 1-5';
       }));
-      document.querySelectorAll('[data-score]').forEach((button) => button.addEventListener('click', () => document.querySelectorAll('[data-score]').forEach((item) => item.classList.toggle('active', item === button))));
+       document.querySelectorAll('[data-score]').forEach((button) => button.addEventListener('click', () => document.querySelectorAll('[data-score]').forEach((item) => item.classList.toggle('active', item === button))));
 
        recordForm.addEventListener('submit', (event) => {
          event.preventDefault();
-         showToast('Capaian belum tersimpan.', 'Endpoint tahfidz belum terhubung. Tidak ada perubahan yang dikirim ke server.');
+         const student = studentSelect.value;
+         const target = document.querySelector('#record-target').value.trim() || 'Capaian baru';
+         const kind = document.querySelector('[data-kind].active')?.dataset.kind === 'tahsin' ? 'Tahsin' : 'Tahfidz';
+         const scoreButton = document.querySelector('[data-score].active');
+         const score = scoreButton?.textContent.trim() || 'Lancar';
+         const needsReview = ['Perlu bimbingan', 'Ulangi besok'].includes(score);
+         const card = cards.find(item => item.dataset.student === student);
+         if (card) {
+           card.querySelector('.student-sub').textContent = `${kind} - ${target}`;
+           const chip = card.querySelector('.stage-chip');
+           chip.textContent = needsReview ? 'Perlu murojaah' : 'Tercatat hari ini';
+           chip.classList.toggle('warn', needsReview);
+           chip.classList.remove('blue');
+           card.dataset.stage = needsReview ? 'murojaah' : 'setoran';
+         }
+         showToast('Capaian dicatat.', `${student} - ${kind} - ${score}. Kartu progres diperbarui di sesi ini.`);
        });
       document.querySelector('#record-top').addEventListener('click', () => document.querySelector('#record-panel').scrollIntoView({ behavior: 'smooth', block: 'center' }));
       document.querySelector('#progress-button').addEventListener('click', () => showToast('Kartu progres siap dibagikan.', 'Tautan ringkasan akan tersedia setelah portal wali aktif.'));

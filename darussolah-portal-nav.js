@@ -22,8 +22,7 @@
     ['materi.html', 'Materi & tugas'],
     ['tahfidz.html', 'Tahfidz & tahsin'],
     ['nilai.html', 'Nilai & rapor'],
-    ['santri.html', 'Data santri'],
-    ['pengaturan.html', 'Pengaturan']
+    ['santri.html', 'Data santri']
   ];
 
   const readStoredMode = () => {
@@ -46,8 +45,10 @@
   const sameTarget = href => {
     const target = new URL(href, window.location.href);
     const page = target.pathname.split('/').pop() || 'index.html';
-    return `${page}${target.hash}` === currentTarget()
-      || (!window.location.hash && !target.hash && page === (window.location.pathname.split('/').pop() || 'index.html'));
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    if (page !== currentPage) return false;
+    if (!window.location.hash) return !target.hash || target.hash === '#ringkasan';
+    return `${page}${target.hash}` === currentTarget();
   };
   const saveMode = mode => {
     try {
