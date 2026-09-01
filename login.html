@@ -342,8 +342,13 @@
                  .filter(key => key.startsWith('sb-') && key.endsWith('-auth-token'))
                  .forEach(key => localStorage.removeItem(key));
              }
-           } catch (storageError) { /* Login remains usable when browser storage is unavailable. */ }
-           loginButton.classList.remove('is-loading');
+            } catch (storageError) { /* Login remains usable when browser storage is unavailable. */ }
+            try {
+              safeStorage('sessionStorage')?.setItem('dwj-ui-role', selectedRole);
+              if (remember) safeStorage('localStorage')?.setItem('dwj-ui-role', selectedRole);
+              else safeStorage('localStorage')?.removeItem('dwj-ui-role');
+            } catch (storageError) { /* Navigation remains usable when role storage is unavailable. */ }
+            loginButton.classList.remove('is-loading');
             const destination = redirectTarget || roleDestinations[selectedRole];
            showAuthMessage('Login berhasil.', remember ? 'Sesi akan diingat pada perangkat ini.' : 'Sesi hanya berlaku pada tab ini.', `<a class="portal-link" href="${destination}">Buka portal &rarr;</a>`);
            return;

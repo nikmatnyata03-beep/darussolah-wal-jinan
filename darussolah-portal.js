@@ -115,6 +115,8 @@
       try {
         localStorage.removeItem(sessionModeKey);
         sessionStorage.removeItem(sessionModeKey);
+        localStorage.removeItem('dwj-ui-role');
+        sessionStorage.removeItem('dwj-ui-role');
       } catch (error) { /* Storage can be unavailable in private browsing. */ }
       window.location.replace('login.html');
     });
