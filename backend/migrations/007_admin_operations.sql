@@ -83,13 +83,26 @@ CREATE POLICY site_media_admin_insert ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
     bucket_id = 'site-media'
-    AND (storage.foldername(name))[1] IS NOT NULL
+    AND (storage.foldername(name))[1] ~ '^[0-9a-fA-F-]{36}$'
+    AND darussolah.has_tenant_role(
+      ((storage.foldername(name))[1])::uuid,
+      ARRAY['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran']
+    )
   );
 DROP POLICY IF EXISTS site_media_public_read ON storage.objects;
 CREATE POLICY site_media_public_read ON storage.objects
   FOR SELECT TO public USING (bucket_id = 'site-media');
 DROP POLICY IF EXISTS site_media_admin_update ON storage.objects;
 CREATE POLICY site_media_admin_update ON storage.objects
-  FOR UPDATE TO authenticated USING (bucket_id = 'site-media') WITH CHECK (bucket_id = 'site-media');
+  FOR UPDATE TO authenticated
+  USING (
+    bucket_id = 'site-media'
+    AND (storage.foldername(name))[1] ~ '^[0-9a-fA-F-]{36}$'
+    AND darussolah.has_tenant_role(
+      ((storage.foldername(name))[1])::uuid,
+      ARRAY['super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran']
+    )
+  )
+  WITH CHECK (bucket_id = 'site-media');
 
 COMMIT;
