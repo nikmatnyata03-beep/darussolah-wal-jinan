@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
@@ -91,6 +91,92 @@ class LearningSubmissionCreateRequest(BaseModel):
         if not self.file_path and not (self.note and self.note.strip()):
             raise ValueError("file_path or note is required")
         return self
+
+
+class AdminRecordCreateRequest(BaseModel):
+    module: str = Field(min_length=2, max_length=42, pattern=r"^[a-z][a-z0-9_-]{1,40}$")
+    record_key: str | None = Field(default=None, min_length=1, max_length=200)
+    entity_id: UUID | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class AdminRecordUpdateRequest(BaseModel):
+    payload: dict[str, Any] | None = None
+    status: Literal["active", "archived"] | None = None
+
+
+class AdminStudentCreateRequest(BaseModel):
+    institution_id: UUID | None = None
+    class_id: UUID | None = None
+    full_name: str = Field(min_length=2, max_length=200)
+    nis: str | None = Field(default=None, max_length=80)
+    birth_place: str | None = Field(default=None, max_length=100)
+    birth_date: date | None = None
+    gender: Literal["male", "female"] | None = None
+    address: str | None = Field(default=None, max_length=1000)
+    status: Literal["candidate", "active", "leave", "graduated", "transferred", "inactive"] = "active"
+    guardian_name: str | None = Field(default=None, max_length=200)
+    guardian_phone: str | None = Field(default=None, max_length=40)
+    guardian_email: str | None = Field(default=None, max_length=200)
+    guardian_relationship: str = Field(default="guardian", max_length=40)
+
+
+class AdminStudentUpdateRequest(BaseModel):
+    full_name: str | None = Field(default=None, min_length=2, max_length=200)
+    nis: str | None = Field(default=None, max_length=80)
+    birth_place: str | None = Field(default=None, max_length=100)
+    birth_date: date | None = None
+    gender: Literal["male", "female"] | None = None
+    address: str | None = Field(default=None, max_length=1000)
+    status: Literal["candidate", "active", "leave", "graduated", "transferred", "inactive"] | None = None
+    photo_url: str | None = Field(default=None, max_length=500)
+
+
+class AdminStaffCreateRequest(BaseModel):
+    institution_id: UUID
+    display_name: str = Field(min_length=2, max_length=200)
+    role_title: str | None = Field(default=None, max_length=100)
+    subject: str | None = Field(default=None, max_length=100)
+    education: str | None = Field(default=None, max_length=200)
+    short_bio: str | None = Field(default=None, max_length=1000)
+    status: Literal["active", "inactive"] = "active"
+    employment_type: Literal["fixed", "honor"] = "fixed"
+    weekly_hours: int = Field(default=0, ge=0, le=100)
+
+
+class AdminStaffUpdateRequest(BaseModel):
+    display_name: str | None = Field(default=None, min_length=2, max_length=200)
+    role_title: str | None = Field(default=None, max_length=100)
+    subject: str | None = Field(default=None, max_length=100)
+    education: str | None = Field(default=None, max_length=200)
+    short_bio: str | None = Field(default=None, max_length=1000)
+    status: Literal["active", "inactive"] | None = None
+    employment_type: Literal["fixed", "honor"] | None = None
+    weekly_hours: int | None = Field(default=None, ge=0, le=100)
+
+
+class AdminContentCreateRequest(BaseModel):
+    site_kind: Literal["foundation", "institution"] = "foundation"
+    institution_id: UUID | None = None
+    content_type: str = Field(default="article", min_length=2, max_length=50)
+    slug: str = Field(min_length=2, max_length=160, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    title: str = Field(min_length=2, max_length=200)
+    excerpt: str | None = Field(default=None, max_length=1000)
+    body: str | None = Field(default=None, max_length=20000)
+    cover_url: str | None = Field(default=None, max_length=500)
+    status: Literal["draft", "published", "archived"] = "draft"
+    sort_order: int = Field(default=0, ge=0, le=100000)
+
+
+class AdminContentUpdateRequest(BaseModel):
+    content_type: str | None = Field(default=None, min_length=2, max_length=50)
+    slug: str | None = Field(default=None, min_length=2, max_length=160, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    title: str | None = Field(default=None, min_length=2, max_length=200)
+    excerpt: str | None = Field(default=None, max_length=1000)
+    body: str | None = Field(default=None, max_length=20000)
+    cover_url: str | None = Field(default=None, max_length=500)
+    status: Literal["draft", "published", "archived"] | None = None
+    sort_order: int | None = Field(default=None, ge=0, le=100000)
 
 
 def _store(request: Request) -> FoundationStore:
@@ -405,6 +491,211 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
             raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
         except ConflictError as exc:
             raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/summary", tags=["admin"])
+    async def admin_summary(
+        tenant_slug: str,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.fetch_admin_summary(tenant["id"], str(user.user_id))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/students", tags=["admin"])
+    async def admin_students(
+        tenant_slug: str,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return {"items": await store.list_admin_students(tenant["id"], str(user.user_id))}
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.post("/v1/private/{tenant_slug}/admin/students", status_code=status.HTTP_201_CREATED, tags=["admin"])
+    async def create_admin_student(
+        tenant_slug: str,
+        payload: AdminStudentCreateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.create_admin_student(tenant["id"], str(user.user_id), payload.model_dump())
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.put("/v1/private/{tenant_slug}/admin/students/{student_id}", tags=["admin"])
+    async def update_admin_student(
+        tenant_slug: str,
+        student_id: UUID,
+        payload: AdminStudentUpdateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.update_admin_student(tenant["id"], str(user.user_id), str(student_id), payload.model_dump(exclude_unset=True))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/staff", tags=["admin"])
+    async def admin_staff(
+        tenant_slug: str,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return {"items": await store.list_admin_staff(tenant["id"], str(user.user_id))}
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.post("/v1/private/{tenant_slug}/admin/staff", status_code=status.HTTP_201_CREATED, tags=["admin"])
+    async def create_admin_staff(
+        tenant_slug: str,
+        payload: AdminStaffCreateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.create_admin_staff(tenant["id"], str(user.user_id), payload.model_dump())
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+    @app.put("/v1/private/{tenant_slug}/admin/staff/{staff_id}", tags=["admin"])
+    async def update_admin_staff(
+        tenant_slug: str,
+        staff_id: UUID,
+        payload: AdminStaffUpdateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.update_admin_staff(tenant["id"], str(user.user_id), str(staff_id), payload.model_dump(exclude_unset=True))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/records", tags=["admin"])
+    async def admin_records(
+        tenant_slug: str,
+        module: str = Query(min_length=2, max_length=42),
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return {"items": await store.list_admin_records(tenant["id"], str(user.user_id), module)}
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.post("/v1/private/{tenant_slug}/admin/records", status_code=status.HTTP_201_CREATED, tags=["admin"])
+    async def upsert_admin_record(
+        tenant_slug: str,
+        payload: AdminRecordCreateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.upsert_admin_record(tenant["id"], str(user.user_id), payload.model_dump())
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.put("/v1/private/{tenant_slug}/admin/records/{record_id}", tags=["admin"])
+    async def update_admin_record(
+        tenant_slug: str,
+        record_id: UUID,
+        payload: AdminRecordUpdateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.update_admin_record(tenant["id"], str(user.user_id), str(record_id), payload.model_dump(exclude_unset=True))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/content", tags=["admin"])
+    async def admin_content(
+        tenant_slug: str,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return {"items": await store.list_admin_content(tenant["id"], str(user.user_id))}
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.post("/v1/private/{tenant_slug}/admin/content", status_code=status.HTTP_201_CREATED, tags=["admin"])
+    async def create_admin_content(
+        tenant_slug: str,
+        payload: AdminContentCreateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.create_admin_content(tenant["id"], str(user.user_id), payload.model_dump())
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.put("/v1/private/{tenant_slug}/admin/content/{content_id}", tags=["admin"])
+    async def update_admin_content(
+        tenant_slug: str,
+        content_id: UUID,
+        payload: AdminContentUpdateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.update_admin_content(tenant["id"], str(user.user_id), str(content_id), payload.model_dump(exclude_unset=True))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/export", tags=["admin"])
+    async def export_admin_data(
+        tenant_slug: str,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.export_admin_data(tenant["id"], str(user.user_id))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
 
     return app
 

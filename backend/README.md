@@ -14,7 +14,7 @@ pytest
 ## Local run
 
 1. Copy `.env.example` to `.env` and set `DARUSSOLAH_DATABASE_URL`.
-2. Run `migrations/001_initial.sql`, then `migrations/002_core_portal.sql`, `migrations/003_attendance.sql`, `migrations/004_learning.sql`, `migrations/005_learning_submissions.sql`, and `migrations/006_learning_submission_storage.sql` against the PostgreSQL database.
+2. Run `migrations/001_initial.sql`, then `migrations/002_core_portal.sql`, `migrations/003_attendance.sql`, `migrations/004_learning.sql`, `migrations/005_learning_submissions.sql`, `migrations/006_learning_submission_storage.sql`, and `migrations/007_admin_operations.sql` against the PostgreSQL database.
 3. Run `seed/001_demo_data.sql` for the initial foundation and four institutions, then `seed/002_core_demo_data.sql` for synthetic academic programs and classes, `seed/003_attendance_demo_data.sql` for synthetic students and attendance, `seed/004_learning_demo_data.sql` for synthetic materials and assignments, and `seed/005_learning_submissions_demo_data.sql` for synthetic submissions.
 4. Set `DARUSSOLAH_SUPABASE_URL` so the API can derive the Supabase JWKS URL. `DARUSSOLAH_JWT_SECRET` is optional legacy fallback support.
 5. Start the API:
@@ -41,6 +41,16 @@ Private routes require a Supabase Auth access token validated through the config
 - `PUT /v1/private/{tenant_slug}/learning/submissions/{submission_id}`
 - `GET /v1/private/{tenant_slug}/attendance?class_id={class_id}&attendance_date={YYYY-MM-DD}`
 - `PUT /v1/private/{tenant_slug}/attendance`
+- `GET /v1/private/{tenant_slug}/admin/summary`
+- `GET|POST /v1/private/{tenant_slug}/admin/students`
+- `PUT /v1/private/{tenant_slug}/admin/students/{student_id}`
+- `GET|POST /v1/private/{tenant_slug}/admin/staff`
+- `PUT /v1/private/{tenant_slug}/admin/staff/{staff_id}`
+- `GET|POST /v1/private/{tenant_slug}/admin/records?module={module}`
+- `PUT /v1/private/{tenant_slug}/admin/records/{record_id}`
+- `GET|POST /v1/private/{tenant_slug}/admin/content`
+- `PUT /v1/private/{tenant_slug}/admin/content/{content_id}`
+- `GET /v1/private/{tenant_slug}/admin/export`
 
 The attendance write payload accepts a class, date, and one or more student records with `pending`, `present`, `excused`, `sick`, `absent`, or `late` status. A closed session cannot be changed. Learning resources are scoped to an institution or class and support `material`, `assignment`, and `announcement`. Students or guardians can create one submission per assignment with a private Storage path and/or note. Teachers can list submissions and mark them `reviewed` or `returned` with an optional score and feedback. Migration `006` creates the private `learning-submissions` bucket and restricts object paths to the tenant, student, and resource scope.
 

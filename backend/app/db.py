@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import date
+from datetime import date, datetime, timezone
+import json
 from typing import Any
 from uuid import UUID
 
@@ -161,7 +162,7 @@ class FoundationStore:
             rows = await connection.fetch(
                 """
                 SELECT c.id::text AS id, c.tenant_id::text AS tenant_id,
-                       c.institution_id::text AS institution_id, i.code AS institution_code,
+                       c.institution_id::text AS institution_id, i.code AS institution_code, i.name AS institution_name,
                        c.program_id::text AS program_id, p.name AS program_name,
                        c.academic_year_id::text AS academic_year_id, ay.name AS academic_year,
                        c.code, c.name, c.capacity, c.status
@@ -688,6 +689,455 @@ class FoundationStore:
                 ],
             )
         return await self.fetch_attendance(tenant_id, user_id, str(class_id), attendance_date)
+
+    async def _require_roles(self, connection: Any, tenant_id: str, user_id: str, roles: tuple[str, ...]) -> None:
+        allowed = await connection.fetchval(
+            """
+            SELECT EXISTS (
+              SELECT 1 FROM user_roles
+              WHERE tenant_id = $1 AND user_id = $2 AND role = ANY($3::text[])
+            )
+            """,
+            _uuid(tenant_id), _uuid(user_id), list(roles),
+        )
+        if not allowed:
+            raise PermissionDeniedError("user does not have access to this admin module")
+
+    async def fetch_admin_summary(self, tenant_id: str, user_id: str) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
+            ))
+            summary = await connection.fetchrow(
+                """
+                SELECT
+                  (SELECT count(*) FROM students WHERE tenant_id = $1) AS students_total,
+                  (SELECT count(*) FROM students WHERE tenant_id = $1 AND status = 'active') AS students_active,
+                  (SELECT count(*) FROM guardians WHERE tenant_id = $1) AS guardians_total,
+                  (SELECT count(*) FROM teacher_profiles WHERE tenant_id = $1 AND status = 'active') AS teachers_active,
+                  (SELECT count(*) FROM learning_resources WHERE tenant_id = $1 AND status <> 'archived') AS learning_total,
+                  (SELECT count(*) FROM attendance_sessions WHERE tenant_id = $1 AND attendance_date = CURRENT_DATE) AS attendance_sessions_today,
+                  (SELECT count(*) FROM registration_applications WHERE tenant_id = $1 AND status IN ('new', 'reviewing')) AS registrations_pending
+                """,
+                _uuid(tenant_id),
+            )
+            records = await connection.fetch(
+                """
+                SELECT module, count(*)::int AS total
+                FROM admin_records
+                WHERE tenant_id = $1 AND status = 'active'
+                GROUP BY module
+                ORDER BY module
+                """,
+                _uuid(tenant_id),
+            )
+        return {
+            **dict(summary),
+            "modules": {row["module"]: row["total"] for row in records},
+        }
+
+    async def list_admin_students(self, tenant_id: str, user_id: str) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
+            ))
+            rows = await connection.fetch(
+                """
+                SELECT s.id::text AS id, s.tenant_id::text AS tenant_id, s.nis, s.full_name,
+                       s.birth_place, s.birth_date, s.gender, s.address, s.status, s.photo_url,
+                       enrollment.class_id::text AS class_id, enrollment.class_name,
+                       enrollment.institution_id::text AS institution_id, enrollment.institution_name,
+                       guardian.id::text AS guardian_id, guardian.full_name AS guardian_name,
+                       guardian.phone AS guardian_phone, guardian.email AS guardian_email,
+                       CASE WHEN guardian.id IS NULL THEN false ELSE true END AS guardian_connected
+                FROM students s
+                LEFT JOIN LATERAL (
+                  SELECT e.class_id, c.name AS class_name, e.institution_id, i.name AS institution_name
+                  FROM enrollments e
+                  JOIN institutions i ON i.id = e.institution_id
+                  LEFT JOIN classes c ON c.id = e.class_id
+                  WHERE e.student_id = s.id AND e.tenant_id = s.tenant_id AND e.status = 'active'
+                  ORDER BY e.created_at DESC LIMIT 1
+                ) enrollment ON true
+                LEFT JOIN LATERAL (
+                  SELECT g.id, g.full_name, g.phone, g.email
+                  FROM guardian_students gs
+                  JOIN guardians g ON g.id = gs.guardian_id
+                  WHERE gs.student_id = s.id AND gs.tenant_id = s.tenant_id
+                  ORDER BY gs.is_primary DESC, g.created_at ASC LIMIT 1
+                ) guardian ON true
+                WHERE s.tenant_id = $1
+                ORDER BY s.full_name
+                """,
+                _uuid(tenant_id),
+            )
+        return [dict(row) for row in rows]
+
+    async def create_admin_student(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            institution_id = _uuid(data["institution_id"]) if data.get("institution_id") else await connection.fetchval(
+                "SELECT id FROM institutions WHERE tenant_id = $1 AND status = 'active' ORDER BY code LIMIT 1",
+                _uuid(tenant_id),
+            )
+            if institution_id is None:
+                raise NotFoundError("no active institution is available")
+            class_info = None
+            if data.get("class_id"):
+                class_info = await connection.fetchrow(
+                    """
+                    SELECT id, institution_id, program_id, academic_year_id
+                    FROM classes
+                    WHERE id = $1 AND tenant_id = $2 AND status = 'active'
+                    """,
+                    _uuid(data["class_id"]), _uuid(tenant_id),
+                )
+                if class_info is None:
+                    raise NotFoundError("class not found")
+                institution_id = class_info["institution_id"]
+            student_id = await connection.fetchval(
+                """
+                INSERT INTO students (tenant_id, nis, full_name, birth_place, birth_date, gender, address, status)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING id
+                """,
+                _uuid(tenant_id), data.get("nis"), data["full_name"], data.get("birth_place"),
+                data.get("birth_date"), data.get("gender"), data.get("address"), data.get("status", "active"),
+            )
+            if class_info is not None:
+                await connection.execute(
+                    """
+                    INSERT INTO enrollments (tenant_id, student_id, institution_id, program_id, class_id, academic_year_id, status)
+                    VALUES ($1, $2, $3, $4, $5, $6, 'active')
+                    ON CONFLICT (student_id, institution_id, academic_year_id) DO UPDATE
+                      SET class_id = EXCLUDED.class_id, status = 'active', updated_at = now()
+                    """,
+                    _uuid(tenant_id), student_id, institution_id, class_info["program_id"],
+                    class_info["id"], class_info["academic_year_id"],
+                )
+            if data.get("guardian_name"):
+                guardian_id = await connection.fetchval(
+                    """
+                    INSERT INTO guardians (tenant_id, full_name, phone, email, relationship)
+                    VALUES ($1, $2, $3, $4, $5)
+                    RETURNING id
+                    """,
+                    _uuid(tenant_id), data["guardian_name"], data.get("guardian_phone"),
+                    data.get("guardian_email"), data.get("guardian_relationship", "guardian"),
+                )
+                await connection.execute(
+                    """
+                    INSERT INTO guardian_students (guardian_id, student_id, tenant_id, relationship, is_primary)
+                    VALUES ($1, $2, $3, $4, true)
+                    ON CONFLICT (guardian_id, student_id) DO UPDATE SET is_primary = true
+                    """,
+                    guardian_id, student_id, _uuid(tenant_id), data.get("guardian_relationship", "guardian"),
+                )
+            await connection.execute(
+                """
+                INSERT INTO audit_logs (tenant_id, actor_user_id, action, entity_type, entity_id, after_data)
+                VALUES ($1, $2, 'create', 'student', $3, jsonb_build_object('full_name', $4, 'nis', $5))
+                """,
+                _uuid(tenant_id), _uuid(user_id), student_id, data["full_name"], data.get("nis"),
+            )
+        students = await self.list_admin_students(tenant_id, user_id)
+        return next((student for student in students if student["id"] == str(student_id)), {})
+
+    async def update_admin_student(self, tenant_id: str, user_id: str, student_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        allowed = {key: data[key] for key in (
+            "nis", "full_name", "birth_place", "birth_date", "gender", "address", "status", "photo_url",
+        ) if key in data}
+        if not allowed:
+            raise ConflictError("no student fields supplied")
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            student_uuid = _uuid(student_id)
+            exists = await connection.fetchval(
+                "SELECT EXISTS (SELECT 1 FROM students WHERE id = $1 AND tenant_id = $2)",
+                student_uuid, _uuid(tenant_id),
+            )
+            if not exists:
+                raise NotFoundError("student not found")
+            assignments = ", ".join(f"{column} = ${index + 2}" for index, column in enumerate(allowed))
+            await connection.execute(
+                f"UPDATE students SET {assignments}, updated_at = now() WHERE id = $1 AND tenant_id = ${len(allowed) + 2}",
+                student_uuid, *allowed.values(), _uuid(tenant_id),
+            )
+        students = await self.list_admin_students(tenant_id, user_id)
+        return next((student for student in students if student["id"] == str(student_uuid)), {})
+
+    async def list_admin_staff(self, tenant_id: str, user_id: str) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            rows = await connection.fetch(
+                """
+                SELECT tp.id::text AS id, tp.user_id::text AS user_id, tp.institution_id::text AS institution_id,
+                       i.name AS institution_name, tp.display_name, tp.role_title, tp.subject, tp.education,
+                       tp.short_bio, tp.photo_url, tp.status, tp.employment_type, tp.weekly_hours,
+                       COALESCE(string_agg(DISTINCT c.name, ', ' ORDER BY c.name), '') AS classes
+                FROM teacher_profiles tp
+                JOIN institutions i ON i.id = tp.institution_id
+                LEFT JOIN class_teachers ct ON ct.teacher_id = tp.id
+                LEFT JOIN classes c ON c.id = ct.class_id
+                WHERE tp.tenant_id = $1
+                GROUP BY tp.id, i.name
+                ORDER BY tp.display_name
+                """,
+                _uuid(tenant_id),
+            )
+        return [dict(row) for row in rows]
+
+    async def create_admin_staff(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            institution_id = _uuid(data["institution_id"])
+            valid = await connection.fetchval(
+                "SELECT EXISTS (SELECT 1 FROM institutions WHERE id = $1 AND tenant_id = $2)",
+                institution_id, _uuid(tenant_id),
+            )
+            if not valid:
+                raise NotFoundError("institution not found")
+            staff_id = await connection.fetchval(
+                """
+                INSERT INTO teacher_profiles (
+                  tenant_id, institution_id, display_name, role_title, subject, education,
+                  short_bio, status, employment_type, weekly_hours
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                RETURNING id
+                """,
+                _uuid(tenant_id), institution_id, data["display_name"], data.get("role_title"),
+                data.get("subject"), data.get("education"), data.get("short_bio"),
+                data.get("status", "active"), data.get("employment_type", "fixed"), data.get("weekly_hours", 0),
+            )
+        staff = await self.list_admin_staff(tenant_id, user_id)
+        return next((item for item in staff if item["id"] == str(staff_id)), {})
+
+    async def update_admin_staff(self, tenant_id: str, user_id: str, staff_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        allowed = {key: data[key] for key in (
+            "display_name", "role_title", "subject", "education", "short_bio", "status", "employment_type", "weekly_hours",
+        ) if key in data}
+        if not allowed:
+            raise ConflictError("no staff fields supplied")
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            staff_uuid = _uuid(staff_id)
+            assignments = ", ".join(f"{column} = ${index + 2}" for index, column in enumerate(allowed))
+            updated = await connection.execute(
+                f"UPDATE teacher_profiles SET {assignments}, updated_at = now() WHERE id = $1 AND tenant_id = ${len(allowed) + 2}",
+                staff_uuid, *allowed.values(), _uuid(tenant_id),
+            )
+            if updated.endswith("0"):
+                raise NotFoundError("staff member not found")
+        staff = await self.list_admin_staff(tenant_id, user_id)
+        return next((item for item in staff if item["id"] == str(staff_uuid)), {})
+
+    async def list_admin_records(self, tenant_id: str, user_id: str, module: str) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
+            ))
+            rows = await connection.fetch(
+                """
+                SELECT id::text AS id, module, record_key, entity_id::text AS entity_id,
+                       payload, status, created_by::text AS created_by, created_at, updated_at
+                FROM admin_records
+                WHERE tenant_id = $1 AND module = $2 AND status = 'active'
+                ORDER BY updated_at DESC
+                """,
+                _uuid(tenant_id), module,
+            )
+        result = []
+        for row in rows:
+            item = dict(row)
+            if isinstance(item.get("payload"), str):
+                item["payload"] = json.loads(item["payload"])
+            result.append(item)
+        return result
+
+    async def upsert_admin_record(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
+            ))
+            row = await connection.fetchrow(
+                """
+                INSERT INTO admin_records (tenant_id, module, record_key, entity_id, payload, status, created_by)
+                VALUES ($1, $2, $3, $4, $5::jsonb, 'active', $6)
+                ON CONFLICT (tenant_id, module, record_key) DO UPDATE
+                  SET entity_id = EXCLUDED.entity_id, payload = EXCLUDED.payload,
+                      status = 'active', updated_at = now()
+                RETURNING id::text AS id, module, record_key, entity_id::text AS entity_id,
+                          payload, status, created_by::text AS created_by, created_at, updated_at
+                """,
+                _uuid(tenant_id), data["module"], data.get("record_key") or str(UUID(int=0)),
+                _uuid(data["entity_id"]) if data.get("entity_id") else None,
+                json.dumps(data.get("payload") or {}), _uuid(user_id),
+            )
+        item = dict(row)
+        if isinstance(item.get("payload"), str):
+            item["payload"] = json.loads(item["payload"])
+        return item
+
+    async def update_admin_record(self, tenant_id: str, user_id: str, record_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
+            ))
+            row = await connection.fetchrow(
+                """
+                UPDATE admin_records
+                SET payload = COALESCE($2::jsonb, payload), status = COALESCE($3, status), updated_at = now()
+                WHERE id = $1 AND tenant_id = $4
+                RETURNING id::text AS id, module, record_key, entity_id::text AS entity_id,
+                          payload, status, created_by::text AS created_by, created_at, updated_at
+                """,
+                _uuid(record_id), json.dumps(data.get("payload")) if "payload" in data else None,
+                data.get("status"), _uuid(tenant_id),
+            )
+            if row is None:
+                raise NotFoundError("admin record not found")
+        item = dict(row)
+        if isinstance(item.get("payload"), str):
+            item["payload"] = json.loads(item["payload"])
+        return item
+
+    async def list_admin_content(self, tenant_id: str, user_id: str) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            rows = await connection.fetch(
+                """
+                SELECT sc.id::text AS id, sc.site_kind, sc.foundation_site_id::text AS foundation_site_id,
+                       sc.institution_id::text AS institution_id, i.name AS institution_name,
+                       sc.content_type, sc.slug, sc.title, sc.excerpt, sc.body, sc.cover_url,
+                       sc.status, sc.sort_order, sc.published_at, sc.created_at, sc.updated_at
+                FROM site_content sc
+                LEFT JOIN institutions i ON i.id = sc.institution_id
+                WHERE sc.tenant_id = $1
+                ORDER BY sc.updated_at DESC, sc.sort_order, sc.title
+                """,
+                _uuid(tenant_id),
+            )
+        return [dict(row) for row in rows]
+
+    async def create_admin_content(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            site_kind = data.get("site_kind", "foundation")
+            foundation_id = None
+            institution_id = None
+            if site_kind == "foundation":
+                foundation_id = await connection.fetchval(
+                    "SELECT id FROM foundation_sites WHERE tenant_id = $1 ORDER BY created_at LIMIT 1",
+                    _uuid(tenant_id),
+                )
+            else:
+                institution_id = _uuid(data["institution_id"]) if data.get("institution_id") else await connection.fetchval(
+                    "SELECT id FROM institutions WHERE tenant_id = $1 ORDER BY code LIMIT 1", _uuid(tenant_id)
+                )
+                if institution_id is None:
+                    raise NotFoundError("institution not found")
+            status = data.get("status", "draft")
+            content_id = await connection.fetchval(
+                """
+                INSERT INTO site_content (
+                  tenant_id, site_kind, foundation_site_id, institution_id, content_type, slug,
+                  title, excerpt, body, cover_url, status, sort_order, published_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+                          CASE WHEN $11 = 'published' THEN now() ELSE NULL END)
+                RETURNING id
+                """,
+                _uuid(tenant_id), site_kind, foundation_id, institution_id, data.get("content_type", "article"),
+                data["slug"], data["title"], data.get("excerpt"), data.get("body"), data.get("cover_url"),
+                status, data.get("sort_order", 0),
+            )
+        content = await self.list_admin_content(tenant_id, user_id)
+        return next((item for item in content if item["id"] == str(content_id)), {})
+
+    async def update_admin_content(self, tenant_id: str, user_id: str, content_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        allowed = {key: data[key] for key in (
+            "content_type", "slug", "title", "excerpt", "body", "cover_url", "status", "sort_order",
+        ) if key in data}
+        if not allowed:
+            raise ConflictError("no content fields supplied")
+        assignments = ", ".join(f"{column} = ${index + 2}" for index, column in enumerate(allowed))
+        values = list(allowed.values())
+        if "status" in allowed:
+            status_placeholder = list(allowed).index("status") + 2
+            assignments += f", published_at = CASE WHEN ${status_placeholder} = 'published' THEN COALESCE(published_at, now()) ELSE NULL END"
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            row = await connection.fetchrow(
+                f"""
+                UPDATE site_content SET {assignments}, updated_at = now()
+                WHERE id = $1 AND tenant_id = ${len(values) + 2}
+                RETURNING id::text AS id, site_kind, foundation_site_id::text AS foundation_site_id,
+                          institution_id::text AS institution_id, content_type, slug, title, excerpt,
+                          body, cover_url, status, sort_order, published_at, created_at, updated_at
+                """,
+                _uuid(content_id), *values, _uuid(tenant_id),
+            )
+            if row is None:
+                raise NotFoundError("content not found")
+        return dict(row)
+
+    async def export_admin_data(self, tenant_id: str, user_id: str) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            students = await connection.fetch(
+                "SELECT id::text AS id, nis, full_name, birth_place, birth_date, gender, address, status, created_at, updated_at FROM students WHERE tenant_id = $1 ORDER BY full_name",
+                _uuid(tenant_id),
+            )
+            staff = await connection.fetch(
+                "SELECT id::text AS id, institution_id::text AS institution_id, display_name, role_title, subject, education, status, employment_type, weekly_hours, created_at, updated_at FROM teacher_profiles WHERE tenant_id = $1 ORDER BY display_name",
+                _uuid(tenant_id),
+            )
+            records = await connection.fetch(
+                "SELECT id::text AS id, module, record_key, entity_id::text AS entity_id, payload, status, created_at, updated_at FROM admin_records WHERE tenant_id = $1 ORDER BY module, updated_at DESC",
+                _uuid(tenant_id),
+            )
+            content = await connection.fetch(
+                "SELECT id::text AS id, site_kind, foundation_site_id::text AS foundation_site_id, institution_id::text AS institution_id, content_type, slug, title, excerpt, body, cover_url, status, sort_order, published_at, created_at, updated_at FROM site_content WHERE tenant_id = $1 ORDER BY updated_at DESC",
+                _uuid(tenant_id),
+            )
+            attendance = await connection.fetch(
+                "SELECT id::text AS id, class_id::text AS class_id, attendance_date, status, opened_at, closed_at FROM attendance_sessions WHERE tenant_id = $1 ORDER BY attendance_date DESC LIMIT 500",
+                _uuid(tenant_id),
+            )
+        def serialise(rows: list[Any]) -> list[dict[str, Any]]:
+            result = []
+            for row in rows:
+                item = dict(row)
+                if isinstance(item.get("payload"), str):
+                    item["payload"] = json.loads(item["payload"])
+                result.append(item)
+            return result
+        return {
+            "generated_at": datetime.now(timezone.utc),
+            "tenant_id": tenant_id,
+            "students": serialise(students),
+            "staff": serialise(staff),
+            "records": serialise(records),
+            "content": serialise(content),
+            "attendance_sessions": serialise(attendance),
+        }
 
     async def fetch_public_foundation(self, tenant_id: str) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
