@@ -1,6 +1,15 @@
-const CACHE_NAME = 'darussolah-public-v1';
+const CACHE_NAME = 'darussolah-public-v2';
 const APP_SHELL = [
   './',
+  './index.html',
+  './darussolah-wal-jinan.html',
+  './tpq-darul-jinan.html',
+  './mdt-darussolah.html',
+  './ra-darussolah.html',
+  './rtq-darussolah.html',
+  './darussolah-institution-site.css',
+  './darussolah-institution-site.js',
+  './darussolah-config.js',
   './manifest.webmanifest',
   './darussolah-logo-yayasan.jpeg'
 ];
@@ -20,7 +29,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
-  const publicPath = url.pathname === '/' || url.pathname.endsWith('/darussolah-wal-jinan-website.html')
+  const publicPath = /\/(index|darussolah-wal-jinan|tpq-darul-jinan|mdt-darussolah|ra-darussolah|rtq-darussolah)\.html$/.test(url.pathname)
+    || url.pathname === '/' || url.pathname.endsWith('/darussolah-institution-site.css')
+    || url.pathname.endsWith('/darussolah-institution-site.js') || url.pathname.endsWith('/darussolah-config.js')
     || url.pathname.endsWith('/manifest.webmanifest') || url.pathname.endsWith('/darussolah-logo-yayasan.jpeg');
   if (request.method !== 'GET' || url.origin !== self.location.origin || !publicPath) return;
 
