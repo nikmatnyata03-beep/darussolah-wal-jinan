@@ -1,0 +1,47 @@
+# Darussolah Foundation Backend
+
+API for `Yayasan Darussolah Wal Jinan`. The first release contains public reads, registration intake, Supabase Auth token validation, scoped profile/master-data reads, attendance, and the first learning-resource slice.
+
+## Local test
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install -e '.[test]'
+pytest
+```
+
+## Local run
+
+1. Copy `.env.example` to `.env` and set `DARUSSOLAH_DATABASE_URL`.
+2. Run `migrations/001_initial.sql`, then `migrations/002_core_portal.sql`, `migrations/003_attendance.sql`, `migrations/004_learning.sql`, `migrations/005_learning_submissions.sql`, and `migrations/006_learning_submission_storage.sql` against the PostgreSQL database.
+3. Run `seed/001_demo_data.sql` for the initial foundation and four institutions, then `seed/002_core_demo_data.sql` for synthetic academic programs and classes, `seed/003_attendance_demo_data.sql` for synthetic students and attendance, `seed/004_learning_demo_data.sql` for synthetic materials and assignments, and `seed/005_learning_submissions_demo_data.sql` for synthetic submissions.
+4. Set `DARUSSOLAH_SUPABASE_URL` so the API can derive the Supabase JWKS URL. `DARUSSOLAH_JWT_SECRET` is optional legacy fallback support.
+5. Start the API:
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+## Production deployment
+
+Build and deploy the included `Dockerfile` to Google Cloud Run. Set `DARUSSOLAH_DATABASE_URL` to the Supabase transaction pooler connection string, `DARUSSOLAH_SUPABASE_URL` to the project URL, and `DARUSSOLAH_ALLOWED_ORIGINS` to the exact website origin. See `../darussolah-cloud-run.md` for the Cloud Run checklist, Secret Manager setup, and cost safeguards.
+
+The migration intentionally keeps tenant-owned tables behind PostgreSQL row-level security. The API sets `app.tenant_id` for every tenant-scoped operation before querying.
+
+Private routes require a Supabase Auth access token validated through the configured JWKS URL, or through the optional legacy `DARUSSOLAH_JWT_SECRET`:
+
+- `GET /v1/private/{tenant_slug}/me`
+- `GET /v1/private/{tenant_slug}/students`
+- `GET /v1/private/{tenant_slug}/classes`
+- `GET /v1/private/{tenant_slug}/learning?class_id={class_id}&resource_type={material|assignment|announcement}`
+- `POST /v1/private/{tenant_slug}/learning`
+- `GET /v1/private/{tenant_slug}/learning/submissions?class_id={class_id}&resource_id={resource_id}`
+- `POST /v1/private/{tenant_slug}/learning/submissions`
+- `PUT /v1/private/{tenant_slug}/learning/submissions/{submission_id}`
+- `GET /v1/private/{tenant_slug}/attendance?class_id={class_id}&attendance_date={YYYY-MM-DD}`
+- `PUT /v1/private/{tenant_slug}/attendance`
+
+The attendance write payload accepts a class, date, and one or more student records with `pending`, `present`, `excused`, `sick`, `absent`, or `late` status. A closed session cannot be changed. Learning resources are scoped to an institution or class and support `material`, `assignment`, and `announcement`. Students or guardians can create one submission per assignment with a private Storage path and/or note. Teachers can list submissions and mark them `reviewed` or `returned` with an optional score and feedback. Migration `006` creates the private `learning-submissions` bucket and restricts object paths to the tenant, student, and resource scope.
+
+The tables live in the `darussolah` schema. If a frontend uses Supabase REST directly, expose that schema in Supabase API settings and query it with the client schema selector; otherwise keep database access behind this API.
