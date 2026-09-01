@@ -216,13 +216,13 @@
     document.getElementById('scopeSelect').addEventListener('change',(event)=>{const data=scopes[event.target.value];document.getElementById('studentTotal').textContent=data.students;document.getElementById('attendanceTotal').textContent=data.attendance;document.getElementById('attendanceChartValue').textContent=data.attendance;document.getElementById('admissionTotal').textContent=data.admissions;document.getElementById('incomeTotal').textContent=data.income;showToast('Lingkup diperbarui',`Analitik ${event.target.selectedOptions[0].text} sedang ditampilkan.`);});
     document.querySelectorAll('[data-period]').forEach((button)=>button.addEventListener('click',()=>{document.querySelectorAll('[data-period]').forEach((item)=>item.classList.toggle('active',item===button));document.getElementById('admissionPeriod').textContent=button.dataset.period==='month'?'Agustus 2026':button.dataset.period==='term'?'Semester 1':'2026 / 2027';showToast('Periode diperbarui',`Grafik kini menampilkan ${button.textContent.toLowerCase()}.`);}));
     document.getElementById('emisButton').addEventListener('click',()=>setModal('emisModal',true));
-    document.getElementById('confirmEmis').addEventListener('click',()=>{setModal('emisModal',false);showToast('Ekspor EMIS disiapkan','File terformat siap diunduh setelah 4 data dilengkapi.');});
+     document.getElementById('confirmEmis').addEventListener('click',()=>{setModal('emisModal',false);showToast('Ekspor EMIS belum tersedia','Lengkapi 4 data rombel dan hubungkan endpoint ekspor terlebih dahulu. Tidak ada file yang dibuat.');});
     document.querySelectorAll('[data-close-modal]').forEach((button)=>button.addEventListener('click',()=>setModal(button.closest('.modal').id,false)));
     document.addEventListener('keydown',(event)=>{if(event.key==='Escape')document.querySelectorAll('.modal').forEach((modal)=>{if(!modal.hidden)setModal(modal.id,false);});});
     document.getElementById('exportTopButton').addEventListener('click',()=>setModal('emisModal',true));
     document.querySelectorAll('[data-report-action]').forEach((button)=>button.addEventListener('click',()=>showToast('Pratinjau laporan',`${button.dataset.reportAction} siap dibuka.`)));
-    document.getElementById('printButton').addEventListener('click',()=>showToast('Laporan siap dicetak','Ringkasan analitik telah disiapkan untuk pencetakan.'));
-    document.getElementById('printReport').addEventListener('click',()=>showToast('Semua laporan siap','Tiga laporan siap dicetak atau disimpan sebagai PDF.'));
+     document.getElementById('printButton').addEventListener('click',()=>window.print());
+     document.getElementById('printReport').addEventListener('click',()=>window.print());
     document.getElementById('institutionDetail').addEventListener('click',()=>showToast('Detail lembaga dibuka','Gunakan filter lingkup untuk melihat satu lembaga secara terpisah.'));
     document.querySelectorAll('[data-report]').forEach((button)=>button.addEventListener('click',()=>{document.querySelectorAll('[data-report]').forEach((item)=>item.classList.toggle('active',item===button));document.querySelectorAll('.report-card').forEach((card)=>{card.hidden=button.dataset.report!=='all'&&card.dataset.reportType!==button.dataset.report;});}));
   </script>
