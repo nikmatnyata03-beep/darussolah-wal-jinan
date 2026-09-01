@@ -401,7 +401,14 @@
            showToast('Review belum tersimpan.', error.message || 'Periksa koneksi API.');
          }
        });
-       document.querySelector('#upload-form').addEventListener('submit', async (event) => {
+        document.querySelector('#upload-form').addEventListener('submit', (event) => {
+          if (!window.DarussolahPortal?.session) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            showToast('Materi belum tersimpan.', 'Masuk ke portal terlebih dahulu agar data dapat dikirim ke server.');
+          }
+        }, true);
+        document.querySelector('#upload-form').addEventListener('submit', async (event) => {
          event.preventDefault();
          const portal = window.DarussolahPortal;
          if (portal?.session) {
@@ -477,7 +484,14 @@
         showToast('Materi berhasil diunggah.', `${title} siap dibagikan ke ${className}.`);
       });
 
-      document.querySelectorAll('[data-review]').forEach((button) => {
+       document.querySelectorAll('[data-review]').forEach((button) => button.addEventListener('click', (event) => {
+         if (button.dataset.review !== 'live') {
+           event.preventDefault();
+           event.stopImmediatePropagation();
+           showToast('Review belum tersimpan.', 'Endpoint pengumpulan tugas belum terhubung.');
+         }
+       }, true));
+       document.querySelectorAll('[data-review]').forEach((button) => {
         button.addEventListener('click', () => {
           const row = button.closest('.assignment-row');
           if (row.dataset.reviewed === 'true') return;

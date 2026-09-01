@@ -9,7 +9,7 @@
     <meta name="darussolah-supabase-anon-key" content="" />
     <title>Masuk Portal | TPQ Darul Jinan</title>
     <script src="darussolah-config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js" integrity="sha384-AkNSQdptcXlJ0/NBZc4qGk86cDVXcCevwoWgEKIpHOEfbvlXGLlIkimQtONt8KNf" crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
@@ -82,7 +82,7 @@
     .field input:focus { border-color: var(--pine); box-shadow: 0 0 0 3px rgba(13,68,51,.08); }
     .password-wrap { position: relative; }
     .password-wrap input { padding-right: 65px; }
-    .show-password { position: absolute; top: 50%; right: 10px; padding: 5px 6px; color: var(--pine); border: 0; background: transparent; font-size: 10px; font-weight: 700; transform: translateY(-50%); }
+    .show-password { position: absolute; top: 50%; right: 6px; min-width: 44px; min-height: 36px; padding: 5px 6px; color: var(--pine); border: 0; background: transparent; font-size: 10px; font-weight: 700; transform: translateY(-50%); }
     .show-password:hover { color: var(--gold); }
     .form-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin: 3px 0 24px; }
     .remember { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
@@ -197,7 +197,10 @@
        const tenantSlug = String(config.tenantSlug || 'yayasan-darussolah-wal-jinan').trim();
        const configuredFields = [apiBase, supabaseUrl, supabaseAnonKey].filter(Boolean);
        const partiallyConfigured = configuredFields.length > 0 && configuredFields.length < 3;
-       const supabaseClient = configuredFields.length === 3 && window.supabase ? window.supabase.createClient(supabaseUrl, supabaseAnonKey) : null;
+        const rememberInput = loginForm.elements.remember;
+        const sessionModeKey = 'dwj-session-mode';
+        const safeStorage = (name) => { try { return window[name]; } catch (error) { return null; } };
+        const createAuthClient = storage => window.supabase.createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: true, storage } });
        const roleContent = {
          wali: { helper: 'Wali santri dapat melihat ringkasan semua anak yang terhubung.', button: 'Masuk ke portal' },
          guru: { helper: 'Guru dapat mengelola kehadiran, materi, tugas, dan catatan perkembangan.', button: 'Masuk ke ruang guru' },
@@ -248,11 +251,22 @@
         togglePassword.setAttribute('aria-label', visible ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi');
       });
 
-      document.querySelector('.forgot').addEventListener('click', (event) => {
-        event.preventDefault();
-        message.innerHTML = '<strong>Permintaan reset dicatat.</strong><span>Alur reset kata sandi akan dikirim melalui WhatsApp atau email setelah layanan terhubung.</span>';
-        message.classList.add('show');
-      });
+       document.querySelector('.forgot').addEventListener('click', async (event) => {
+         event.preventDefault();
+         const identity = document.querySelector('#identity').value.trim();
+         if (!identity || !identity.includes('@') || !supabaseUrl || !supabaseAnonKey || !window.supabase) {
+           showAuthMessage('Masukkan email akun.', 'Pemulihan kata sandi memakai email yang terdaftar dan hanya tersedia saat layanan aktif.');
+           return;
+         }
+         try {
+           const recoveryClient = createAuthClient(safeStorage('localStorage'));
+           const { error } = await recoveryClient.auth.resetPasswordForEmail(identity, { redirectTo: `${window.location.origin}/reset-password.html` });
+           if (error) throw error;
+           showAuthMessage('Tautan reset dikirim.', 'Periksa email akun Anda lalu ikuti tautan untuk membuat kata sandi baru.');
+         } catch (error) {
+           showAuthMessage('Reset belum berhasil.', error.message || 'Periksa email dan koneksi Anda.');
+         }
+       });
 
       const showAuthMessage = (title, copy, link = '') => {
         const safe = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
@@ -269,8 +283,11 @@
            showAuthMessage('Konfigurasi belum lengkap.', 'Isi API URL, Supabase URL, dan anon key di darussolah-config.js sebelum mengaktifkan login production.');
            return;
          }
-         if (supabaseClient) {
-          const { data, error } = await supabaseClient.auth.signInWithPassword({
+         if (window.supabase && configuredFields.length === 3) {
+           const remember = Boolean(rememberInput.checked);
+           const storage = safeStorage(remember ? 'localStorage' : 'sessionStorage');
+           const authClient = createAuthClient(storage);
+           const { data, error } = await authClient.auth.signInWithPassword({
             email: document.querySelector('#identity').value.trim(),
             password: passwordInput.value
           });
@@ -307,17 +324,29 @@
                 showAuthMessage('Koneksi belum stabil.', 'Akun berhasil masuk, tetapi peran belum dapat diverifikasi. Tekan tombol masuk lagi.');
                 return;
               }
-              await supabaseClient.auth.signOut();
+              await authClient.auth.signOut();
              loginButton.classList.remove('is-loading');
              const available = availableRoles.map(role => roleContent[role].button.replace('Masuk ke ', '')).join(', ');
              showAuthMessage('Peran belum diizinkan.', available ? `Akun ini tersedia untuk: ${available}.` : 'Akun berhasil dikenali, tetapi role belum dapat diverifikasi.');
              return;
              }
            }
-          loginButton.classList.remove('is-loading');
-           const destination = redirectTarget || roleDestinations[selectedRole];
-           showAuthMessage('Login berhasil.', 'Sesi aman tersimpan. Buka portal sesuai peran Anda.', `<a class="portal-link" href="${destination}">Buka portal &rarr;</a>`);
-          return;
+           try {
+             if (remember) {
+               safeStorage('localStorage')?.setItem(sessionModeKey, 'persistent');
+               safeStorage('sessionStorage')?.removeItem(sessionModeKey);
+             } else {
+               safeStorage('sessionStorage')?.setItem(sessionModeKey, 'session');
+               safeStorage('localStorage')?.removeItem(sessionModeKey);
+               [...(safeStorage('localStorage') ? Object.keys(localStorage) : [])]
+                 .filter(key => key.startsWith('sb-') && key.endsWith('-auth-token'))
+                 .forEach(key => localStorage.removeItem(key));
+             }
+           } catch (storageError) { /* Login remains usable when browser storage is unavailable. */ }
+           loginButton.classList.remove('is-loading');
+            const destination = redirectTarget || roleDestinations[selectedRole];
+           showAuthMessage('Login berhasil.', remember ? 'Sesi akan diingat pada perangkat ini.' : 'Sesi hanya berlaku pada tab ini.', `<a class="portal-link" href="${destination}">Buka portal &rarr;</a>`);
+           return;
         }
         window.setTimeout(() => {
           loginButton.classList.remove('is-loading');
