@@ -322,40 +322,7 @@
 
        recordForm.addEventListener('submit', (event) => {
          event.preventDefault();
-         const student = studentSelect.value;
-         const kind = document.querySelector('.kind-button.active')?.dataset.kind || 'tahfidz';
-         const score = document.querySelector('.score-button.active')?.dataset.score || 'lancar';
-         const target = document.querySelector('#record-target').value.trim() || 'Target belum diisi';
-         const note = document.querySelector('#record-note').value.trim();
-         const card = cards.find((item) => item.dataset.student === student);
-         const previousStage = card?.dataset.stage;
-         if (card) {
-           const percentage = card.querySelector('.progress-line strong');
-           const current = Number.parseInt(percentage.textContent, 10) || 0;
-           const increment = { lancar: 4, cukup: 2, bimbingan: 1, ulang: 0 }[score] ?? 0;
-           const next = Math.min(100, current + increment);
-           percentage.textContent = `${next}%`;
-           card.querySelector('.fill').style.width = `${next}%`;
-           card.querySelector('.student-sub').textContent = target;
-           card.querySelector('.stage-chip').textContent = score === 'ulang' ? 'Perlu murojaah' : kind === 'tahsin' ? 'Tahsin baru' : 'Baru disetor';
-           if (kind === 'tahfidz') card.dataset.stage = score === 'ulang' ? 'murojaah' : 'setoran';
-           if (kind === 'tahfidz' && previousStage !== card.dataset.stage) {
-             const reviewCount = document.querySelector('#review-count');
-             const delta = card.dataset.stage === 'murojaah' ? 1 : -1;
-             reviewCount.textContent = String(Math.max(0, Number(reviewCount.textContent) + delta)).padStart(2, '0');
-           }
-         }
-         if (kind === 'tahfidz' && score !== 'ulang') {
-           const targetDone = document.querySelector('#target-done');
-           const nextDone = Math.min(25, Number(targetDone.textContent) + 1);
-           targetDone.textContent = nextDone;
-           document.querySelector('.target-percent').textContent = `${Math.round((nextDone / 25) * 100)}%`;
-           document.querySelector('#target-fill').style.width = `${(nextDone / 25) * 100}%`;
-         }
-         const kindLabel = kind === 'tahsin' ? 'Tahsin' : 'Tahfidz';
-         const scoreLabel = document.querySelector('.score-button.active')?.textContent.trim() || 'Lancar';
-         renderCards();
-         showToast(`${kindLabel} ${student} tersimpan.`, `${target}${note ? ' · Catatan disimpan' : ''} · ${scoreLabel}.`);
+         showToast('Capaian belum tersimpan.', 'Endpoint tahfidz belum terhubung. Tidak ada perubahan yang dikirim ke server.');
        });
       document.querySelector('#record-top').addEventListener('click', () => document.querySelector('#record-panel').scrollIntoView({ behavior: 'smooth', block: 'center' }));
       document.querySelector('#progress-button').addEventListener('click', () => showToast('Kartu progres siap dibagikan.', 'Tautan ringkasan akan tersedia setelah portal wali aktif.'));
