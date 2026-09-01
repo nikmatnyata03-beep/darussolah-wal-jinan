@@ -443,11 +443,11 @@
        document.querySelector('#save-attendance').addEventListener('click', async () => {
          const total = rows.length;
          const portal = window.DarussolahPortal;
-         if (!portal?.session || !portal.classes?.length || !portal.students?.length) {
-           showToast('Absensi tersimpan.', `${total} data siap disinkronkan ke server.`);
-           document.querySelector('#sync-title').textContent = 'Perubahan tersimpan';
-           document.querySelector('#sync-detail').textContent = 'Mode demo: data akan tersinkron setelah API diaktifkan.';
-           return;
+          if (!portal?.session || !portal.classes?.length || !portal.students?.length) {
+            showToast('Absensi belum tersimpan.', 'Hubungkan akun dan data kelas sebelum menyimpan perubahan.');
+            document.querySelector('#sync-title').textContent = 'Belum tersimpan';
+            document.querySelector('#sync-detail').textContent = `${total} perubahan masih hanya tampil di layar.`;
+            return;
          }
          const statusMap = {belum:'pending', hadir:'present', izin:'excused', sakit:'sick', alpa:'absent', terlambat:'late'};
          const records = rows.map(row => ({
