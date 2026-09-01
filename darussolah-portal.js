@@ -7,6 +7,7 @@
     supabaseUrl: String(source.supabaseUrl || metaValue('darussolah-supabase-url')).replace(/\/+$/, ''),
     supabaseAnonKey: String(source.supabaseAnonKey || metaValue('darussolah-supabase-anon-key')),
     storageBucket: String(source.storageBucket || 'learning-submissions'),
+    resourceStorageBucket: String(source.resourceStorageBucket || 'learning-resources'),
     tenantSlug: String(source.tenantSlug || 'yayasan-darussolah-wal-jinan')
   });
   const role = document.body?.dataset.portalRole || '';
@@ -82,7 +83,7 @@
   };
   const addClassPicker = (classes, primaryClass, session) => {
     const host = document.querySelector('.topbar-actions');
-    if (!host || role !== 'guru' || document.body.dataset.portalPage !== 'learning' || classes.length < 2) return;
+     if (!host || role !== 'guru' || !['learning', 'attendance', 'tahfidz', 'grades'].includes(document.body.dataset.portalPage) || classes.length < 2) return;
     let picker = host.querySelector('[data-portal-class-picker]');
     if (!picker) {
       picker = document.createElement('select');
@@ -245,7 +246,7 @@
       let learningResponse = null;
       let learningSubmissionsResponse = null;
        const classes = classesResponse.items || [];
-       const supportsClassSelection = role === 'guru' && document.body.dataset.portalPage === 'learning';
+       const supportsClassSelection = role === 'guru' && ['learning', 'attendance', 'tahfidz', 'grades'].includes(document.body.dataset.portalPage);
        const requestedClassId = supportsClassSelection
          ? new URLSearchParams(window.location.search).get('class_id') || readActiveClassId(session)
          : '';

@@ -432,8 +432,8 @@
              if (!tenantId) throw new Error('tenant akun belum tersedia');
              if (file) {
                const safeName = file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'berkas';
-               filePath = `resources/${tenantId}/${selectedClass.id}/${Date.now()}-${safeName}`;
-               const upload = await portal.client.storage.from(portal.config.storageBucket).upload(filePath, file, {
+                filePath = `resources/${tenantId}/${selectedClass.id}/${Date.now()}-${safeName}`;
+                const upload = await portal.client.storage.from(portal.config.resourceStorageBucket).upload(filePath, file, {
                  contentType: file.type || 'application/octet-stream', upsert: false
                });
                if (upload.error) throw upload.error;
@@ -458,7 +458,7 @@
              configureLiveClassSelect(portal);
              showToast('Materi berhasil disimpan.', `${title} sudah tersimpan di server.`);
            } catch (error) {
-             if (filePath) await portal.client.storage.from(portal.config.storageBucket).remove([filePath]).catch(() => {});
+              if (filePath) await portal.client.storage.from(portal.config.resourceStorageBucket).remove([filePath]).catch(() => {});
              showToast('Materi belum tersimpan.', error.message || 'Periksa koneksi API lalu coba lagi.');
            } finally {
              submitButton.disabled = false;
