@@ -593,7 +593,7 @@
     let activeModal = null;
     let lastFocused = null;
     const query = new URLSearchParams(window.location.search);
-    const apiBase = (query.get('api') || window.DARUSSOLAH_API_BASE || document.querySelector('meta[name="darussolah-api-base"]')?.content || '').replace(/\/+$/, '');
+    const apiBase = String(window.DARUSSOLAH_CONFIG?.apiBase || window.DARUSSOLAH_API_BASE || document.querySelector('meta[name="darussolah-api-base"]')?.content || '').replace(/\/+$/, '');
     const tenantSlug = 'yayasan-darussolah-wal-jinan';
     const unitSelect = document.querySelector('#unit');
     let apiReady = false;
@@ -616,6 +616,7 @@
       menuButton.setAttribute('aria-label', isOpen ? 'Buka menu' : 'Tutup menu');
       mobilePanel.classList.toggle('open', !isOpen);
     });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && mobilePanel.classList.contains('open')) { closeMenu(); menuButton.focus(); } });
 
     document.querySelectorAll('.mobile-panel a').forEach(link => link.addEventListener('click', closeMenu));
 
@@ -707,10 +708,7 @@
           return;
         }
       }
-      try { localStorage.setItem('dwj-interest', JSON.stringify({ unit, parentName, studentName, phone, notes, savedAt: new Date().toISOString() })); } catch (error) { /* storage may be unavailable in a preview tab */ }
-      closeModal(form.closest('.modal'));
-      form.reset();
-      showToast('Terima kasih. Minat Anda tersimpan di mode demo.');
+      showToast('Pendaftaran belum terkirim. Layanan pendaftaran belum aktif. Silakan hubungi admin.');
     });
 
     document.querySelector('#portal-form').addEventListener('submit', event => {
