@@ -304,7 +304,7 @@
         const status = row.querySelector('.status-pill');
         status.textContent = needsReview ? 'Perlu perhatian' : 'Tuntas';
         status.classList.toggle('needs-review', needsReview);
-        updateClassSummary();
+         updateClassSummary();
       };
       document.querySelectorAll('.score-input').forEach((input) => input.addEventListener('change', () => updateRow(input)));
       document.querySelectorAll('select').forEach((select) => select.addEventListener('change', () => showToast('Tampilan diperbarui.', `${select.value} sedang ditampilkan.`)));
@@ -314,18 +314,20 @@
       document.querySelectorAll('[data-open-report]').forEach((button) => button.addEventListener('click', () => { modal.hidden = false; }));
       document.querySelectorAll('[data-close-report]').forEach((button) => button.addEventListener('click', () => { modal.hidden = true; }));
       document.addEventListener('keydown', (event) => { if (event.key === 'Escape') modal.hidden = true; });
-      document.querySelector('#approval-button').addEventListener('click', (event) => {
-        event.currentTarget.textContent = 'Menunggu persetujuan';
-        event.currentTarget.disabled = true;
-        document.querySelector('#approval-status').textContent = 'Diajukan ke kepala lembaga';
-        document.querySelector('#approval-status').style.color = 'var(--green)';
-        document.querySelector('#approval-status').style.background = '#e5f1e7';
-        showToast('Rapor diajukan.', 'Kepala lembaga dapat meninjau dan memberi persetujuan.');
-      });
+       document.querySelector('#approval-button').addEventListener('click', () => {
+         showToast('Rapor belum diajukan.', 'Endpoint persetujuan belum terhubung. Tidak ada perubahan yang dikirim ke server.');
+       });
        document.querySelector('#download-report').addEventListener('click', () => { modal.hidden = true; showToast('PDF siap disiapkan.', 'Generator rapor akan membuat dokumen setelah backend aktif.'); });
        const noteModal=document.createElement('div');noteModal.className='modal';noteModal.hidden=true;noteModal.setAttribute('aria-hidden','true');noteModal.innerHTML='<div class="modal-backdrop"></div><div class="report-modal"><button class="modal-close" type="button" aria-label="Tutup catatan">&times;</button><span class="eyebrow">Catatan santri</span><h2 class="serif">Catatan perkembangan.</h2><p>Tambahkan konteks yang dapat membantu wali memahami capaian santri.</p><label class="form-field" for="student-note"><span>Catatan</span><textarea id="student-note" rows="5" placeholder="Tulis catatan guru..."></textarea></label><div class="modal-actions"><button class="btn btn-ghost" type="button" data-close-note>Batal</button><button class="btn btn-primary" type="button" id="save-student-note">Simpan catatan</button></div></div>';document.body.append(noteModal);let activeNoteRow=null;const closeNote=()=>{noteModal.hidden=true;noteModal.setAttribute('aria-hidden','true');};document.querySelectorAll('.note-button').forEach(button=>button.addEventListener('click',()=>{activeNoteRow=button.closest('tr');document.getElementById('student-note').value=activeNoteRow.dataset.note||'';noteModal.hidden=false;noteModal.setAttribute('aria-hidden','false');document.getElementById('student-note').focus();}));noteModal.querySelector('.modal-backdrop').addEventListener('click',closeNote);noteModal.querySelector('[data-close-note]').addEventListener('click',closeNote);noteModal.querySelector('#save-student-note').addEventListener('click',()=>{if(activeNoteRow){activeNoteRow.dataset.note=document.getElementById('student-note').value.trim();activeNoteRow.querySelector('.note-button').title=activeNoteRow.dataset.note?'Catatan tersimpan':'Tambah catatan';}closeNote();showToast('Catatan tersimpan','Catatan santri akan ikut dalam pratinjau rapor.');});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!noteModal.hidden)closeNote();});
-       updateClassSummary();
-    })();
+        updateClassSummary();
+        noteModal.querySelector('#save-student-note').addEventListener('click', () => {
+          if (activeNoteRow) {
+            delete activeNoteRow.dataset.note;
+            activeNoteRow.querySelector('.note-button').title = 'Tambah catatan';
+          }
+          showToast('Catatan belum tersimpan.', 'Endpoint nilai belum terhubung. Catatan tidak dikirim ke server.');
+        });
+     })();
   </script>
 </body>
 </html>
