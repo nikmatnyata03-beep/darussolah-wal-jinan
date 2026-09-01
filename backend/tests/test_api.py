@@ -124,6 +124,16 @@ class FakeStore:
         assert data["records"][0]["status"] == "present"
         return await self.fetch_attendance(tenant_id, user_id, str(data["class_id"]), str(data["attendance_date"]))
 
+    async def fetch_admin_summary(self, tenant_id: str, user_id: str):
+        assert UUID(tenant_id) == UUID(TENANT_ID)
+        assert UUID(user_id) == UUID("77777777-7777-4777-8777-777777777777")
+        return {"students_active": 1, "registrations_pending": 0, "attendance_sessions_today": 1}
+
+    async def list_admin_students(self, tenant_id: str, user_id: str):
+        assert UUID(tenant_id) == UUID(TENANT_ID)
+        assert UUID(user_id) == UUID("77777777-7777-4777-8777-777777777777")
+        return [{"id": "55555555-5555-4555-8555-555555555555", "full_name": "Aisyah", "status": "active"}]
+
 
 def client() -> TestClient:
     settings = Settings(
@@ -316,6 +326,17 @@ def test_private_attendance_reads_and_saves_for_authenticated_user():
         )
         assert saved.status_code == 200
         assert saved.json()["session"]["status"] == "open"
+
+
+def test_admin_summary_and_students_use_authenticated_identity():
+    with authenticated_client() as api:
+        base = "/v1/private/yayasan-darussolah-wal-jinan/admin"
+        summary = api.get(f"{base}/summary")
+        students = api.get(f"{base}/students")
+        assert summary.status_code == 200
+        assert summary.json()["students_active"] == 1
+        assert students.status_code == 200
+        assert students.json()["items"][0]["full_name"] == "Aisyah"
 
 
 def test_attendance_rejects_duplicate_students():

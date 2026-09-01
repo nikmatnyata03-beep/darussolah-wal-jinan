@@ -1,13 +1,15 @@
-# Frontend Darussolah Wal Jinan
+# Darussolah Wal Jinan
 
-Paket static frontend siap di-deploy ke Vercel.
+Repository ini berisi frontend statis dan backend FastAPI untuk Darussolah Wal Jinan.
+
+- `index.html` dan halaman HTML lain adalah frontend yang siap di-deploy ke Vercel.
+- `backend/` berisi API FastAPI, migration PostgreSQL/Supabase, seed demo, dan test.
 
 ## Deploy
 
-1. Extract paket frontend ini.
-2. Upload seluruh isi folder ke GitHub, atau pilih folder tersebut saat membuat project Vercel.
-3. Di Vercel gunakan preset **Other** atau static site.
-4. Kosongkan build command dan output directory, lalu klik **Deploy**.
+1. Deploy isi repository ini ke Vercel sebagai static site.
+2. Di Vercel gunakan preset **Other** atau static site.
+3. Kosongkan build command dan output directory, lalu klik **Deploy**.
 
 `index.html` adalah halaman utama website yayasan. Halaman portal dan microsite tersedia sebagai file HTML terpisah.
 
@@ -24,6 +26,11 @@ Paket static frontend siap di-deploy ke Vercel.
 - `reset-password.html` menyediakan alur reset kata sandi melalui Supabase Auth.
 - Pendaftaran tidak lagi menyimpan PII di `localStorage` jika API belum aktif atau gagal.
 - Wali tidak lagi menerima fixture anak/keuangan dari HTML statis; data ditampilkan dari respons API setelah guard sesi selesai.
+- Workspace admin/guru memakai endpoint live untuk absensi, santri, guru, tahfidz, nilai, keuangan, CMS, analitik, notifikasi, dan pengaturan.
 - Deploy ulang paket ini agar perbaikan keamanan dan akses admin berlaku di situs publik.
 
-Paket ini tidak berisi backend, database URL, password, atau credential server.
+## Backend
+
+Jalankan migration `backend/migrations/001_initial.sql` sampai `backend/migrations/008_learning_resource_storage.sql` secara berurutan. Detail local run, route, dan deployment ada di `backend/README.md`.
+
+Repository ini tidak berisi database URL, password, atau credential server.
