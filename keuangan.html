@@ -351,44 +351,19 @@
     document.getElementById('billSearch').addEventListener('input', refreshBills);
     document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
       const action = button.dataset.action;
-      if (action === 'remind') showToast('Pengingat siap dikirim', 'Pesan WhatsApp telah disiapkan untuk wali santri.');
-      if (action === 'receipt') showToast('Kwitansi dibuka', 'Pratinjau kwitansi pembayaran siap diunduh.');
-      if (action === 'export') showToast('Laporan disiapkan', 'Laporan transaksi Agustus 2026 siap diunduh.');
+       if (action === 'remind') showToast('Pengingat belum dikirim', 'Endpoint komunikasi belum terhubung. Tidak ada pesan yang dikirim.');
+       if (action === 'receipt') showToast('Kwitansi belum tersedia', 'Generator kwitansi belum terhubung. Tidak ada dokumen yang dibuat.');
+       if (action === 'export') showToast('Laporan belum tersedia', 'Endpoint ekspor keuangan belum terhubung. Tidak ada file yang dibuat.');
     }));
     document.getElementById('invoiceForm').addEventListener('submit', (event) => {
       event.preventDefault();
-      const student = document.getElementById('studentName').value.trim();
-      const amount = Number(document.getElementById('invoiceAmount').value || 0);
-      const dueDate = new Date(document.getElementById('invoiceDue').value + 'T00:00:00');
-      const due = new Intl.DateTimeFormat('id-ID', {day: '2-digit', month: 'short', year: 'numeric'}).format(dueDate);
-      const initials = student.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
-      const safeStudent = student.replace(/[&<>"']/g, (character) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
-      const amountLabel = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(amount);
-      const row = document.createElement('tr');
-      row.dataset.status = 'pending';
-      row.innerHTML = `<td><div class="payer-cell"><span class="payer-avatar">${initials || 'SN'}</span><span class="payer-detail">${safeStudent || 'Santri baru'}<small>Invoice baru · SPP bulanan</small></span></div></td><td>${due}</td><td class="amount">${amountLabel}</td><td><span class="status-pill pending">Menunggu</span></td><td><button class="pay-button" type="button" data-action="remind">Ingatkan</button></td>`;
-      document.getElementById('billRows').prepend(row);
-      row.querySelector('[data-action]').addEventListener('click', () => showToast('Pengingat siap dikirim', 'Pesan WhatsApp telah disiapkan untuk wali santri.'));
-      closeModal(document.getElementById('invoiceModal'));
-      event.target.reset();
-      activeFilter = 'all';
-      document.querySelectorAll('.filter-tab').forEach((item) => item.classList.toggle('active', item.dataset.filter === 'all'));
-      refreshBills();
-      showToast('Invoice berhasil dibuat', 'Tagihan baru sudah masuk ke daftar dan siap dikirim.');
+      showToast('Invoice belum tersimpan', 'Endpoint keuangan belum terhubung. Tidak ada perubahan yang dikirim ke server.');
     });
-     document.getElementById('donationForm').addEventListener('submit', (event) => {
-       event.preventDefault();
-       const amount = Number(document.getElementById('donationAmount').value || 0);
-      const current = 4.2 + (amount / 1000000);
-      document.getElementById('donationValue').textContent = `Rp ${current.toFixed(1).replace('.', ',')} jt`;
-      document.getElementById('incomeValue').textContent = `Rp ${(12.4 + (amount / 1000000)).toFixed(1).replace('.', ',')} jt`;
-      closeModal(document.getElementById('donationModal'));
-      event.target.reset();
-       showToast('Donasi berhasil dicatat', 'Ringkasan program akan diperbarui pada laporan berikutnya.');
-     });
+    document.getElementById('donationForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      showToast('Donasi belum tersimpan', 'Endpoint keuangan belum terhubung. Tidak ada perubahan yang dikirim ke server.');
+    });
      let billedTotal=7.85;let pendingCount=4;let donationTotal=4.2;let incomeTotal=12.4;
-     document.getElementById('invoiceForm').addEventListener('submit',()=>{const amount=Number(document.getElementById('invoiceAmount').value)||0;billedTotal+=amount/1000000;pendingCount+=1;setTimeout(()=>{document.getElementById('billedValue').textContent=`Rp ${billedTotal.toFixed(2).replace('.',',')} jt`;const count=document.querySelector('[data-filter="pending"] span');if(count)count.textContent=`(${pendingCount})`;},0);},true);
-     document.getElementById('donationForm').addEventListener('submit',()=>{const amount=Number(document.getElementById('donationAmount').value)||0;const donor=document.getElementById('donorName').value.trim()||'Hamba Allah';const program=document.getElementById('donationProgram').value;const safeDonor=donor.replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));const amountLabel=new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(amount);donationTotal+=amount/1000000;incomeTotal+=amount/1000000;const row=document.createElement('tr');row.innerHTML=`<td><div class="payer-cell"><span class="payer-avatar">WK</span><span class="payer-detail">${safeDonor}<small>${program}</small></span></div></td><td>Baru saja</td><td>Donasi</td><td class="amount">+ ${amountLabel}</td><td><span class="status-pill">Berhasil</span></td>`;document.querySelector('#laporan .bill-table tbody')?.prepend(row);setTimeout(()=>{document.getElementById('donationValue').textContent=`Rp ${donationTotal.toFixed(1).replace('.',',')} jt`;document.getElementById('incomeValue').textContent=`Rp ${incomeTotal.toFixed(1).replace('.',',')} jt`;},0);},true);
    </script>
 </body>
 </html>
