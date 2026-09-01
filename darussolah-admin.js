@@ -1,9 +1,11 @@
 /* Live data and actions for the management workspace. */
 (() => {
   const page = window.location.pathname.split('/').pop() || '';
-  const managed = new Set(['absensi.html', 'santri.html', 'kepegawaian.html', 'tahfidz.html', 'nilai.html', 'keuangan.html', 'cms.html', 'analitik.html', 'notifikasi.html', 'pengaturan.html']);
+  const managed = new Set(['absensi.html', 'santri.html', 'materi.html', 'kepegawaian.html', 'tahfidz.html', 'nilai.html', 'keuangan.html', 'cms.html', 'analitik.html', 'notifikasi.html', 'pengaturan.html']);
   if (!managed.has(page)) return;
   const state = { students: [], classes: [], staff: [], records: {}, content: [] };
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
   const portal = () => window.DarussolahPortal;
   const safe = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
   const initials = value => String(value || 'SN').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
@@ -179,6 +181,14 @@
     if (target.id === 'restoreButton') { event.preventDefault(); event.stopImmediatePropagation(); try { const result = await api('admin/summary'); toast('Uji pemulihan selesai', `${result.students_total || 0} santri dan ${result.teachers_active || 0} guru terbaca.`); } catch (error) { toast('Uji pemulihan gagal', error.message); } return; }
     if (target.id === 'download-report') { event.preventDefault(); event.stopImmediatePropagation(); window.print(); return; }
     if (target.id === 'approval-button') { event.preventDefault(); event.stopImmediatePropagation(); const student = state.students[0]; if (!student) return; try { await saveRecord('grades', gradeKey(student.id), { scores: {}, approval_status: 'pending', submitted_at: new Date().toISOString() }, student.id); const node = document.getElementById('approval-status'); if (node) node.textContent = 'Menunggu persetujuan kepala lembaga'; toast('Rapor diajukan', 'Status persetujuan sudah tersimpan.'); } catch (error) { toast('Pengajuan gagal', error.message); } return; }
+    if (target.matches('[data-live-note]')) { event.preventDefault(); event.stopImmediatePropagation(); const studentId = target.dataset.liveNote; const current = (state.records.grades || []).find(item => item.entity_id === studentId && item.record_key === gradeKey(studentId)); const note = window.prompt('Catatan perkembangan santri', current?.payload?.note || ''); if (note === null) return; try { await saveRecord('grades', gradeKey(studentId), { ...(current?.payload || {}), note: note.trim(), scores: current?.payload?.scores || {} }, studentId); await loadGrades(); toast('Catatan tersimpan', 'Catatan akan masuk ke ringkasan rapor.'); } catch (error) { toast('Catatan belum tersimpan', error.message); } return; }
+    if ((target.id === 'journal-button' || target.id === 'journal-card-button') && ['nilai.html', 'materi.html'].includes(page)) { event.preventDefault(); event.stopImmediatePropagation(); const text = window.prompt('Ringkasan jurnal pertemuan', ''); if (!text?.trim()) return; try { await saveRecord('journals', `journal:${Date.now()}`, { type: 'meeting', text: text.trim(), date: new Date().toISOString().slice(0, 10) }); toast('Jurnal tersimpan', 'Jurnal pertemuan sudah masuk ke server.'); } catch (error) { toast('Jurnal belum tersimpan', error.message); } return; }
+    if (target.id === 'akhlak-button') { event.preventDefault(); event.stopImmediatePropagation(); const student = state.students[0]; if (!student) return; const text = window.prompt('Catatan akhlak dan kedisiplinan', ''); if (text === null) return; const current = (state.records.grades || []).find(item => item.entity_id === student.id && item.record_key === gradeKey(student.id)); try { await saveRecord('grades', gradeKey(student.id), { ...(current?.payload || {}), akhlak: text.trim(), scores: current?.payload?.scores || {} }, student.id); await loadGrades(); toast('Catatan akhlak tersimpan', 'Catatan sudah disiapkan untuk rapor.'); } catch (error) { toast('Catatan belum tersimpan', error.message); } return; }
+    if (target.id === 'progress-button') { event.preventDefault(); event.stopImmediatePropagation(); download('progres-tahfidz.json', JSON.stringify(state.records.tahfidz || [], null, 2), 'application/json'); toast('Progres dibagikan', 'File progres live berhasil diunduh.'); return; }
+    if (target.id === 'scheduleButton') { event.preventDefault(); event.stopImmediatePropagation(); const title = window.prompt('Nama jadwal mengajar', 'Sesi mengajar baru'); if (!title?.trim()) return; try { await saveRecord('schedule', `schedule:${Date.now()}`, { title: title.trim(), date: new Date().toISOString().slice(0, 10), teacher: portal()?.context?.profile?.full_name || '' }); toast('Jadwal tersimpan', 'Jadwal baru sudah masuk ke server.'); } catch (error) { toast('Jadwal belum tersimpan', error.message); } return; }
+    if (target.id === 'confirmEmis') { event.preventDefault(); event.stopImmediatePropagation(); try { const result = await api('admin/export'); download(`emis-darussolah-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(result, null, 2), 'application/json'); closeModal('emisModal'); toast('Ekspor data selesai', 'Paket data live berhasil diunduh.'); } catch (error) { toast('Ekspor gagal', error.message); } return; }
+    if (target.id === 'institutionDetail') { event.preventDefault(); event.stopImmediatePropagation(); download('sebaran-santri.csv', csv([['Nama santri', 'Lembaga', 'Kelas'], ...state.students.map(student => [student.full_name, student.institution_name || '', student.class_name || ''])])); toast('Detail lembaga diunduh', 'Rekap sebaran santri berhasil dibuat.'); return; }
+    if (target.id === 'installButton') { event.preventDefault(); event.stopImmediatePropagation(); if (installPrompt) { await installPrompt.prompt(); installPrompt = null; } else toast('Pemasangan belum dipicu', 'Gunakan menu browser Tambahkan ke layar utama untuk memasang aplikasi.'); return; }
     if (target.id === 'close-session') { event.preventDefault(); event.stopImmediatePropagation(); const p = portal(); const rows = [...document.querySelectorAll('#student-rows tr[data-student-id]')]; if (!p?.primaryClass || !rows.length) return toast('Sesi belum siap', 'Data kelas dan santri belum termuat.'); const map = { belum: 'pending', hadir: 'present', izin: 'excused', sakit: 'sick', alpa: 'absent', terlambat: 'late' }; try { await api('attendance', json('PUT', { class_id: p.primaryClass.id, attendance_date: new Date().toISOString().slice(0, 10), close_session: true, records: rows.map(row => ({ student_id: row.dataset.studentId, status: map[row.dataset.status] || 'pending' })) })); target.textContent = 'Sesi ditutup'; toast('Sesi absensi ditutup', 'Status final sudah tersimpan di server.'); } catch (error) { toast('Sesi belum ditutup', error.message); } }
   }
   async function start(detail) {
@@ -188,7 +198,17 @@
   }
   document.addEventListener('submit', handleSubmit, true);
   document.addEventListener('click', handleClick, true);
-  document.addEventListener('change', event => { if (event.target.matches('[data-grade-subject]')) saveGrade(event.target); if (page === 'tahfidz.html' && event.target.id === 'record-student') document.querySelector('#record-target')?.focus(); }, true);
+  document.addEventListener('change', event => {
+    if (event.target.matches('[data-grade-subject]')) saveGrade(event.target);
+    if (page === 'nilai.html' && ['class-select', 'term-select'].includes(event.target.id)) renderGrades();
+    if (page === 'analitik.html' && event.target.id === 'scopeSelect' && event.target.value !== 'all') {
+      const students = state.students.filter(item => item.class_id === event.target.value);
+      const node = document.getElementById('studentTotal'); if (node) node.textContent = String(students.length);
+    } else if (page === 'analitik.html' && event.target.id === 'scopeSelect') {
+      const node = document.getElementById('studentTotal'); if (node) node.textContent = String(state.students.filter(item => item.status === 'active').length);
+    }
+    if (page === 'tahfidz.html' && event.target.id === 'record-student') document.querySelector('#record-target')?.focus();
+  }, true);
   document.addEventListener('input', event => { if (event.target.id === 'student-search') { const query = event.target.value.toLowerCase(); document.querySelectorAll('#student-list .student-card').forEach(card => { card.hidden = !card.dataset.name.includes(query); }); } if (event.target.id === 'studentSearch') document.querySelectorAll('#studentRows tr').forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(event.target.value.toLowerCase()); }); }, true);
   window.addEventListener('darussolah:ready', event => start(event.detail), { once: true });
 })();
