@@ -29,6 +29,14 @@
     admin: adminRoles,
     santri: ['santri', ...adminRoles]
   };
+  const sessionModeKey = 'dwj-session-mode';
+  const sessionStorageForAuth = () => {
+    try {
+      return localStorage.getItem(sessionModeKey) === 'persistent' ? localStorage : sessionStorage;
+    } catch (error) {
+      return undefined;
+    }
+  };
 
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -104,6 +112,10 @@
     button.addEventListener('click', async () => {
       button.disabled = true;
       await client.auth.signOut();
+      try {
+        localStorage.removeItem(sessionModeKey);
+        sessionStorage.removeItem(sessionModeKey);
+      } catch (error) { /* Storage can be unavailable in private browsing. */ }
       window.location.replace('login.html');
     });
     host.append(button);
@@ -126,7 +138,8 @@
       .portal-runtime-signout { padding: 6px 9px; color: #0d4433; border: 1px solid #e0e4dc; border-radius: 7px; background: #fffdf9; font: 700 10px/1 "DM Sans", sans-serif; }
        .portal-runtime-signout:hover { border-color: #0d4433; }
        .portal-runtime-class-picker { max-width: 175px; height: 29px; padding: 0 7px; color: #0d4433; border: 1px solid #e0e4dc; border-radius: 7px; background: #fffdf9; font: 600 10px "DM Sans", sans-serif; }
-      html[data-dwj-portal-state="checking"] body > .app-shell { opacity: .35; pointer-events: none; }
+       html[data-dwj-portal-state="checking"] body > .app-shell { opacity: .35; pointer-events: none; }
+       @media (max-width: 820px) { .side-link, .row-action, .mini-button, .portal-runtime-signout { min-height: 36px; } }
       .portal-runtime-blocker { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: rgba(8,46,37,.96); color: #fff; text-align: center; }
       .portal-runtime-blocker div { width: min(100%, 380px); padding: 28px; border: 1px solid rgba(232,200,121,.3); border-radius: 16px; background: #0d4433; box-shadow: 0 22px 60px rgba(0,0,0,.25); }
       .portal-runtime-blocker strong, .portal-runtime-blocker span { display: block; }
@@ -197,7 +210,9 @@
       return;
     }
     document.documentElement.dataset.dwjPortalState = 'checking';
-    const client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+     const client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+       auth: { persistSession: true, storage: sessionStorageForAuth() }
+     });
     let sessionData;
     let sessionError;
     try {
@@ -270,8 +285,9 @@
       }
        setIdentity(context, session, primaryClass);
        setStatus('Akun terhubung', 'live');
-       addSignOut(client);
-       addClassPicker(classes, primaryClass, session);
+        addSignOut(client);
+        addClassPicker(classes, primaryClass, session);
+        document.querySelector('.side-link.active, [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
        document.documentElement.dataset.dwjPortalState = 'live';
        const students = studentsResponse.items || [];
        window.DarussolahPortal = Object.freeze({
