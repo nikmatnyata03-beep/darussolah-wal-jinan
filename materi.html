@@ -358,10 +358,32 @@
         });
         emptyResource.hidden = visible > 0;
       };
-      const bindResourceButton = (button) => button.addEventListener('click', () => {
-        const card = button.closest('.resource-card');
-        showToast('Materi dibuka.', `${card.querySelector('h3').textContent} siap dilihat.`);
-      });
+       const openResource = async item => {
+         const portal = window.DarussolahPortal;
+         if (!item?.file_path) {
+           showToast('Berkas belum tersedia.', 'Materi ini belum memiliki file yang dapat dibuka.');
+           return;
+         }
+         const popup = window.open('', '_blank');
+         try {
+           const result = await portal.client.storage.from(portal.config.resourceStorageBucket).createSignedUrl(item.file_path, 300);
+           if (result.error || !result.data?.signedUrl) throw result.error || new Error('tautan materi tidak tersedia');
+           if (popup) {
+             popup.opener = null;
+             popup.location.href = result.data.signedUrl;
+           } else {
+             window.location.assign(result.data.signedUrl);
+           }
+         } catch (error) {
+           popup?.close();
+           showToast('Materi belum dapat dibuka.', error.message || 'Periksa koneksi lalu coba lagi.');
+         }
+       };
+       const bindResourceButton = (button, item = null) => button.addEventListener('click', () => {
+         if (item) return openResource(item);
+         const card = button.closest('.resource-card');
+         showToast('Berkas belum tersedia.', `${card.querySelector('h3').textContent} belum memiliki file live.`);
+       });
       document.querySelectorAll('[data-open-resource]').forEach(bindResourceButton);
        const kindFilters = document.querySelectorAll('.filter-tab[data-kind]');
        kindFilters.forEach((button) => {
@@ -477,7 +499,7 @@
         card.dataset.name = title.toLowerCase();
         card.innerHTML = `<span class="file-icon ${type === 'pengumuman' ? 'file-image' : type === 'tugas' ? 'file-pdf' : 'file-doc'}">${escapeHtml(fileLabel.slice(0, 4))}</span><span><span class="resource-type">${kindLabel} &bull; Baru saja</span><h3>${escapeHtml(title)}</h3><span class="resource-meta">${escapeHtml(className)} &bull; Baru diunggah</span></span><button class="resource-action" type="button" data-open-resource aria-label="Buka ${escapeHtml(title)}">&nearr;</button>`;
         resourceList.insertBefore(card, emptyResource);
-        bindResourceButton(card.querySelector('[data-open-resource]'));
+            bindResourceButton(card.querySelector('[data-open-resource]'), item);
         uploadModal.hidden = true;
         document.querySelector('#upload-form').reset();
         activeKind = 'all';

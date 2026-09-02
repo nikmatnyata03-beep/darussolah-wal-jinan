@@ -256,9 +256,10 @@
           button.setAttribute('aria-pressed', String(active));
         });
         const className = classes.find(item => item.id === student.class_id)?.name || 'Kelas belum tersedia';
-        document.getElementById('childClass').textContent = className;
-        document.getElementById('invoiceChild').textContent = student.full_name || 'anak terpilih';
-      };
+         document.getElementById('childClass').textContent = className;
+         document.getElementById('invoiceChild').textContent = student.full_name || 'anak terpilih';
+         window.dispatchEvent(new CustomEvent('darussolah:child-selected', { detail: { student } }));
+       };
       window.addEventListener('darussolah:ready', event => renderChildren(event.detail), { once: true });
       showEmpty('.announcement-list', 'Belum ada pengumuman untuk akun ini.');
       showEmpty('.docs-list', 'Belum ada dokumen yang tersedia.');
