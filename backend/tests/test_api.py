@@ -43,6 +43,12 @@ class FakeStore:
     async def list_public_teachers(self, tenant_id: str, institution_id: str):
         return [{"institution_id": institution_id, "display_name": "Ustadzah A"}]
 
+    async def list_public_teachers_for_foundation(self, tenant_id: str):
+        return [{"institution_id": INSTITUTION_ID, "institution_name": "TPQ", "display_name": "Ustadzah A", "is_published": True}]
+
+    async def list_public_page_blocks(self, tenant_id: str, page_slug: str):
+        return [{"page_slug": page_slug, "block_key": "testimonials-main", "block_type": "testimonials", "title": "Cerita keluarga", "settings": {}}]
+
     async def create_registration(self, tenant_id: str, data: dict):
         assert UUID(tenant_id) == UUID(TENANT_ID)
         assert data["institution_id"] == UUID(INSTITUTION_ID)
@@ -134,6 +140,18 @@ class FakeStore:
         assert UUID(user_id) == UUID("77777777-7777-4777-8777-777777777777")
         return [{"id": "55555555-5555-4555-8555-555555555555", "full_name": "Aisyah", "status": "active"}]
 
+    async def list_admin_page_blocks(self, tenant_id: str, user_id: str, *, page_slug=None):
+        return [{"id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "page_slug": page_slug or "home", "block_key": "hero-main"}]
+
+    async def create_admin_page_block(self, tenant_id: str, user_id: str, data: dict):
+        return {"id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", **data}
+
+    async def update_admin_page_block(self, tenant_id: str, user_id: str, block_id: str, data: dict):
+        return {"id": block_id, **data}
+
+    async def delete_admin_page_block(self, tenant_id: str, user_id: str, block_id: str):
+        return {"id": block_id, "status": "archived"}
+
 
 def client() -> TestClient:
     settings = Settings(
@@ -177,6 +195,16 @@ def test_public_institutions_posts_content_and_teachers():
         assert posts.json()["items"][0]["limit_seen"] == 7
         assert api.get("/v1/public/yayasan-darussolah-wal-jinan/foundation/content").status_code == 200
         teachers = api.get("/v1/public/yayasan-darussolah-wal-jinan/institutions/tpq/teachers")
+        assert teachers.json()["items"][0]["display_name"] == "Ustadzah A"
+
+
+def test_public_page_blocks_and_foundation_teachers_are_available():
+    with client() as api:
+        blocks = api.get("/v1/public/yayasan-darussolah-wal-jinan/pages/home")
+        teachers = api.get("/v1/public/yayasan-darussolah-wal-jinan/teachers")
+        assert blocks.status_code == 200
+        assert blocks.json()["items"][0]["block_type"] == "testimonials"
+        assert teachers.status_code == 200
         assert teachers.json()["items"][0]["display_name"] == "Ustadzah A"
 
 
@@ -339,6 +367,27 @@ def test_admin_summary_and_students_use_authenticated_identity():
         assert students.json()["items"][0]["full_name"] == "Aisyah"
 
 
+def test_cms_page_block_routes_use_authenticated_identity():
+    with authenticated_client() as api:
+        base = "/v1/private/yayasan-darussolah-wal-jinan/admin/page-blocks"
+        assert api.get(base).status_code == 200
+        created = api.post(base, json={"block_key": "custom-main", "block_type": "custom", "title": "Blok baru"})
+        assert created.status_code == 201
+        updated = api.put(f"{base}/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", json={"title": "Blok diperbarui"})
+        assert updated.status_code == 200
+        deleted = api.delete(f"{base}/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb")
+        assert deleted.status_code == 200
+
+
+def test_restore_requires_explicit_confirmation():
+    with authenticated_client() as api:
+        response = api.post(
+            "/v1/private/yayasan-darussolah-wal-jinan/admin/restore",
+            json={"confirmation": "YES", "backup": {}},
+        )
+        assert response.status_code == 422
+
+
 def test_attendance_rejects_duplicate_students():
     with authenticated_client() as api:
         response = api.put(
@@ -381,6 +430,20 @@ def test_private_cors_preflight_allows_attendance_put():
         )
         assert response.status_code == 200
         assert "PUT" in response.headers["access-control-allow-methods"]
+
+
+def test_private_cors_preflight_allows_delete():
+    with authenticated_client() as api:
+        response = api.options(
+            "/v1/private/yayasan-darussolah-wal-jinan/admin/page-blocks/00000000-0000-4000-8000-000000000000",
+            headers={
+                "Origin": "https://darussolah-wal-jinan.pages.bu.app",
+                "Access-Control-Request-Method": "DELETE",
+                "Access-Control-Request-Headers": "authorization",
+            },
+        )
+        assert response.status_code == 200
+        assert "DELETE" in response.headers["access-control-allow-methods"]
 
 
 def test_supabase_hs256_token_authenticates_private_route():

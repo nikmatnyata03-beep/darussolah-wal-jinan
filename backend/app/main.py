@@ -138,10 +138,13 @@ class AdminStaffCreateRequest(BaseModel):
     role_title: str | None = Field(default=None, max_length=100)
     subject: str | None = Field(default=None, max_length=100)
     education: str | None = Field(default=None, max_length=200)
-    short_bio: str | None = Field(default=None, max_length=1000)
+    short_bio: str | None = Field(default=None, max_length=3000)
+    photo_url: str | None = Field(default=None, max_length=500)
     status: Literal["active", "inactive"] = "active"
     employment_type: Literal["fixed", "honor"] = "fixed"
     weekly_hours: int = Field(default=0, ge=0, le=100)
+    sort_order: int = Field(default=0, ge=0, le=100000)
+    is_published: bool = False
 
 
 class AdminStaffUpdateRequest(BaseModel):
@@ -149,10 +152,13 @@ class AdminStaffUpdateRequest(BaseModel):
     role_title: str | None = Field(default=None, max_length=100)
     subject: str | None = Field(default=None, max_length=100)
     education: str | None = Field(default=None, max_length=200)
-    short_bio: str | None = Field(default=None, max_length=1000)
+    short_bio: str | None = Field(default=None, max_length=3000)
+    photo_url: str | None = Field(default=None, max_length=500)
     status: Literal["active", "inactive"] | None = None
     employment_type: Literal["fixed", "honor"] | None = None
     weekly_hours: int | None = Field(default=None, ge=0, le=100)
+    sort_order: int | None = Field(default=None, ge=0, le=100000)
+    is_published: bool | None = None
 
 
 class AdminContentCreateRequest(BaseModel):
@@ -177,6 +183,37 @@ class AdminContentUpdateRequest(BaseModel):
     cover_url: str | None = Field(default=None, max_length=500)
     status: Literal["draft", "published", "archived"] | None = None
     sort_order: int | None = Field(default=None, ge=0, le=100000)
+
+
+class AdminPageBlockCreateRequest(BaseModel):
+    site_kind: Literal["foundation", "institution"] = "foundation"
+    institution_id: UUID | None = None
+    page_slug: str = Field(default="home", min_length=2, max_length=120, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    block_key: str = Field(min_length=2, max_length=82, pattern=r"^[a-z][a-z0-9_-]{1,80}$")
+    block_type: str = Field(min_length=2, max_length=52, pattern=r"^[a-z][a-z0-9_-]{1,50}$")
+    title: str = Field(min_length=1, max_length=240)
+    body: str | None = Field(default=None, max_length=30000)
+    media_url: str | None = Field(default=None, max_length=500)
+    settings: dict[str, Any] = Field(default_factory=dict)
+    status: Literal["draft", "published", "archived"] = "draft"
+    sort_order: int = Field(default=0, ge=0, le=100000)
+
+
+class AdminPageBlockUpdateRequest(BaseModel):
+    page_slug: str | None = Field(default=None, min_length=2, max_length=120, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    block_key: str | None = Field(default=None, min_length=2, max_length=82, pattern=r"^[a-z][a-z0-9_-]{1,80}$")
+    block_type: str | None = Field(default=None, min_length=2, max_length=52, pattern=r"^[a-z][a-z0-9_-]{1,50}$")
+    title: str | None = Field(default=None, min_length=1, max_length=240)
+    body: str | None = Field(default=None, max_length=30000)
+    media_url: str | None = Field(default=None, max_length=500)
+    settings: dict[str, Any] | None = None
+    status: Literal["draft", "published", "archived"] | None = None
+    sort_order: int | None = Field(default=None, ge=0, le=100000)
+
+
+class AdminRestoreRequest(BaseModel):
+    confirmation: Literal["RESTORE"]
+    backup: dict[str, Any]
 
 
 def _store(request: Request) -> FoundationStore:
@@ -227,7 +264,7 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=bool(settings.allowed_origins),
-        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
     )
 
@@ -298,6 +335,16 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
         except NotFoundError as exc:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "published foundation profile not found") from exc
         return {"items": await store.list_public_content(tenant["id"], "foundation", foundation["id"])}
+
+    @app.get("/v1/public/{tenant_slug}/pages/{page_slug}", tags=["public"])
+    async def public_page_blocks(tenant_slug: str, page_slug: str, store: FoundationStore = Depends(_store)):
+        tenant = await _public_tenant(store, tenant_slug)
+        return {"items": await store.list_public_page_blocks(tenant["id"], page_slug)}
+
+    @app.get("/v1/public/{tenant_slug}/teachers", tags=["public"])
+    async def public_foundation_teachers(tenant_slug: str, store: FoundationStore = Depends(_store)):
+        tenant = await _public_tenant(store, tenant_slug)
+        return {"items": await store.list_public_teachers_for_foundation(tenant["id"])}
 
     @app.get("/v1/public/{tenant_slug}/institutions/{institution_slug}/content", tags=["public"])
     async def public_institution_content(tenant_slug: str, institution_slug: str, store: FoundationStore = Depends(_store)):
@@ -596,6 +643,21 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
         except ConflictError as exc:
             raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
+    @app.delete("/v1/private/{tenant_slug}/admin/staff/{staff_id}", tags=["admin"])
+    async def delete_admin_staff(
+        tenant_slug: str,
+        staff_id: UUID,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.delete_admin_staff(tenant["id"], str(user.user_id), str(staff_id))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
     @app.get("/v1/private/{tenant_slug}/admin/records", tags=["admin"])
     async def admin_records(
         tenant_slug: str,
@@ -685,6 +747,84 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
         except ConflictError as exc:
             raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
+    @app.delete("/v1/private/{tenant_slug}/admin/content/{content_id}", tags=["admin"])
+    async def delete_admin_content(
+        tenant_slug: str,
+        content_id: UUID,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.delete_admin_content(tenant["id"], str(user.user_id), str(content_id))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
+    @app.get("/v1/private/{tenant_slug}/admin/page-blocks", tags=["admin"])
+    async def admin_page_blocks(
+        tenant_slug: str,
+        page_slug: str | None = None,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return {"items": await store.list_admin_page_blocks(tenant["id"], str(user.user_id), page_slug=page_slug)}
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.post("/v1/private/{tenant_slug}/admin/page-blocks", status_code=status.HTTP_201_CREATED, tags=["admin"])
+    async def create_admin_page_block(
+        tenant_slug: str,
+        payload: AdminPageBlockCreateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.create_admin_page_block(tenant["id"], str(user.user_id), payload.model_dump())
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.put("/v1/private/{tenant_slug}/admin/page-blocks/{block_id}", tags=["admin"])
+    async def update_admin_page_block(
+        tenant_slug: str,
+        block_id: UUID,
+        payload: AdminPageBlockUpdateRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.update_admin_page_block(tenant["id"], str(user.user_id), str(block_id), payload.model_dump(exclude_unset=True))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    @app.delete("/v1/private/{tenant_slug}/admin/page-blocks/{block_id}", tags=["admin"])
+    async def delete_admin_page_block(
+        tenant_slug: str,
+        block_id: UUID,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.delete_admin_page_block(tenant["id"], str(user.user_id), str(block_id))
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
     @app.get("/v1/private/{tenant_slug}/admin/export", tags=["admin"])
     async def export_admin_data(
         tenant_slug: str,
@@ -696,6 +836,21 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
             return await store.export_admin_data(tenant["id"], str(user.user_id))
         except PermissionDeniedError as exc:
             raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+
+    @app.post("/v1/private/{tenant_slug}/admin/restore", tags=["admin"])
+    async def restore_admin_data(
+        tenant_slug: str,
+        payload: AdminRestoreRequest,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.restore_admin_data(tenant["id"], str(user.user_id), payload.backup)
+        except PermissionDeniedError as exc:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, str(exc)) from exc
+        except ConflictError as exc:
+            raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
 
     return app
 
