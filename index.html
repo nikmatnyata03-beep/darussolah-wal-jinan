@@ -675,9 +675,11 @@
       }
     };
 
+    let registrationAttempt = null;
     document.querySelector('#admission-form').addEventListener('submit', async event => {
       event.preventDefault();
       const form = event.currentTarget;
+      const submitButton = form.querySelector('button[type="submit"]');
       const unit = form.querySelector('#unit').value;
       const studentName = form.querySelector('#student-name').value.trim();
       const parentName = form.querySelector('#parent-name').value.trim();
@@ -692,20 +694,30 @@
           father_name: parentName,
           father_phone: phone,
           notes,
-          idempotency_key: window.crypto?.randomUUID?.() || `web-${Date.now()}-${Math.random().toString(16).slice(2)}`
+          idempotency_key: (() => {
+            const fingerprint = JSON.stringify([unit, studentName, parentName, phone, notes]);
+            if (!registrationAttempt || registrationAttempt.fingerprint !== fingerprint) {
+              registrationAttempt = { fingerprint, key: window.crypto?.randomUUID?.() || `web-${Date.now()}-${Math.random().toString(16).slice(2)}` };
+            }
+            return registrationAttempt.key;
+          })()
         };
+        submitButton.disabled = true;
         try {
           const response = await fetch(publicUrl('registrations'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const result = await response.json();
           closeModal(form.closest('.modal'));
           form.reset();
+          registrationAttempt = null;
           showToast(`Pendaftaran terkirim. Nomor: ${result.application_no}`);
           return;
         } catch (error) {
           showToast('Pendaftaran belum terkirim. Periksa koneksi API.');
           console.warn('Registration API unavailable:', error.message);
           return;
+        } finally {
+          submitButton.disabled = false;
         }
       }
       showToast('Pendaftaran belum terkirim. Layanan pendaftaran belum aktif. Silakan hubungi admin.');

@@ -439,8 +439,15 @@
         document.querySelector('#qr-input').value = '';
         showToast(`${row.querySelector('.student-detail').childNodes[0].textContent.trim()} tercatat hadir.`, 'Status diperbarui melalui pemindaian QR.');
       };
-      document.querySelector('#scan-submit').addEventListener('click', submitScan);
-      document.querySelector('#qr-input').addEventListener('keydown', (event) => { if (event.key === 'Enter') submitScan(); });
+       document.querySelector('#scan-submit').addEventListener('click', submitScan);
+       document.querySelector('#qr-input').addEventListener('keydown', (event) => { if (event.key === 'Enter') submitScan(); });
+       const todayInConfiguredTimezone = () => {
+         const timezone = window.DarussolahPortal?.config?.timezone || 'Asia/Jakarta';
+         const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+           timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit'
+         }).formatToParts(new Date()).filter(item => item.type !== 'literal').map(item => [item.type, item.value]));
+         return `${parts.year}-${parts.month}-${parts.day}`;
+       };
 
        document.querySelector('#save-attendance').addEventListener('click', async () => {
          const total = rows.length;
@@ -470,7 +477,7 @@
            const response = await fetch(`${portal.config.apiBase}/v1/private/${encodeURIComponent(portal.config.tenantSlug)}/attendance`, {
              method: 'PUT',
              headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
-              body: JSON.stringify({class_id: portal.primaryClass?.id || portal.classes[0].id, attendance_date: new Date().toISOString().slice(0, 10), records})
+               body: JSON.stringify({class_id: portal.primaryClass?.id || portal.classes[0].id, attendance_date: todayInConfiguredTimezone(), records})
            });
            if (!response.ok) {
              showToast('Absensi belum tersimpan.', `Server mengembalikan status ${response.status}.`);
@@ -491,7 +498,7 @@
         showToast('Sesi absensi ditutup.', 'Santri yang belum tercatat masuk daftar tindak lanjut.');
       });
 
-       document.querySelector('#today-label').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+       document.querySelector('#today-label').textContent = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: window.DarussolahPortal?.config?.timezone || 'Asia/Jakarta' }).format(new Date());
        window.addEventListener('darussolah:ready', event => {
          const {students, attendance} = event.detail || {};
          if (students?.length) renderLiveRows(students, attendance);
