@@ -722,18 +722,32 @@ class FoundationStore:
             )
         return await self.fetch_attendance(tenant_id, user_id, str(class_id), attendance_date)
 
-    async def _require_roles(self, connection: Any, tenant_id: str, user_id: str, roles: tuple[str, ...]) -> None:
-        allowed = await connection.fetchval(
+    async def _require_roles(self, connection: Any, tenant_id: str, user_id: str, roles: tuple[str, ...]) -> set[str]:
+        rows = await connection.fetch(
             """
-            SELECT EXISTS (
-              SELECT 1 FROM user_roles
-              WHERE tenant_id = $1 AND user_id = $2 AND role = ANY($3::text[])
-            )
+            SELECT role
+            FROM user_roles
+            WHERE tenant_id = $1 AND user_id = $2 AND role = ANY($3::text[])
             """,
             _uuid(tenant_id), _uuid(user_id), list(roles),
         )
-        if not allowed:
+        role_set = {row["role"] for row in rows}
+        if not role_set:
             raise PermissionDeniedError("user does not have access to this admin module")
+        global_roles = {"super_admin", "yayasan_admin", "operator_pendaftaran"}
+        if "lembaga_admin" in role_set and not role_set.intersection(global_roles):
+            scoped = await connection.fetchval(
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM institution_memberships
+                  WHERE tenant_id = $1 AND user_id = $2 AND membership_role = 'lembaga_admin'
+                )
+                """,
+                _uuid(tenant_id), _uuid(user_id),
+            )
+            if not scoped:
+                raise PermissionDeniedError("lembaga_admin requires an institution membership")
+        return role_set
 
     async def _require_record_access(
         self,
@@ -743,14 +757,52 @@ class FoundationStore:
         module: str,
         entity_id: str | None = None,
         owner_id: str | None = None,
+        payload: dict[str, Any] | None = None,
     ) -> None:
         roles = await connection.fetch(
             "SELECT role FROM user_roles WHERE tenant_id = $1 AND user_id = $2",
             _uuid(tenant_id), _uuid(user_id),
         )
-        is_admin = any(row["role"] in {"super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran"} for row in roles)
-        if is_admin:
+        role_set = {row["role"] for row in roles}
+        if role_set.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}):
             return
+        if "lembaga_admin" in role_set:
+            institution_id = (payload or {}).get("institution_id")
+            if module in {"grades", "tahfidz"} and entity_id:
+                allowed = await connection.fetchval(
+                    """
+                    SELECT EXISTS (
+                      SELECT 1
+                      FROM enrollments e
+                      JOIN institution_memberships im
+                        ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                       AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                      WHERE e.student_id = $1 AND e.tenant_id = $3 AND e.status = 'active'
+                    )
+                    """,
+                    _uuid(entity_id), _uuid(user_id), _uuid(tenant_id),
+                )
+                if allowed:
+                    return
+            if institution_id:
+                try:
+                    institution_uuid = _uuid(institution_id)
+                except (TypeError, ValueError):
+                    institution_uuid = None
+                if institution_uuid is not None:
+                    allowed = await connection.fetchval(
+                        """
+                        SELECT EXISTS (
+                          SELECT 1 FROM institution_memberships
+                          WHERE tenant_id = $1 AND user_id = $2
+                            AND institution_id = $3 AND membership_role = 'lembaga_admin'
+                        )
+                        """,
+                        _uuid(tenant_id), _uuid(user_id), institution_uuid,
+                    )
+                    if allowed:
+                        return
+            raise PermissionDeniedError("lembaga_admin is outside this institution scope")
         if module not in {"grades", "tahfidz", "journals", "schedule"}:
             raise PermissionDeniedError("guru tidak memiliki akses ke modul ini")
         if module in {"journals", "schedule"} and owner_id and owner_id != user_id:
@@ -780,19 +832,24 @@ class FoundationStore:
 
     async def fetch_admin_summary(self, tenant_id: str, user_id: str) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             summary = await connection.fetchrow(
                 """
                 WITH accessible_students AS (
                   SELECT DISTINCT s.id
                   FROM students s
                   WHERE s.tenant_id = $1 AND (
-                    EXISTS (
-                      SELECT 1 FROM user_roles ur
-                      WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                        AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
+                    $3
+                    OR EXISTS (
+                      SELECT 1
+                      FROM enrollments e
+                      JOIN institution_memberships im
+                        ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                       AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                      WHERE e.student_id = s.id AND e.tenant_id = $1 AND e.status = 'active'
                     )
                     OR EXISTS (
                       SELECT 1
@@ -811,59 +868,108 @@ class FoundationStore:
                   (SELECT count(DISTINCT gs.guardian_id)
                    FROM guardian_students gs JOIN accessible_students a ON a.id = gs.student_id
                    WHERE gs.tenant_id = $1) AS guardians_total,
-                  (SELECT count(*) FROM teacher_profiles tp
-                   WHERE tp.tenant_id = $1 AND tp.status = 'active' AND (
-                     EXISTS (
-                       SELECT 1 FROM user_roles ur
-                       WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                         AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
-                     ) OR tp.user_id = $2
-                   )) AS teachers_active,
-                  (SELECT count(*) FROM learning_resources r
-                   WHERE r.tenant_id = $1 AND r.status <> 'archived' AND (
-                     EXISTS (
-                       SELECT 1 FROM user_roles ur
-                       WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                         AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
-                     ) OR EXISTS (
-                       SELECT 1 FROM institution_memberships im
-                       WHERE im.user_id = $2 AND im.tenant_id = $1 AND im.institution_id = r.institution_id
-                     ) OR EXISTS (
+                   (SELECT count(*) FROM teacher_profiles tp
+                    WHERE tp.tenant_id = $1 AND tp.status = 'active' AND (
+                      $3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.user_id = $2 AND im.tenant_id = $1
+                          AND im.institution_id = tp.institution_id
+                          AND im.membership_role = 'lembaga_admin'
+                      ) OR tp.user_id = $2
+                    )) AS teachers_active,
+                   (SELECT count(*) FROM learning_resources r
+                    WHERE r.tenant_id = $1 AND r.status <> 'archived' AND (
+                      $3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.user_id = $2 AND im.tenant_id = $1 AND im.institution_id = r.institution_id
+                      ) OR EXISTS (
                        SELECT 1 FROM class_teachers ct
                        JOIN teacher_profiles tp ON tp.id = ct.teacher_id
                        WHERE ct.class_id = r.class_id AND ct.tenant_id = $1 AND tp.user_id = $2
                      )
                    )) AS learning_total,
-                  (SELECT count(*) FROM attendance_sessions a
-                   WHERE a.tenant_id = $1 AND a.attendance_date = CURRENT_DATE AND (
-                     EXISTS (
-                       SELECT 1 FROM user_roles ur
-                       WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                         AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
-                     ) OR EXISTS (
-                       SELECT 1 FROM class_teachers ct
+                   (SELECT count(*) FROM attendance_sessions a
+                    WHERE a.tenant_id = $1 AND a.attendance_date = CURRENT_DATE AND (
+                      $3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.user_id = $2 AND im.tenant_id = $1
+                          AND im.institution_id = a.institution_id
+                          AND im.membership_role = 'lembaga_admin'
+                      ) OR EXISTS (
+                        SELECT 1 FROM class_teachers ct
                        JOIN teacher_profiles tp ON tp.id = ct.teacher_id
                        WHERE ct.class_id = a.class_id AND ct.tenant_id = $1 AND tp.user_id = $2
                      )
                    )) AS attendance_sessions_today,
-                  (SELECT count(*) FROM registration_applications r
-                   WHERE r.tenant_id = $1 AND r.status IN ('new', 'reviewing') AND EXISTS (
-                     SELECT 1 FROM user_roles ur
-                     WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                       AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
-                   )) AS registrations_pending
+                   (SELECT count(*) FROM registration_applications r
+                    WHERE r.tenant_id = $1 AND r.status IN ('new', 'reviewing') AND (
+                      $3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.user_id = $2 AND im.tenant_id = $1
+                          AND im.institution_id = r.institution_id
+                          AND im.membership_role = 'lembaga_admin'
+                      )
+                    )) AS registrations_pending
                 """,
-                _uuid(tenant_id), _uuid(user_id),
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
-            records = await connection.fetch(
+            if global_admin:
+                record_scope = ""
+            elif "lembaga_admin" in roles:
+                record_scope = """
+                  AND (
+                    (
+                      ar.module IN ('grades', 'tahfidz')
+                      AND EXISTS (
+                        SELECT 1
+                        FROM enrollments e
+                        JOIN institution_memberships im
+                          ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                         AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                        WHERE e.student_id = ar.entity_id
+                          AND e.tenant_id = $1 AND e.status = 'active'
+                      )
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = $1 AND im.user_id = $2
+                          AND im.membership_role = 'lembaga_admin'
+                          AND im.institution_id::text = ar.payload->>'institution_id'
+                      )
+                  )
                 """
+            else:
+                record_scope = """
+                  AND ar.module IN ('grades', 'tahfidz', 'journals', 'schedule')
+                  AND (
+                    (
+                      ar.module IN ('grades', 'tahfidz')
+                      AND EXISTS (
+                        SELECT 1
+                        FROM enrollments teacher_enrollment
+                        JOIN class_teachers ct
+                          ON ct.class_id = teacher_enrollment.class_id
+                         AND ct.tenant_id = teacher_enrollment.tenant_id
+                        JOIN teacher_profiles tp ON tp.id = ct.teacher_id
+                        WHERE teacher_enrollment.student_id = ar.entity_id
+                          AND teacher_enrollment.tenant_id = $1
+                          AND teacher_enrollment.status = 'active'
+                          AND tp.user_id = $2
+                      )
+                    )
+                    OR (ar.module IN ('journals', 'schedule') AND ar.created_by = $2)
+                  )
+                """
+            records = await connection.fetch(
+                f"""
                 SELECT module, count(*)::int AS total
-                FROM admin_records
-                WHERE tenant_id = $1 AND status = 'active'
+                FROM admin_records ar
+                WHERE ar.tenant_id = $1 AND ar.status = 'active' AND $2 IS NOT NULL
+                {record_scope}
                 GROUP BY module
                 ORDER BY module
                 """,
-                _uuid(tenant_id),
+                _uuid(tenant_id), _uuid(user_id),
             )
             institutions = await connection.fetch(
                 """
@@ -872,10 +978,12 @@ class FoundationStore:
                   FROM enrollments e
                   JOIN students s ON s.id = e.student_id AND s.tenant_id = e.tenant_id AND s.status = 'active'
                   WHERE e.tenant_id = $1 AND e.status = 'active' AND (
-                    EXISTS (
-                      SELECT 1 FROM user_roles ur
-                      WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                        AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
+                    $3
+                    OR EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.user_id = $2 AND im.tenant_id = $1
+                        AND im.institution_id = e.institution_id
+                        AND im.membership_role = 'lembaga_admin'
                     )
                     OR EXISTS (
                       SELECT 1 FROM institution_memberships im
@@ -892,13 +1000,26 @@ class FoundationStore:
                 )
                 SELECT i.id::text AS id, i.code, i.name,
                        count(a.student_id)::int AS active_students
-                FROM institutions i
-                LEFT JOIN accessible_enrollments a ON a.institution_id = i.id
-                WHERE i.tenant_id = $1 AND i.status = 'active'
-                GROUP BY i.id, i.code, i.name
+                 FROM institutions i
+                 LEFT JOIN accessible_enrollments a ON a.institution_id = i.id
+                 WHERE i.tenant_id = $1 AND i.status = 'active' AND (
+                   $3 OR EXISTS (
+                     SELECT 1 FROM institution_memberships im
+                     WHERE im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                       AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                     )
+                    OR EXISTS (
+                      SELECT 1
+                      FROM class_teachers ct
+                      JOIN teacher_profiles tp ON tp.id = ct.teacher_id
+                      JOIN classes c ON c.id = ct.class_id
+                      WHERE c.institution_id = i.id AND c.tenant_id = i.tenant_id AND tp.user_id = $2
+                    )
+                 )
+                 GROUP BY i.id, i.code, i.name
                 ORDER BY i.code
                 """,
-                _uuid(tenant_id), _uuid(user_id),
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             attendance_trend = await connection.fetch(
                 """
@@ -910,10 +1031,12 @@ class FoundationStore:
                 WHERE s.tenant_id = $1
                   AND s.attendance_date >= CURRENT_DATE - INTERVAL '5 months'
                   AND (
-                    EXISTS (
-                      SELECT 1 FROM user_roles ur
-                      WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                        AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
+                    $3
+                    OR EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.user_id = $2 AND im.tenant_id = $1
+                        AND im.institution_id = s.institution_id
+                        AND im.membership_role = 'lembaga_admin'
                     )
                     OR EXISTS (
                       SELECT 1 FROM institution_memberships im
@@ -930,7 +1053,7 @@ class FoundationStore:
                 GROUP BY date_trunc('month', s.attendance_date)
                 ORDER BY date_trunc('month', s.attendance_date)
                 """,
-                _uuid(tenant_id), _uuid(user_id),
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             registration_trend = await connection.fetch(
                 """
@@ -938,15 +1061,18 @@ class FoundationStore:
                        count(*)::int AS total,
                        count(*) FILTER (WHERE status IN ('new', 'reviewing'))::int AS pending
                 FROM registration_applications
-                WHERE tenant_id = $1 AND EXISTS (
-                  SELECT 1 FROM user_roles ur
-                  WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                    AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
+                WHERE tenant_id = $1 AND (
+                  $3 OR EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.user_id = $2 AND im.tenant_id = $1
+                      AND im.institution_id = registration_applications.institution_id
+                      AND im.membership_role = 'lembaga_admin'
+                  )
                 )
                 GROUP BY date_trunc('month', created_at)
                 ORDER BY date_trunc('month', created_at)
                 """,
-                _uuid(tenant_id), _uuid(user_id),
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             finance_trend = await connection.fetch(
                 """
@@ -957,17 +1083,20 @@ class FoundationStore:
                        COALESCE(sum(CASE WHEN payload->>'type' = 'invoice'
                          AND (payload->>'amount') ~ '^[0-9]+(\\.[0-9]+)?$'
                          THEN (payload->>'amount')::numeric ELSE 0 END), 0) AS billed
-                FROM admin_records
-                WHERE tenant_id = $1 AND module = 'finance' AND status = 'active'
-                  AND EXISTS (
-                    SELECT 1 FROM user_roles ur
-                    WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                      AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
+                FROM admin_records ar
+                WHERE ar.tenant_id = $1 AND ar.module = 'finance' AND ar.status = 'active'
+                  AND (
+                    $3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = $1 AND im.user_id = $2
+                          AND im.membership_role = 'lembaga_admin'
+                          AND im.institution_id::text = ar.payload->>'institution_id'
+                      )
                   )
                 GROUP BY date_trunc('month', updated_at)
                 ORDER BY date_trunc('month', updated_at)
                 """,
-                _uuid(tenant_id), _uuid(user_id),
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
         return {
             **dict(summary),
@@ -980,9 +1109,10 @@ class FoundationStore:
 
     async def list_admin_students(self, tenant_id: str, user_id: str) -> list[dict[str, Any]]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             rows = await connection.fetch(
                 """
                 SELECT s.id::text AS id, s.tenant_id::text AS tenant_id, s.nis, s.full_name,
@@ -1010,11 +1140,16 @@ class FoundationStore:
                 ) guardian ON true
                  WHERE s.tenant_id = $1
                    AND (
-                     EXISTS (
-                       SELECT 1 FROM user_roles ur
-                       WHERE ur.user_id = $2 AND ur.tenant_id = $1
-                         AND ur.role IN ('super_admin', 'yayasan_admin', 'lembaga_admin', 'operator_pendaftaran')
-                     )
+                      $3 OR EXISTS (
+                        SELECT 1 FROM enrollments institution_enrollment
+                        JOIN institution_memberships im
+                          ON im.tenant_id = institution_enrollment.tenant_id
+                         AND im.institution_id = institution_enrollment.institution_id
+                         AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                        WHERE institution_enrollment.student_id = s.id
+                          AND institution_enrollment.tenant_id = $1
+                          AND institution_enrollment.status = 'active'
+                      )
                      OR EXISTS (
                        SELECT 1
                        FROM enrollments teacher_enrollment
@@ -1030,21 +1165,48 @@ class FoundationStore:
                    )
                  ORDER BY s.full_name
                  """,
-                 _uuid(tenant_id), _uuid(user_id),
-             )
+                  _uuid(tenant_id), _uuid(user_id), global_admin,
+              )
         return [dict(row) for row in rows]
 
     async def create_admin_student(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             institution_id = _uuid(data["institution_id"]) if data.get("institution_id") else await connection.fetchval(
-                "SELECT id FROM institutions WHERE tenant_id = $1 AND status = 'active' ORDER BY code LIMIT 1",
-                _uuid(tenant_id),
+                """
+                SELECT i.id
+                FROM institutions i
+                WHERE i.tenant_id = $1 AND i.status = 'active'
+                  AND ($3 OR EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                      AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                  ))
+                ORDER BY i.code LIMIT 1
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             if institution_id is None:
                 raise NotFoundError("no active institution is available")
+            valid_institution = await connection.fetchval(
+                """
+                SELECT $3 OR EXISTS (
+                  SELECT 1 FROM institutions i
+                  WHERE i.id = $1 AND i.tenant_id = $2 AND i.status = 'active'
+                    AND EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                        AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                    )
+                )
+                """,
+                institution_id, _uuid(tenant_id), global_admin, _uuid(user_id),
+            )
+            if not valid_institution:
+                raise PermissionDeniedError("lembaga_admin is outside this institution scope")
             class_info = None
             if data.get("class_id"):
                 class_info = await connection.fetchrow(
@@ -1052,8 +1214,13 @@ class FoundationStore:
                     SELECT id, institution_id, program_id, academic_year_id
                     FROM classes
                     WHERE id = $1 AND tenant_id = $2 AND status = 'active'
+                      AND ($3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = $2 AND im.institution_id = classes.institution_id
+                          AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                      ))
                     """,
-                    _uuid(data["class_id"]), _uuid(tenant_id),
+                    _uuid(data["class_id"]), _uuid(tenant_id), global_admin, _uuid(user_id),
                 )
                 if class_info is None:
                     raise NotFoundError("class not found")
@@ -1113,13 +1280,27 @@ class FoundationStore:
         if not allowed:
             raise ConflictError("no student fields supplied")
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             student_uuid = _uuid(student_id)
             exists = await connection.fetchval(
-                "SELECT EXISTS (SELECT 1 FROM students WHERE id = $1 AND tenant_id = $2)",
-                student_uuid, _uuid(tenant_id),
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM students s
+                  WHERE s.id = $1 AND s.tenant_id = $2
+                    AND ($3 OR EXISTS (
+                      SELECT 1
+                      FROM enrollments e
+                      JOIN institution_memberships im
+                        ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                       AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                      WHERE e.student_id = s.id AND e.tenant_id = $2 AND e.status = 'active'
+                    ))
+                )
+                """,
+                student_uuid, _uuid(tenant_id), global_admin, _uuid(user_id),
             )
             if not exists:
                 raise NotFoundError("student not found")
@@ -1133,9 +1314,10 @@ class FoundationStore:
 
     async def list_admin_staff(self, tenant_id: str, user_id: str) -> list[dict[str, Any]]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             rows = await connection.fetch(
                 """
                 SELECT tp.id::text AS id, tp.user_id::text AS user_id, tp.institution_id::text AS institution_id,
@@ -1146,23 +1328,39 @@ class FoundationStore:
                 JOIN institutions i ON i.id = tp.institution_id
                 LEFT JOIN class_teachers ct ON ct.teacher_id = tp.id
                 LEFT JOIN classes c ON c.id = ct.class_id
-                WHERE tp.tenant_id = $1
-                GROUP BY tp.id, i.name
+                 WHERE tp.tenant_id = $1
+                   AND ($3 OR EXISTS (
+                     SELECT 1 FROM institution_memberships im
+                     WHERE im.tenant_id = tp.tenant_id AND im.institution_id = tp.institution_id
+                       AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                   ))
+                 GROUP BY tp.id, i.name
                 ORDER BY tp.display_name
                 """,
-                _uuid(tenant_id),
-            )
+                 _uuid(tenant_id), _uuid(user_id), global_admin,
+             )
         return [dict(row) for row in rows]
 
     async def create_admin_staff(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             institution_id = _uuid(data["institution_id"])
             valid = await connection.fetchval(
-                "SELECT EXISTS (SELECT 1 FROM institutions WHERE id = $1 AND tenant_id = $2)",
-                institution_id, _uuid(tenant_id),
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM institutions i
+                  WHERE i.id = $1 AND i.tenant_id = $2 AND i.status = 'active'
+                    AND ($3 OR EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                        AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                    ))
+                )
+                """,
+                institution_id, _uuid(tenant_id), global_admin, _uuid(user_id),
             )
             if not valid:
                 raise NotFoundError("institution not found")
@@ -1188,10 +1386,27 @@ class FoundationStore:
         if not allowed:
             raise ConflictError("no staff fields supplied")
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             staff_uuid = _uuid(staff_id)
+            visible = await connection.fetchval(
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM teacher_profiles tp
+                  WHERE tp.id = $1 AND tp.tenant_id = $2
+                    AND ($3 OR EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.tenant_id = tp.tenant_id AND im.institution_id = tp.institution_id
+                        AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                    ))
+                )
+                """,
+                staff_uuid, _uuid(tenant_id), global_admin, _uuid(user_id),
+            )
+            if not visible:
+                raise NotFoundError("staff member not found")
             assignments = ", ".join(f"{column} = ${index + 2}" for index, column in enumerate(allowed))
             updated = await connection.execute(
                 f"UPDATE teacher_profiles SET {assignments}, updated_at = now() WHERE id = $1 AND tenant_id = ${len(allowed) + 2}",
@@ -1204,18 +1419,37 @@ class FoundationStore:
 
     async def list_admin_records(self, tenant_id: str, user_id: str, module: str) -> list[dict[str, Any]]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
             ))
-            roles = await connection.fetch(
-                "SELECT role FROM user_roles WHERE tenant_id = $1 AND user_id = $2",
-                _uuid(tenant_id), _uuid(user_id),
-            )
-            is_admin = any(row["role"] in {"super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran"} for row in roles)
-            if not is_admin and module not in {"grades", "tahfidz", "journals", "schedule"}:
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
+            if not global_admin and "lembaga_admin" not in roles and module not in {"grades", "tahfidz", "journals", "schedule"}:
                 raise PermissionDeniedError("guru tidak memiliki akses ke modul ini")
             scope_clause = ""
-            if not is_admin and module in {"grades", "tahfidz"}:
+            if not global_admin and "lembaga_admin" in roles:
+                scope_clause = """
+                  AND (
+                    (
+                      ar.module IN ('grades', 'tahfidz')
+                      AND EXISTS (
+                        SELECT 1
+                        FROM enrollments e
+                        JOIN institution_memberships im
+                          ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                         AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                        WHERE e.student_id = ar.entity_id
+                          AND e.tenant_id = $1 AND e.status = 'active'
+                      )
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = $1 AND im.user_id = $2
+                          AND im.membership_role = 'lembaga_admin'
+                          AND im.institution_id::text = ar.payload->>'institution_id'
+                      )
+                  )
+                """
+            elif not global_admin and module in {"grades", "tahfidz"}:
                 scope_clause = """
                   AND EXISTS (
                     SELECT 1
@@ -1230,7 +1464,7 @@ class FoundationStore:
                       AND tp.user_id = $2
                   )
                  """
-            elif not is_admin and module in {"journals", "schedule"}:
+            elif not global_admin and module in {"journals", "schedule"}:
                 scope_clause = "AND ar.created_by = $2"
             rows = await connection.fetch(
                 f"""
@@ -1256,14 +1490,15 @@ class FoundationStore:
             await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
             ))
-            existing_owner = await connection.fetchval(
-                "SELECT created_by::text FROM admin_records WHERE tenant_id = $1 AND module = $2 AND record_key = $3",
+            existing = await connection.fetchrow(
+                "SELECT created_by::text AS created_by, payload FROM admin_records WHERE tenant_id = $1 AND module = $2 AND record_key = $3",
                 _uuid(tenant_id), data["module"], data.get("record_key") or str(UUID(int=0)),
             )
             await self._require_record_access(
                 connection, tenant_id, user_id, data["module"],
                 str(data["entity_id"]) if data.get("entity_id") else None,
-                existing_owner,
+                existing["created_by"] if existing else None,
+                data.get("payload") or {},
             )
             row = await connection.fetchrow(
                 """
@@ -1290,13 +1525,17 @@ class FoundationStore:
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran", "guru",
             ))
             existing = await connection.fetchrow(
-                "SELECT module, entity_id::text AS entity_id, created_by::text AS created_by FROM admin_records WHERE id = $1 AND tenant_id = $2",
+                "SELECT module, entity_id::text AS entity_id, created_by::text AS created_by, payload FROM admin_records WHERE id = $1 AND tenant_id = $2",
                 _uuid(record_id), _uuid(tenant_id),
             )
             if existing is None:
                 raise NotFoundError("admin record not found")
+            existing_payload = existing["payload"] or {}
+            if isinstance(existing_payload, str):
+                existing_payload = json.loads(existing_payload)
+            candidate_payload = {**existing_payload, **(data.get("payload") or {})}
             await self._require_record_access(
-                connection, tenant_id, user_id, existing["module"], existing["entity_id"], existing["created_by"],
+                connection, tenant_id, user_id, existing["module"], existing["entity_id"], existing["created_by"], candidate_payload,
             )
             row = await connection.fetchrow(
                 """
@@ -1318,9 +1557,10 @@ class FoundationStore:
 
     async def list_admin_content(self, tenant_id: str, user_id: str) -> list[dict[str, Any]]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             rows = await connection.fetch(
                 """
                 SELECT sc.id::text AS id, sc.site_kind, sc.foundation_site_id::text AS foundation_site_id,
@@ -1329,32 +1569,65 @@ class FoundationStore:
                        sc.status, sc.sort_order, sc.published_at, sc.created_at, sc.updated_at
                 FROM site_content sc
                 LEFT JOIN institutions i ON i.id = sc.institution_id
-                WHERE sc.tenant_id = $1
-                ORDER BY sc.updated_at DESC, sc.sort_order, sc.title
+                 WHERE sc.tenant_id = $1 AND (
+                   $3 OR EXISTS (
+                     SELECT 1 FROM institution_memberships im
+                     WHERE im.tenant_id = sc.tenant_id AND im.institution_id = sc.institution_id
+                       AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                   )
+                 )
+                 ORDER BY sc.updated_at DESC, sc.sort_order, sc.title
                 """,
-                _uuid(tenant_id),
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
         return [dict(row) for row in rows]
 
     async def create_admin_content(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             site_kind = data.get("site_kind", "foundation")
             foundation_id = None
             institution_id = None
             if site_kind == "foundation":
+                if not global_admin:
+                    raise PermissionDeniedError("lembaga_admin cannot manage foundation content")
                 foundation_id = await connection.fetchval(
                     "SELECT id FROM foundation_sites WHERE tenant_id = $1 ORDER BY created_at LIMIT 1",
                     _uuid(tenant_id),
                 )
             else:
                 institution_id = _uuid(data["institution_id"]) if data.get("institution_id") else await connection.fetchval(
-                    "SELECT id FROM institutions WHERE tenant_id = $1 ORDER BY code LIMIT 1", _uuid(tenant_id)
+                    """
+                    SELECT i.id FROM institutions i
+                    WHERE i.tenant_id = $1 AND i.status = 'active'
+                      AND ($3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                          AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                      ))
+                    ORDER BY i.code LIMIT 1
+                    """,
+                    _uuid(tenant_id), _uuid(user_id), global_admin,
                 )
                 if institution_id is None:
                     raise NotFoundError("institution not found")
+                valid_institution = await connection.fetchval(
+                    """
+                    SELECT $3 OR EXISTS (
+                      SELECT 1 FROM institutions i
+                      JOIN institution_memberships im
+                        ON im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                       AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                      WHERE i.id = $1 AND i.tenant_id = $2 AND i.status = 'active'
+                    )
+                    """,
+                    institution_id, _uuid(tenant_id), global_admin, _uuid(user_id),
+                )
+                if not valid_institution:
+                    raise PermissionDeniedError("lembaga_admin is outside this institution scope")
             status = data.get("status", "draft")
             content_id = await connection.fetchval(
                 """
@@ -1384,9 +1657,26 @@ class FoundationStore:
             status_placeholder = list(allowed).index("status") + 2
             assignments += f", published_at = CASE WHEN ${status_placeholder} = 'published' THEN COALESCE(published_at, now()) ELSE NULL END"
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
+            visible = await connection.fetchval(
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM site_content sc
+                  WHERE sc.id = $1 AND sc.tenant_id = $2
+                    AND ($3 OR EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.tenant_id = sc.tenant_id AND im.institution_id = sc.institution_id
+                        AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                    ))
+                )
+                """,
+                _uuid(content_id), _uuid(tenant_id), global_admin, _uuid(user_id),
+            )
+            if not visible:
+                raise NotFoundError("content not found")
             row = await connection.fetchrow(
                 f"""
                 UPDATE site_content SET {assignments}, updated_at = now()
@@ -1403,28 +1693,110 @@ class FoundationStore:
 
     async def export_admin_data(self, tenant_id: str, user_id: str) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
-            await self._require_roles(connection, tenant_id, user_id, (
+            roles = await self._require_roles(connection, tenant_id, user_id, (
                 "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
             ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
             students = await connection.fetch(
-                "SELECT id::text AS id, nis, full_name, birth_place, birth_date, gender, address, status, created_at, updated_at FROM students WHERE tenant_id = $1 ORDER BY full_name",
-                _uuid(tenant_id),
+                """
+                SELECT id::text AS id, nis, full_name, birth_place, birth_date, gender, address,
+                       status, created_at, updated_at
+                FROM students s
+                WHERE s.tenant_id = $1 AND (
+                  $3 OR EXISTS (
+                    SELECT 1 FROM enrollments e
+                    JOIN institution_memberships im
+                      ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                     AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                    WHERE e.student_id = s.id AND e.tenant_id = $1 AND e.status = 'active'
+                  )
+                )
+                ORDER BY full_name
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             staff = await connection.fetch(
-                "SELECT id::text AS id, institution_id::text AS institution_id, display_name, role_title, subject, education, status, employment_type, weekly_hours, created_at, updated_at FROM teacher_profiles WHERE tenant_id = $1 ORDER BY display_name",
-                _uuid(tenant_id),
+                """
+                SELECT tp.id::text AS id, tp.institution_id::text AS institution_id,
+                       tp.display_name, tp.role_title, tp.subject, tp.education, tp.status,
+                       tp.employment_type, tp.weekly_hours, tp.created_at, tp.updated_at
+                FROM teacher_profiles tp
+                WHERE tp.tenant_id = $1 AND (
+                  $3 OR EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.tenant_id = tp.tenant_id AND im.institution_id = tp.institution_id
+                      AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                  )
+                )
+                ORDER BY display_name
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             records = await connection.fetch(
-                "SELECT id::text AS id, module, record_key, entity_id::text AS entity_id, payload, status, created_at, updated_at FROM admin_records WHERE tenant_id = $1 ORDER BY module, updated_at DESC",
-                _uuid(tenant_id),
+                """
+                SELECT ar.id::text AS id, ar.module, ar.record_key,
+                       ar.entity_id::text AS entity_id, ar.payload, ar.status,
+                       ar.created_at, ar.updated_at
+                FROM admin_records ar
+                WHERE ar.tenant_id = $1 AND (
+                  $3 OR (
+                    (
+                      ar.module IN ('grades', 'tahfidz')
+                      AND EXISTS (
+                        SELECT 1 FROM enrollments e
+                        JOIN institution_memberships im
+                          ON im.tenant_id = e.tenant_id AND im.institution_id = e.institution_id
+                         AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                        WHERE e.student_id = ar.entity_id AND e.tenant_id = $1 AND e.status = 'active'
+                      )
+                    )
+                    OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = $1 AND im.user_id = $2
+                          AND im.membership_role = 'lembaga_admin'
+                          AND im.institution_id::text = ar.payload->>'institution_id'
+                      )
+                  )
+                )
+                ORDER BY module, updated_at DESC
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             content = await connection.fetch(
-                "SELECT id::text AS id, site_kind, foundation_site_id::text AS foundation_site_id, institution_id::text AS institution_id, content_type, slug, title, excerpt, body, cover_url, status, sort_order, published_at, created_at, updated_at FROM site_content WHERE tenant_id = $1 ORDER BY updated_at DESC",
-                _uuid(tenant_id),
+                """
+                SELECT sc.id::text AS id, sc.site_kind,
+                       sc.foundation_site_id::text AS foundation_site_id,
+                       sc.institution_id::text AS institution_id, sc.content_type,
+                       sc.slug, sc.title, sc.excerpt, sc.body, sc.cover_url,
+                       sc.status, sc.sort_order, sc.published_at, sc.created_at, sc.updated_at
+                FROM site_content sc
+                WHERE sc.tenant_id = $1 AND (
+                  $3 OR EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.tenant_id = sc.tenant_id AND im.institution_id = sc.institution_id
+                      AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                  )
+                )
+                ORDER BY updated_at DESC
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
             attendance = await connection.fetch(
-                "SELECT id::text AS id, class_id::text AS class_id, attendance_date, status, opened_at, closed_at FROM attendance_sessions WHERE tenant_id = $1 ORDER BY attendance_date DESC LIMIT 500",
-                _uuid(tenant_id),
+                """
+                SELECT id::text AS id, institution_id::text AS institution_id,
+                       class_id::text AS class_id, attendance_date, status,
+                       opened_at, closed_at
+                FROM attendance_sessions a
+                WHERE a.tenant_id = $1 AND (
+                  $3 OR EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.tenant_id = a.tenant_id AND im.institution_id = a.institution_id
+                      AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                  )
+                )
+                ORDER BY attendance_date DESC LIMIT 500
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
             )
         def serialise(rows: list[Any]) -> list[dict[str, Any]]:
             result = []
