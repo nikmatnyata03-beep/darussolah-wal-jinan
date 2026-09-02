@@ -249,8 +249,32 @@
     .contact-row span { display: block; color: var(--muted); font-size: 11px; }
     .contact-side { display: flex; flex-direction: column; justify-content: space-between; padding: 30px; border-radius: 23px; color: var(--white); background: var(--forest-dark); }
     .contact-side h3 { max-width: 270px; font-size: 34px; }
-    .contact-side p { max-width: 300px; color: #bdd8c6; font-size: 12px; }
-    .contact-side .btn { align-self: flex-start; margin-top: 25px; }
+     .contact-side p { max-width: 300px; color: #bdd8c6; font-size: 12px; }
+     .contact-side .btn { align-self: flex-start; margin-top: 25px; }
+
+     .trust-slider { position: relative; display: grid; grid-template-columns: 46px minmax(0,1fr) 46px; align-items: center; gap: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 24px; background: var(--white); box-shadow: var(--shadow-sm); }
+     .trust-slider-control { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 50%; color: var(--forest); background: var(--cream); font-size: 21px; }
+     .trust-slider-control:hover { border-color: var(--forest); background: var(--mint); }
+     .testimonial-track { min-width: 0; overflow: hidden; }
+     .testimonial-slide { display: grid; grid-template-columns: 74px minmax(0,1fr); gap: 19px; align-items: start; }
+     .testimonial-avatar { display: grid; place-items: center; width: 68px; height: 68px; overflow: hidden; border: 3px solid var(--gold-soft); border-radius: 50%; color: var(--forest); background: var(--mint); font: 26px/1 "DM Serif Display", Georgia, serif; }
+     .testimonial-avatar img { width: 100%; height: 100%; object-fit: cover; }
+     .testimonial-quote { margin: 0; color: var(--forest-dark); font: 27px/1.18 "DM Serif Display", Georgia, serif; }
+     .testimonial-story { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+     .testimonial-byline { display: block; margin-top: 14px; color: var(--forest); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+     .testimonial-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
+     .testimonial-dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: var(--line); }
+     .testimonial-dot.active { width: 22px; border-radius: 9px; background: var(--gold); }
+     .teacher-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+     .teacher-card { display: grid; grid-template-columns: 72px minmax(0,1fr); gap: 15px; padding: 18px; border: 1px solid var(--line); border-radius: 19px; background: var(--white); }
+     .teacher-photo { display: grid; place-items: center; width: 68px; height: 82px; overflow: hidden; border-radius: 16px; color: var(--forest); background: var(--mint); font: 24px/1 "DM Serif Display", Georgia, serif; }
+     .teacher-photo img { width: 100%; height: 100%; object-fit: cover; }
+     .teacher-card h3 { margin: 0 0 4px; font-size: 21px; }
+     .teacher-role { display: block; color: var(--forest); font-size: 10px; font-weight: 800; }
+     .teacher-bio { margin: 9px 0 0; color: var(--muted); font-size: 11px; }
+     .dynamic-block { padding: 44px 0; }
+     .dynamic-block-inner { padding: 28px; border: 1px solid var(--line); border-radius: 22px; background: var(--white); }
+     .dynamic-block-inner p { max-width: 700px; color: var(--muted); font-size: 13px; }
 
     .site-footer { padding: 47px 0 25px; color: #bdd8c6; background: #062f27; }
     .footer-top { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 30px; padding-bottom: 40px; }
@@ -352,8 +376,14 @@
       .about-image-main { right: 20px; }
       .support-points { grid-template-columns: 1fr; }
       .footer-top { grid-template-columns: 1fr; }
-      .footer-bottom { align-items: flex-start; flex-direction: column; }
-    }
+       .footer-bottom { align-items: flex-start; flex-direction: column; }
+       .trust-slider { grid-template-columns: 34px minmax(0,1fr) 34px; gap: 7px; padding: 12px; }
+       .trust-slider-control { width: 32px; height: 32px; font-size: 16px; }
+       .testimonial-slide { grid-template-columns: 1fr; gap: 12px; }
+       .testimonial-avatar { width: 56px; height: 56px; }
+       .testimonial-quote { font-size: 23px; }
+       .teacher-grid { grid-template-columns: 1fr; }
+     }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
@@ -509,9 +539,20 @@
         </div>
         <div class="agenda"><div><div class="section-head" style="margin-bottom:17px"><div><span class="eyebrow">Agenda rutin</span><h3 style="margin:9px 0 0;font-size:31px">Mari hadir bersama.</h3></div></div><div class="agenda-list"><div class="agenda-row"><div class="agenda-date"><strong>01</strong><span>pekan</span></div><div><h3>Setoran dan murojaah</h3><p>Rutin mingguan &middot; TPQ dan RTQ</p></div><span class="agenda-type">Al-Quran</span></div><div class="agenda-row"><div class="agenda-date"><strong>02</strong><span>pekan</span></div><div><h3>Kajian dan evaluasi belajar</h3><p>Rutin mingguan &middot; MDT Darussolah</p></div><span class="agenda-type">Diniyah</span></div><div class="agenda-row"><div class="agenda-date"><strong>03</strong><span>periode</span></div><div><h3>Pertemuan wali santri</h3><p>Sesuai kalender &middot; Seluruh lembaga</p></div><span class="agenda-type">Keluarga</span></div></div></div><aside class="agenda-note"><div><span class="eyebrow">Catat tanggalnya</span><h3>Hadir adalah bentuk dukungan.</h3><p>Informasi jadwal pertemuan, perubahan kelas, dan agenda yayasan akan dirangkum untuk keluarga.</p></div><a class="text-link" href="#kontak">Minta kalender kegiatan <span class="arrow">&#8594;</span></a></aside></div>
       </div>
-    </section>
+     </section>
 
-    <section class="section apply-section" id="pendaftaran">
+     <section class="section" id="testimoni" hidden>
+       <div class="container">
+         <div class="section-head"><div><span class="eyebrow" data-testimonials-eyebrow>Cerita keluarga</span><h2 data-testimonials-title>Cerita yang tumbuh bersama kami.</h2></div><p data-testimonials-body>Kutipan dan kisah nyata dari orang tua serta siswa Darussolah.</p></div>
+         <div class="trust-slider" aria-label="Slider testimoni"><button class="trust-slider-control" type="button" data-testimonial-prev aria-label="Testimoni sebelumnya">&#8592;</button><div class="testimonial-track"><article class="testimonial-slide" id="testimonialSlide"></article><div class="testimonial-dots" id="testimonialDots"></div></div><button class="trust-slider-control" type="button" data-testimonial-next aria-label="Testimoni berikutnya">&#8594;</button></div>
+       </div>
+     </section>
+
+     <section class="section soft-section" id="guru" hidden>
+       <div class="container"><div class="section-head"><div><span class="eyebrow" data-teachers-eyebrow>Para pendamping</span><h2 data-teachers-title>Guru yang mendampingi dengan hati.</h2></div><p data-teachers-body>Kenali para guru yang hadir dalam proses belajar anak setiap hari.</p></div><div class="teacher-grid" id="teacherGrid"></div></div>
+     </section>
+
+     <section class="section apply-section" id="pendaftaran">
       <div class="container">
         <div class="apply-band">
           <div><span class="eyebrow" style="color:#d9ebda">Penerimaan santri</span><h2>Langkah pertama dimulai dari sini.</h2><p>Isi data singkat untuk memberi tahu minat Anda. Tim pendaftaran akan membantu menjelaskan pilihan lembaga dan tahapan berikutnya.</p><button class="btn btn-light" type="button" data-open="admission">Isi formulir minat <span class="arrow">&#8594;</span></button></div>
@@ -652,28 +693,63 @@
     document.querySelectorAll('.modal').forEach(modal => modal.addEventListener('click', event => { if (event.target === modal) closeModal(modal); }));
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && activeModal) closeModal(activeModal); });
 
-    const publicUrl = path => `${apiBase}/v1/public/${tenantSlug}/${path}`;
-    const loadPublicData = async () => {
-      if (!apiBase) return;
-      try {
-        const [foundationResponse, institutionsResponse] = await Promise.all([
-          fetch(publicUrl('foundation')),
-          fetch(publicUrl('institutions'))
-        ]);
-        if (!foundationResponse.ok || !institutionsResponse.ok) throw new Error('API tidak tersedia');
-        const foundation = await foundationResponse.json();
-        const institutions = (await institutionsResponse.json()).items || [];
-        if (!institutions.length) throw new Error('Belum ada lembaga terbit');
-        unitSelect.replaceChildren(new Option('Pilih lembaga', ''), ...institutions.map(item => new Option(item.name, item.id)));
-        if (foundation.tagline) document.querySelector('.hero-lead').textContent = foundation.tagline;
-        if (foundation.description) document.querySelector('.about-copy > p').textContent = foundation.description;
-        apiReady = true;
-        document.documentElement.dataset.api = 'connected';
-      } catch (error) {
-        document.documentElement.dataset.api = 'offline';
-        console.warn('Darussolah API belum tersedia:', error.message);
-      }
-    };
+     const publicUrl = path => `${apiBase}/v1/public/${tenantSlug}/${path}`;
+     const homeSectionByKey = { 'hero-main': '.hero', 'about-main': '#tentang', 'units-main': '#lembaga', 'experience-main': '#pengalaman', 'news-main': '#kegiatan', 'agenda-main': '.agenda', 'application-main': '#pendaftaran', 'support-main': '#transparansi', 'faq-main': '#faq', 'contact-main': '#kontak', 'testimonials-main': '#testimoni', 'teachers-main': '#guru' };
+     const setHomeText = (node, value) => { if (node && value !== undefined && value !== null) node.textContent = value; };
+     const applyHomeBlocks = blocks => {
+       if (!Array.isArray(blocks) || !blocks.length) return;
+       const byKey = new Map(blocks.map(block => [block.block_key, block]));
+       Object.entries(homeSectionByKey).forEach(([key, selector]) => { const node = document.querySelector(selector); if (node) node.hidden = !byKey.has(key); });
+       blocks.forEach(block => {
+         const section = document.querySelector(homeSectionByKey[block.block_key]);
+         const settings = block.settings && typeof block.settings === 'object' ? block.settings : {};
+         if (!section) return;
+         setHomeText(section.querySelector('.section-head .eyebrow, .hero-copy .eyebrow'), settings.eyebrow);
+         const heading = section.matches('.hero') ? section.querySelector('.hero-copy h1') : section.querySelector('.section-head h2, .about-copy h2, .apply-band h2, .contact-card h2');
+         setHomeText(heading, block.title);
+         setHomeText(section.querySelector('.section-head > div + p, .hero-lead, .about-copy > p, .apply-band > div:first-child > p, .contact-card > p'), block.body);
+         if (settings.image_url && section.matches('.hero')) { const image = section.querySelector('.hero-image'); if (image) image.src = settings.image_url; }
+         if (settings.quote && section.matches('#tentang')) setHomeText(section.querySelector('.quote'), `"${settings.quote}"`);
+         if (settings.note_title && section.matches('#tentang')) setHomeText(section.querySelector('.about-note strong'), settings.note_title);
+         if (settings.note_text && section.matches('#tentang')) setHomeText(section.querySelector('.about-note span'), settings.note_text);
+         if (settings.items && Array.isArray(settings.items) && block.block_type === 'faq') { const list = section.querySelector('.faq-list'); if (list) { list.innerHTML = ''; settings.items.forEach(item => { const detail = document.createElement('details'); const summary = document.createElement('summary'); const answer = document.createElement('p'); summary.textContent = item.question || item.title || ''; answer.textContent = item.answer || item.body || ''; detail.append(summary, answer); list.append(detail); }); } }
+       });
+       document.querySelector('#custom-cms-blocks')?.remove();
+       const custom = blocks.filter(block => block.block_type === 'custom');
+       if (custom.length) { const host = document.createElement('div'); host.id = 'custom-cms-blocks'; custom.forEach(block => { const section = document.createElement('section'); section.className = 'dynamic-block'; const inner = document.createElement('div'); inner.className = 'container dynamic-block-inner'; const eyebrow = document.createElement('span'); eyebrow.className = 'eyebrow'; eyebrow.textContent = block.settings?.eyebrow || 'Informasi'; const title = document.createElement('h2'); title.textContent = block.title; const body = document.createElement('p'); body.textContent = block.body || ''; inner.append(eyebrow, title, body); section.append(inner); host.append(section); }); document.querySelector('main')?.append(host); }
+     };
+     const testimonialState = { items: [], index: 0, timer: null };
+     const testimonialParts = item => { try { const parsed = JSON.parse(item.body || '{}'); if (parsed && typeof parsed === 'object') return { quote: parsed.quote || '', story: parsed.story || '' }; } catch (error) {} return { quote: item.body || '', story: '' }; };
+     const renderTestimonials = (items, block) => {
+       const section = document.querySelector('#testimoni'); if (!section || !items.length) { if (section) section.hidden = true; return; }
+       testimonialState.items = items; testimonialState.index = 0; if (block) { setHomeText(section.querySelector('[data-testimonials-eyebrow]'), block.settings?.eyebrow || 'Cerita keluarga'); setHomeText(section.querySelector('[data-testimonials-title]'), block.title); setHomeText(section.querySelector('[data-testimonials-body]'), block.body); }
+       const draw = () => { const item = testimonialState.items[testimonialState.index]; const parts = testimonialParts(item); const slide = document.querySelector('#testimonialSlide'); if (!slide) return; const avatar = item.cover_url ? `<img src="${item.cover_url}" alt="">` : safeInitials(item.title); slide.replaceChildren(); const avatarNode = document.createElement('span'); avatarNode.className = 'testimonial-avatar'; if (item.cover_url) { const image = document.createElement('img'); image.src = item.cover_url; image.alt = ''; avatarNode.replaceChildren(image); } else avatarNode.textContent = avatar; const copy = document.createElement('div'); const quote = document.createElement('blockquote'); quote.className = 'testimonial-quote'; quote.textContent = `“${parts.quote}”`; const story = document.createElement('p'); story.className = 'testimonial-story'; story.textContent = parts.story; const byline = document.createElement('span'); byline.className = 'testimonial-byline'; byline.textContent = `${item.title} · ${item.excerpt || 'Keluarga Darussolah'}`; copy.append(quote); if (parts.story) copy.append(story); copy.append(byline); slide.append(avatarNode, copy); const dots = document.querySelector('#testimonialDots'); if (dots) { dots.replaceChildren(...testimonialState.items.map((_, index) => { const dot = document.createElement('button'); dot.type = 'button'; dot.className = `testimonial-dot${index === testimonialState.index ? ' active' : ''}`; dot.setAttribute('aria-label', `Lihat testimoni ${index + 1}`); dot.addEventListener('click', () => { testimonialState.index = index; draw(); }); return dot; })); } };
+       const safeInitials = value => String(value || 'DW').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+       document.querySelector('[data-testimonial-prev]')?.addEventListener('click', () => { testimonialState.index = (testimonialState.index - 1 + testimonialState.items.length) % testimonialState.items.length; draw(); });
+       document.querySelector('[data-testimonial-next]')?.addEventListener('click', () => { testimonialState.index = (testimonialState.index + 1) % testimonialState.items.length; draw(); });
+       draw(); clearInterval(testimonialState.timer); testimonialState.timer = setInterval(() => { testimonialState.index = (testimonialState.index + 1) % testimonialState.items.length; draw(); }, 7000);
+     };
+     const renderTeachers = (items, block) => { const section = document.querySelector('#guru'); const grid = document.querySelector('#teacherGrid'); if (!section || !grid || !items.length) { if (section) section.hidden = true; return; } if (block) { setHomeText(section.querySelector('[data-teachers-eyebrow]'), block.settings?.eyebrow || 'Para pendamping'); setHomeText(section.querySelector('[data-teachers-title]'), block.title); setHomeText(section.querySelector('[data-teachers-body]'), block.body); } grid.replaceChildren(...items.map(item => { const card = document.createElement('article'); card.className = 'teacher-card'; const photo = document.createElement('span'); photo.className = 'teacher-photo'; if (item.photo_url) { const image = document.createElement('img'); image.src = item.photo_url; image.alt = `Foto ${item.display_name}`; photo.append(image); } else photo.textContent = String(item.display_name || 'DW').split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase(); const copy = document.createElement('div'); const title = document.createElement('h3'); title.textContent = item.display_name; const role = document.createElement('span'); role.className = 'teacher-role'; role.textContent = [item.role_title || 'Guru', item.subject, item.institution_name].filter(Boolean).join(' · '); const bio = document.createElement('p'); bio.className = 'teacher-bio'; bio.textContent = item.short_bio || item.education || ''; copy.append(title, role, bio); card.append(photo, copy); return card; })); };
+     const renderNews = items => { const visible = items.filter(item => !['testimonial', 'banner', 'page'].includes(item.content_type)); if (!visible.length) return; const feature = document.querySelector('.news-feature'); const first = visible[0]; if (feature) { setHomeText(feature.querySelector('.news-meta'), `${first.content_type || 'Kabar'} · Yayasan`); setHomeText(feature.querySelector('h3'), first.title); setHomeText(feature.querySelector('p'), first.excerpt || first.body); } const list = document.querySelector('.news-list'); if (list) list.replaceChildren(...visible.slice(1, 4).map(item => { const article = document.createElement('article'); article.className = 'news-item'; const figure = document.createElement('figure'); const image = document.createElement('img'); image.src = item.cover_url || 'https://images.unsplash.com/photo-1649030839339-3d117544fcb4?auto=format&fit=crop&w=500&q=80'; image.alt = ''; figure.append(image); const copy = document.createElement('div'); const meta = document.createElement('span'); meta.className = 'news-meta'; meta.textContent = item.content_type || 'Kabar'; const title = document.createElement('h3'); title.textContent = item.title; const body = document.createElement('p'); body.textContent = item.excerpt || item.body || ''; copy.append(meta, title, body); article.append(figure, copy); return article; })); };
+     const loadPublicData = async () => {
+       if (!apiBase) return;
+       try {
+         const [foundationResponse, institutionsResponse] = await Promise.all([fetch(publicUrl('foundation')), fetch(publicUrl('institutions'))]);
+         if (!foundationResponse.ok || !institutionsResponse.ok) throw new Error('API tidak tersedia');
+         const foundation = await foundationResponse.json();
+         const institutions = (await institutionsResponse.json()).items || [];
+         if (!institutions.length) throw new Error('Belum ada lembaga terbit');
+         unitSelect.replaceChildren(new Option('Pilih lembaga', ''), ...institutions.map(item => new Option(item.name, item.id)));
+         if (foundation.tagline) document.querySelector('.hero-lead').textContent = foundation.tagline;
+         if (foundation.description) document.querySelector('.about-copy > p').textContent = foundation.description;
+         apiReady = true; document.documentElement.dataset.api = 'connected';
+         const optional = await Promise.allSettled([fetch(publicUrl('pages/home')), fetch(publicUrl('foundation/content')), fetch(publicUrl('teachers'))]);
+         const blocks = optional[0].status === 'fulfilled' && optional[0].value.ok ? (await optional[0].value.json()).items || [] : [];
+         const content = optional[1].status === 'fulfilled' && optional[1].value.ok ? (await optional[1].value.json()).items || [] : [];
+         const teachers = optional[2].status === 'fulfilled' && optional[2].value.ok ? (await optional[2].value.json()).items || [] : [];
+         applyHomeBlocks(blocks); renderNews(content); renderTestimonials(content.filter(item => item.content_type === 'testimonial' && item.status === 'published'), blocks.find(item => item.block_key === 'testimonials-main')); renderTeachers(teachers, blocks.find(item => item.block_key === 'teachers-main'));
+       } catch (error) { document.documentElement.dataset.api = 'offline'; console.warn('Darussolah API belum tersedia:', error.message); }
+     };
 
     let registrationAttempt = null;
     document.querySelector('#admission-form').addEventListener('submit', async event => {
