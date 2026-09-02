@@ -39,6 +39,7 @@ Private routes require a Supabase Auth access token validated through the config
 - `GET /v1/private/{tenant_slug}/learning/submissions?class_id={class_id}&resource_id={resource_id}`
 - `POST /v1/private/{tenant_slug}/learning/submissions`
 - `PUT /v1/private/{tenant_slug}/learning/submissions/{submission_id}`
+- `GET /v1/private/{tenant_slug}/guardian/overview?student_id={student_id}`
 - `GET /v1/private/{tenant_slug}/attendance?class_id={class_id}&attendance_date={YYYY-MM-DD}`
 - `PUT /v1/private/{tenant_slug}/attendance`
 - `GET /v1/private/{tenant_slug}/admin/summary`

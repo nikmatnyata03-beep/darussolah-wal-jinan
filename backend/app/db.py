@@ -593,6 +593,176 @@ class FoundationStore:
                 return submission
         raise NotFoundError("learning submission was not returned after review")
 
+    async def fetch_guardian_overview(self, tenant_id: str, user_id: str, student_id: str) -> dict[str, Any]:
+        student_uuid = _uuid(student_id)
+        async with self._tenant_connection(tenant_id) as connection:
+            student = await connection.fetchrow(
+                """
+                SELECT s.id::text AS id, s.tenant_id::text AS tenant_id,
+                       s.nis, s.full_name, s.status, s.photo_url,
+                       enrollment.class_id::text AS class_id,
+                       enrollment.class_name, enrollment.institution_id::text AS institution_id,
+                       enrollment.institution_code, enrollment.institution_name
+                FROM students s
+                LEFT JOIN LATERAL (
+                  SELECT e.class_id, c.name AS class_name, e.institution_id,
+                         i.code AS institution_code, i.name AS institution_name
+                  FROM enrollments e
+                  JOIN institutions i ON i.id = e.institution_id
+                  LEFT JOIN classes c ON c.id = e.class_id
+                  WHERE e.student_id = s.id AND e.tenant_id = s.tenant_id
+                    AND e.status = 'active'
+                  ORDER BY e.created_at DESC
+                  LIMIT 1
+                ) enrollment ON true
+                WHERE s.id = $3 AND s.tenant_id = $1
+                  AND (
+                    s.user_id = $2
+                    OR EXISTS (
+                      SELECT 1
+                      FROM guardian_students gs
+                      JOIN guardians g ON g.id = gs.guardian_id
+                      WHERE gs.student_id = s.id AND gs.tenant_id = $1
+                        AND g.user_id = $2 AND g.status = 'active'
+                    )
+                    OR EXISTS (
+                      SELECT 1
+                      FROM user_roles ur
+                      WHERE ur.user_id = $2 AND ur.tenant_id = $1
+                        AND ur.role IN ('super_admin', 'yayasan_admin')
+                    )
+                    OR EXISTS (
+                      SELECT 1
+                      FROM enrollments scoped_enrollment
+                      JOIN institution_memberships im
+                        ON im.institution_id = scoped_enrollment.institution_id
+                       AND im.tenant_id = scoped_enrollment.tenant_id
+                      WHERE scoped_enrollment.student_id = s.id
+                        AND scoped_enrollment.tenant_id = $1
+                        AND scoped_enrollment.status = 'active'
+                        AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                    )
+                  )
+                """,
+                _uuid(tenant_id), _uuid(user_id), student_uuid,
+            )
+            if student is None:
+                raise NotFoundError("student not found or not accessible")
+
+            period = await connection.fetchrow(
+                """
+                SELECT date_trunc('month', timezone('Asia/Jakarta', now()))::date AS period_start,
+                       timezone('Asia/Jakarta', now())::date AS period_end
+                """
+            )
+            attendance_rows = []
+            week_rows = []
+            class_id = student["class_id"]
+            class_uuid = _uuid(class_id) if class_id else None
+            institution_uuid = _uuid(student["institution_id"]) if student["institution_id"] else None
+            if class_id is not None:
+                attendance_rows = await connection.fetch(
+                    """
+                    SELECT s.attendance_date, s.status AS session_status,
+                           COALESCE(ar.status, 'pending') AS status,
+                           ar.recorded_at
+                    FROM attendance_sessions s
+                    LEFT JOIN attendance_records ar
+                      ON ar.session_id = s.id AND ar.student_id = $3
+                    WHERE s.tenant_id = $1 AND s.class_id = $2
+                      AND s.attendance_date >= date_trunc('month', timezone('Asia/Jakarta', now()))::date
+                      AND s.attendance_date <= timezone('Asia/Jakarta', now())::date
+                    ORDER BY s.attendance_date DESC
+                    """,
+                    _uuid(tenant_id), class_uuid, student_uuid,
+                )
+                week_rows = await connection.fetch(
+                    """
+                    SELECT days.day::date AS attendance_date,
+                           s.status AS session_status,
+                           COALESCE(ar.status, CASE WHEN s.id IS NULL THEN 'not_recorded' ELSE 'pending' END) AS status,
+                           ar.recorded_at
+                    FROM generate_series(
+                      timezone('Asia/Jakarta', now())::date - INTERVAL '6 days',
+                      timezone('Asia/Jakarta', now())::date, INTERVAL '1 day'
+                    ) AS days(day)
+                    LEFT JOIN attendance_sessions s
+                      ON s.tenant_id = $1 AND s.class_id = $2
+                     AND s.attendance_date = days.day::date
+                    LEFT JOIN attendance_records ar
+                      ON ar.session_id = s.id AND ar.student_id = $3
+                    ORDER BY days.day
+                    """,
+                    _uuid(tenant_id), class_uuid, student_uuid,
+                )
+
+            resources = await connection.fetch(
+                """
+                SELECT r.id::text AS id, r.tenant_id::text AS tenant_id,
+                       r.institution_id::text AS institution_id,
+                       r.class_id::text AS class_id, i.code AS institution_code,
+                       i.name AS institution_name, c.name AS class_name,
+                       r.resource_type, r.title, r.subject, r.description,
+                       r.file_path, r.due_date, r.status, r.published_at,
+                       r.created_at, r.updated_at,
+                       creator.full_name AS created_by_name
+                FROM learning_resources r
+                JOIN institutions i ON i.id = r.institution_id
+                LEFT JOIN classes c ON c.id = r.class_id
+                LEFT JOIN user_profiles creator ON creator.id = r.created_by
+                WHERE r.tenant_id = $1 AND r.status = 'published'
+                  AND r.institution_id = $2
+                  AND (r.class_id IS NULL OR r.class_id = $3)
+                ORDER BY COALESCE(r.published_at, r.created_at) DESC, r.title
+                LIMIT 50
+                """,
+                _uuid(tenant_id), institution_uuid, class_uuid,
+            ) if institution_uuid else []
+
+            submissions = await connection.fetch(
+                """
+                SELECT ls.id::text AS id, ls.tenant_id::text AS tenant_id,
+                       ls.resource_id::text AS resource_id,
+                       ls.student_id::text AS student_id,
+                       r.title AS resource_title, r.resource_type,
+                       ls.file_path, ls.note, ls.status, ls.score, ls.feedback,
+                       ls.submitted_at, ls.reviewed_at,
+                       reviewer.full_name AS reviewer_name
+                FROM learning_submissions ls
+                JOIN learning_resources r ON r.id = ls.resource_id
+                LEFT JOIN user_profiles reviewer ON reviewer.id = ls.reviewed_by
+                WHERE ls.tenant_id = $1 AND ls.student_id = $2
+                  AND r.tenant_id = $1 AND r.status = 'published'
+                ORDER BY ls.submitted_at DESC
+                LIMIT 50
+                """,
+                _uuid(tenant_id), student_uuid,
+            )
+
+        counts = {key: 0 for key in ("present", "late", "excused", "sick", "absent", "pending")}
+        for row in attendance_rows:
+            counts[row["status"]] = counts.get(row["status"], 0) + 1
+        total_sessions = len(attendance_rows)
+        recorded_sessions = total_sessions - counts["pending"]
+        attended_sessions = counts["present"] + counts["late"]
+        rate = round(attended_sessions / recorded_sessions * 100) if recorded_sessions else None
+        attendance = {
+            "period_start": period["period_start"],
+            "period_end": period["period_end"],
+            "total_sessions": total_sessions,
+            "recorded_sessions": recorded_sessions,
+            "attended_sessions": attended_sessions,
+            "rate": rate,
+            **counts,
+            "days": [dict(row) for row in week_rows],
+        }
+        return {
+            "student": dict(student),
+            "attendance": attendance,
+            "learning": [dict(row) for row in resources],
+            "submissions": [dict(row) for row in submissions],
+        }
+
     async def fetch_attendance(self, tenant_id: str, user_id: str, class_id: str, attendance_date: date) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
             class_info = await self._class_for_user(connection, tenant_id, user_id, class_id)

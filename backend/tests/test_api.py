@@ -125,6 +125,14 @@ class FakeStore:
             "records": [{"student_id": "55555555-5555-4555-8555-555555555555", "status": "present"}],
         }
 
+    async def fetch_guardian_overview(self, tenant_id: str, user_id: str, student_id: str):
+        return {
+            "student": {"id": student_id, "full_name": "Aisyah", "class_id": "66666666-6666-4666-8666-666666666666"},
+            "attendance": {"rate": 100, "days": []},
+            "learning": [{"id": "99999999-9999-4999-8999-999999999999", "title": "Materi"}],
+            "submissions": [],
+        }
+
     async def save_attendance(self, tenant_id: str, user_id: str, data: dict):
         assert data["class_id"] == UUID("66666666-6666-4666-8666-666666666666")
         assert data["records"][0]["status"] == "present"
@@ -314,6 +322,17 @@ def test_private_learning_submissions_can_be_listed_and_reviewed():
         )
         assert created.status_code == 201
         assert created.json()["status"] == "submitted"
+
+
+def test_guardian_overview_uses_selected_student_scope():
+    with authenticated_client() as api:
+        response = api.get(
+            "/v1/private/yayasan-darussolah-wal-jinan/guardian/overview",
+            params={"student_id": "55555555-5555-4555-8555-555555555555"},
+        )
+        assert response.status_code == 200
+        assert response.json()["student"]["id"] == "55555555-5555-4555-8555-555555555555"
+        assert response.json()["attendance"]["rate"] == 100
 
 
 def test_learning_submission_review_rejects_invalid_score():

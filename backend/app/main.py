@@ -473,6 +473,19 @@ def create_app(*, settings: Settings | None = None, store: FoundationStore | Non
         except NotFoundError as exc:
             raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
 
+    @app.get("/v1/private/{tenant_slug}/guardian/overview", tags=["private", "guardian"])
+    async def private_guardian_overview(
+        tenant_slug: str,
+        student_id: UUID,
+        user: UserIdentity = Depends(current_user),
+        store: FoundationStore = Depends(_store),
+    ):
+        tenant = await _public_tenant(store, tenant_slug)
+        try:
+            return await store.fetch_guardian_overview(tenant["id"], str(user.user_id), str(student_id))
+        except NotFoundError as exc:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+
     @app.post("/v1/private/{tenant_slug}/learning/submissions", status_code=status.HTTP_201_CREATED, tags=["private", "learning"])
     async def create_private_learning_submission(
         tenant_slug: str,

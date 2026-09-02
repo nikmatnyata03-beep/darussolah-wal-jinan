@@ -5,5 +5,6 @@ window.DARUSSOLAH_CONFIG = Object.freeze({
   supabaseAnonKey: 'sb_publishable_RCXquVk_9fh463_rxXtJOg_tMb3GBLg',
   storageBucket: 'learning-submissions',
   resourceStorageBucket: 'learning-resources',
+  timezone: 'Asia/Jakarta',
   tenantSlug: 'yayasan-darussolah-wal-jinan'
 });

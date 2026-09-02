@@ -93,9 +93,11 @@
     .day { display:grid; min-height:62px; place-items:center; align-content:center; gap:7px; border:1px solid var(--line); border-radius:8px; background:var(--cream); }
     .day span { color:var(--muted); font-size:9px; font-weight:600; }
     .day b { display:grid; width:21px; height:21px; place-items:center; color:var(--green); border-radius:50%; background:#dcecdf; font-size:10px; }
-    .day.today { border-color:var(--gold); background:#fff8e8; }
-    .day.today span { color:var(--gold); }
-    .day.absent b { color:var(--red); background:#f6e3dc; }
+     .day.today { border-color:var(--gold); background:#fff8e8; }
+     .day.today span { color:var(--gold); }
+     .day.absent b { color:var(--red); background:#f6e3dc; }
+     .day.pending b, .day.not-recorded b { color:var(--muted); background:var(--sand); }
+     .day.late b { color:#876226; background:#f8edcf; }
     .attendance-note { display:flex; align-items:center; gap:8px; margin-top:14px; color:var(--muted); font-size:9px; }
     .attendance-note i { width:6px; height:6px; border-radius:50%; background:var(--gold); }
     .learning-list { padding:2px 22px 7px; }
@@ -138,7 +140,8 @@
     .announcement-mark { width:7px; height:7px; margin-top:5px; flex:0 0 auto; border-radius:50%; background:var(--gold); }
     .announcement-item.read .announcement-mark { background:#cad2cb; }
     .announcement-item strong { display:block; color:var(--pine-deep); font-size:10px; }
-    .announcement-item span { display:block; margin-top:3px; color:var(--muted); font-size:9px; }
+     .announcement-item span { display:block; margin-top:3px; color:var(--muted); font-size:9px; }
+     .empty-state { margin:0; padding:18px 0; color:var(--muted); font-size:10px; }
     .bottom-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,.7fr) minmax(240px,.65fr); gap:15px; margin-top:17px; }
     .docs-list { padding:4px 22px 10px; }
     .doc-row { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid #edf0ea; }
@@ -160,9 +163,10 @@
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:39px; padding:0 14px; border:1px solid transparent; border-radius:8px; font-size:10px; font-weight:700; transition:transform .2s ease,box-shadow .2s ease,background .2s ease; }
     .btn:hover { transform:translateY(-1px); }
     .btn-primary { color:#fff; background:var(--pine); box-shadow:0 7px 15px rgba(13,68,51,.12); }
-    .btn-primary:hover { background:var(--pine-deep); }
-    .btn-ghost { color:var(--pine); border-color:var(--line); background:var(--paper); }
-    .btn-ghost:hover { border-color:rgba(13,68,51,.25); background:#fff; }
+     .btn-primary:hover { background:var(--pine-deep); }
+     .btn-ghost { color:var(--pine); border-color:var(--line); background:var(--paper); }
+     .btn-ghost:hover { border-color:rgba(13,68,51,.25); background:#fff; }
+     .btn:disabled { cursor:not-allowed; opacity:.55; transform:none; box-shadow:none; }
     .modal[hidden] { display:none; }
     .modal { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:22px; }
     .modal-backdrop { position:absolute; inset:0; background:rgba(8,46,37,.64); backdrop-filter:blur(5px); }
@@ -199,7 +203,7 @@
     <aside class="sidebar" aria-label="Navigasi portal wali">
       <a class="sidebar-brand" href="index.html"><span class="brand-logo" aria-hidden="true"><svg class="brand-symbol" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 21.5 25 10l16 11.5v18A3.5 3.5 0 0 1 37.5 43h-25A3.5 3.5 0 0 1 9 39.5v-18Z" fill="#0D4433"/><path d="M25 10v33M9 21.5h32M14 27h22M17 43V27h16v16" stroke="#C99435" stroke-width="2"/><path d="m19 19 6-4 6 4-6 4-6-4Z" fill="#E8C879"/></svg></span><span><strong class="brand-name">TPQ Darul Jinan</strong><small class="brand-caption">Portal wali santri</small></span></a>
        <div class="sidebar-context"><span class="context-label">Akun portal</span><span class="context-name">Memuat profil...</span><span class="context-meta">Memuat keterhubungan...</span></div>
-      <nav class="side-nav" aria-label="Menu portal wali"><span class="nav-label">Pendampingan</span><a class="side-link active" href="#beranda" aria-current="page"><span class="nav-icon">01</span>Beranda</a><a class="side-link" href="#kehadiran"><span class="nav-icon">02</span>Kehadiran</a><a class="side-link" href="#belajar"><span class="nav-icon">03</span>Pembelajaran</a><a class="side-link" href="#dokumen"><span class="nav-icon">04</span>Rapor &amp; dokumen</a><a class="side-link" href="keuangan.html"><span class="nav-icon">05</span>Keuangan</a></nav>
+       <nav class="side-nav" aria-label="Menu portal wali"><span class="nav-label">Pendampingan</span><a class="side-link active" href="#beranda" aria-current="page"><span class="nav-icon">01</span>Beranda</a><a class="side-link" href="#kehadiran"><span class="nav-icon">02</span>Kehadiran</a><a class="side-link" href="#belajar"><span class="nav-icon">03</span>Pembelajaran</a><a class="side-link" href="#dokumen"><span class="nav-icon">04</span>Rapor &amp; dokumen</a><a class="side-link" href="#tagihan"><span class="nav-icon">05</span>Keuangan</a></nav>
        <div class="sidebar-spacer"></div><div class="sidebar-footer"><div class="user-card"><span class="user-avatar">DWJ</span><span><strong>Memuat profil...</strong><span>Wali santri</span></span></div></div>
     </aside>
     <main class="main-content">
@@ -209,47 +213,128 @@
          <section class="metrics-grid" aria-label="Ringkasan perkembangan anak"><article class="metric-card highlight"><span class="metric-label">Kehadiran bulan ini</span><strong class="metric-value" id="attendanceValue">Belum tersedia</strong><span class="metric-foot" id="attendanceFoot">Menunggu data resmi</span></article><article class="metric-card"><span class="metric-label">Tagihan aktif</span><strong class="metric-value" id="feeValue">Belum tersedia</strong><span class="metric-foot" id="feeFoot">Menunggu data resmi</span></article><article class="metric-card"><span class="metric-label">Setoran terakhir</span><strong class="metric-value" id="memorizeValue">Belum tersedia</strong><span class="metric-foot" id="memorizeFoot">Menunggu data resmi</span></article><article class="metric-card"><span class="metric-label">Tugas aktif</span><strong class="metric-value" id="taskValue">Belum tersedia</strong><span class="metric-foot" id="taskFoot">Menunggu data resmi</span></article></section>
         <div class="dashboard-grid">
           <div class="left-stack">
-             <section class="panel" id="kehadiran" aria-labelledby="attendanceHeading"><div class="panel-header"><div class="panel-heading"><h2 id="attendanceHeading">Kehadiran</h2><p>Data resmi untuk <span id="childClass">anak terpilih</span></p></div><span class="data-chip">Menunggu data</span></div><div class="attendance-body"><div class="attendance-summary"><div><strong id="attendanceDetail">Belum tersedia</strong><small>data kehadiran belum tersedia</small></div><span class="attendance-rate">Belum tersedia</span></div><div class="week-strip" aria-label="Kehadiran tujuh hari terakhir"></div><div class="attendance-note"><i></i><span>Data akan muncul setelah dicatat oleh lembaga.</span></div></div></section>
-             <section class="panel" id="belajar" aria-labelledby="learningHeading"><div class="panel-header"><div class="panel-heading"><h2 id="learningHeading">Pembelajaran terbaru</h2><p>Materi dan tugas dari guru</p></div><a class="data-chip" href="materi.html">Lihat semua →</a></div><div class="learning-list" aria-live="polite"></div></section>
+              <section class="panel" id="kehadiran" aria-labelledby="attendanceHeading"><div class="panel-header"><div class="panel-heading"><h2 id="attendanceHeading">Kehadiran</h2><p>Data resmi untuk <span id="childClass">anak terpilih</span></p></div><span class="data-chip" id="attendanceDataLabel">Memuat data</span></div><div class="attendance-body"><div class="attendance-summary"><div><strong id="attendanceDetail">Memuat...</strong><small id="attendanceSubtitle">Menyiapkan rekap kehadiran</small></div><span class="attendance-rate" id="attendanceRate">Memuat...</span></div><div class="week-strip" aria-label="Kehadiran tujuh hari terakhir"></div><div class="attendance-note"><i></i><span id="attendanceNote">Data akan muncul setelah dicatat oleh lembaga.</span></div></div></section>
+              <section class="panel" id="belajar" aria-labelledby="learningHeading"><div class="panel-header"><div class="panel-heading"><h2 id="learningHeading">Pembelajaran terbaru</h2><p>Materi dan tugas dari guru</p></div><span class="data-chip">Data anak terpilih</span></div><div class="learning-list" aria-live="polite"></div></section>
           </div>
           <div class="right-stack">
-             <section class="invoice-card" aria-labelledby="invoiceHeading"><div class="invoice-top"><div class="panel-heading"><h2 id="invoiceHeading">Tagihan</h2><p>Data keuangan resmi akun</p></div><span class="invoice-badge">Belum tersedia</span></div><div class="invoice-amount"><strong id="invoiceAmount">Belum tersedia</strong><span>Tagihan aktif untuk <b id="invoiceChild">anak terpilih</b></span></div><div class="invoice-meta"><div><span>Status</span><strong id="invoiceDue">Menunggu data resmi</strong></div><div><span>Pembayaran</span><strong>Menunggu data resmi</strong></div></div><button class="btn invoice-action" type="button" id="payButton">Menu pembayaran <span>↗</span></button></section>
-             <section class="panel progress-card" aria-labelledby="progressHeading"><div class="progress-title"><h2 id="progressHeading">Progres hafalan</h2><a href="tahfidz.html">Buka detail →</a></div><div class="progress-kicker"><strong id="progressValue">Belum tersedia</strong><span>Target semester</span></div><div class="progress-track"><i id="progressBar"></i></div><div class="progress-caption"><span id="progressStart">Menunggu data resmi</span><span id="progressEnd">Menunggu data resmi</span></div></section>
+              <section class="invoice-card" id="tagihan" aria-labelledby="invoiceHeading"><div class="invoice-top"><div class="panel-heading"><h2 id="invoiceHeading">Tagihan</h2><p>Data keuangan resmi akun</p></div><span class="invoice-badge">Belum tersedia</span></div><div class="invoice-amount"><strong id="invoiceAmount">Belum tersedia</strong><span>Tagihan aktif untuk <b id="invoiceChild">anak terpilih</b></span></div><div class="invoice-meta"><div><span>Status</span><strong id="invoiceDue">Menunggu data resmi</strong></div><div><span>Pembayaran</span><strong>Menunggu data resmi</strong></div></div><button class="btn invoice-action" type="button" id="payButton" disabled aria-disabled="true">Pembayaran belum tersedia</button></section>
+              <section class="panel progress-card" aria-labelledby="progressHeading"><div class="progress-title"><h2 id="progressHeading">Progres hafalan</h2><span class="data-chip">Belum tersedia</span></div><div class="progress-kicker"><strong id="progressValue">Belum tersedia</strong><span>Target semester</span></div><div class="progress-track"><i id="progressBar" style="width:0"></i></div><div class="progress-caption"><span id="progressStart">Menunggu data resmi</span><span id="progressEnd">Endpoint belum tersedia</span></div></section>
              <section class="panel" id="pengumuman" aria-labelledby="announcementHeading"><div class="panel-header"><div class="panel-heading"><h2 id="announcementHeading">Pengumuman</h2><p>Pesan terbaru dari lembaga</p></div><span class="data-chip" id="announcementCount">Belum tersedia</span></div><div class="announcement-list" aria-live="polite"></div></section>
           </div>
         </div>
         <div class="bottom-grid">
            <section class="panel" id="dokumen" aria-labelledby="docsHeading"><div class="panel-header"><div class="panel-heading"><h2 id="docsHeading">Rapor &amp; dokumen</h2><p>Dokumen yang tersedia untuk diunduh</p></div></div><div class="docs-list" aria-live="polite"></div></section>
-          <section class="panel leave-card"><h2>Ajukan izin</h2><p>Jika anak berhalangan hadir, sampaikan langsung kepada guru.</p><button class="btn btn-primary leave-button" type="button" data-modal="leaveModal">Ajukan izin / sakit</button></section>
-          <section class="panel feedback-card"><h2>Buku tamu digital</h2><p>Ada saran untuk pendampingan anak?</p><form class="feedback-form" id="feedbackForm"><label class="sr-only" for="feedback">Tulis saran</label><textarea id="feedback" placeholder="Tulis pesan untuk lembaga..."></textarea><button class="btn btn-ghost" type="submit">Kirim masukan</button></form></section>
+           <section class="panel leave-card"><h2>Ajukan izin</h2><p>Pengajuan izin belum tersedia di layanan akun ini. Hubungi guru melalui kanal resmi lembaga.</p><button class="btn btn-primary leave-button" type="button" disabled aria-disabled="true">Layanan belum tersedia</button></section>
+           <section class="panel feedback-card"><h2>Buku tamu digital</h2><p>Masukan digital belum tersedia di layanan akun ini.</p><form class="feedback-form" id="feedbackForm"><label class="sr-only" for="feedback">Tulis saran</label><textarea id="feedback" placeholder="Layanan masukan belum tersedia" disabled></textarea><button class="btn btn-ghost" type="submit" disabled aria-disabled="true">Layanan belum tersedia</button></form></section>
         </div>
       </div>
     </main>
-  </div>
-  <div class="modal" id="leaveModal" hidden aria-hidden="true"><div class="modal-backdrop" data-close-modal></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="leaveTitle"><button class="dialog-close" type="button" data-close-modal aria-label="Tutup">×</button><span class="eyebrow">Kehadiran anak</span><h2 class="serif" id="leaveTitle">Ajukan izin</h2><p>Guru akan menerima pengajuan ini setelah layanan tersedia.</p><form id="leaveForm"><div class="form-grid"><div class="form-field"><label for="leaveDate">Tanggal</label><input id="leaveDate" required type="date" /></div><div class="form-field"><label for="leaveType">Jenis</label><select id="leaveType"><option>Izin keluarga</option><option>Sakit</option><option>Keperluan lain</option></select></div><div class="form-field full"><label for="leaveNote">Keterangan</label><textarea id="leaveNote" required placeholder="Contoh: ada keperluan keluarga..."></textarea></div></div><button class="btn btn-primary form-submit" type="submit">Kirim pengajuan</button></form></div></div>
-  <div class="toast" id="toast" role="status"><span>✓</span><div><strong id="toastTitle">Perubahan tersimpan</strong><small id="toastText">Data berhasil diperbarui.</small></div></div>
-  <script>
-     const toast = document.getElementById('toast');
-     document.querySelectorAll('.help-link[href="#bantuan"]').forEach(link=>link.href='index.html#faq');
-    let toastTimer;
-     function showToast(title, text) { document.getElementById('toastTitle').textContent=title; document.getElementById('toastText').textContent=text; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),3200); }
-      const showEmpty = (selector, message) => { const node = document.querySelector(selector); if (node) node.innerHTML = `<p class="empty-state">${message}</p>`; };
-      const renderChildren = ({ students = [], classes = [] } = {}) => {
-        const options = document.querySelector('.child-options');
+   </div>
+   <div class="toast" id="toast" role="status" aria-live="polite"><span>✓</span><div><strong id="toastTitle">Perubahan tersimpan</strong><small id="toastText">Data berhasil diperbarui.</small></div></div>
+    <script>
+      document.querySelectorAll('.help-link[href="#bantuan"]').forEach(link=>link.href='index.html#faq');
+       const state = { students: [], classes: [], currentStudent: null, overviewRequest: 0 };
+       const showEmpty = (selector, message) => { const node = document.querySelector(selector); if (!node) return; const empty = document.createElement('p'); empty.className = 'empty-state'; empty.textContent = message; node.replaceChildren(empty); };
+       const statusLabels = { present: 'H', late: 'T', excused: 'I', sick: 'S', absent: 'A', pending: '?', 'not_recorded': '-' };
+       const statusNames = { present: 'Hadir', late: 'Terlambat', excused: 'Izin', sick: 'Sakit', absent: 'Alpa', pending: 'Belum dicatat', 'not_recorded': 'Belum ada sesi' };
+       const formatDay = value => new Intl.DateTimeFormat('id-ID', { weekday: 'short', day: 'numeric' }).format(new Date(`${value}T00:00:00`));
+       const setText = (selector, value) => { const node = document.querySelector(selector); if (node) node.textContent = value; };
+       const renderAttendance = overview => {
+         const attendance = overview?.attendance || {};
+         const rate = Number.isFinite(attendance.rate) ? `${attendance.rate}%` : 'Belum tersedia';
+         setText('#attendanceValue', rate);
+         setText('#attendanceFoot', attendance.recorded_sessions ? `${attendance.attended_sessions} hadir dari ${attendance.recorded_sessions} sesi` : 'Belum ada pencatatan');
+         setText('#attendanceDetail', rate);
+         setText('#attendanceSubtitle', attendance.total_sessions ? `${attendance.recorded_sessions} dari ${attendance.total_sessions} sesi tercatat` : 'Belum ada sesi pada bulan ini');
+         setText('#attendanceRate', attendance.pending ? `${attendance.pending} belum dicatat` : 'Rekap bulan berjalan');
+         setText('#attendanceDataLabel', attendance.total_sessions ? 'DATA LIVE' : 'BELUM ADA DATA');
+         setText('#attendanceNote', attendance.total_sessions ? 'Rekap ini hanya menampilkan data resmi yang dicatat lembaga.' : 'Belum ada sesi absensi resmi untuk anak ini pada bulan berjalan.');
+         const strip = document.querySelector('.week-strip');
+         if (!strip) return;
+         strip.replaceChildren(...(attendance.days || []).map(day => {
+           const item = document.createElement('div');
+           const status = day.status || 'not_recorded';
+           item.className = `day ${status}`;
+           if (day.attendance_date === attendance.period_end) item.classList.add('today');
+           const label = document.createElement('span');
+           label.textContent = formatDay(day.attendance_date);
+           const mark = document.createElement('b');
+           mark.textContent = statusLabels[status] || '?';
+           mark.title = statusNames[status] || status;
+           item.append(label, mark);
+           return item;
+         }));
+       };
+       const renderAnnouncements = overview => {
+         const list = document.querySelector('.announcement-list');
+         if (!list) return;
+         const items = (overview?.learning || []).filter(item => item.resource_type === 'announcement');
+         list.replaceChildren();
+         if (!items.length) {
+           showEmpty('.announcement-list', 'Belum ada pengumuman untuk anak ini.');
+           setText('#announcementCount', 'Belum tersedia');
+           return;
+         }
+         setText('#announcementCount', `${items.length} terbaru`);
+         items.slice(0, 5).forEach(item => {
+           const row = document.createElement('div');
+           row.className = 'announcement-item';
+           const mark = document.createElement('i');
+           mark.className = 'announcement-mark';
+           const copy = document.createElement('div');
+           const title = document.createElement('strong');
+           title.textContent = item.title || 'Pengumuman';
+           const detail = document.createElement('span');
+           detail.textContent = item.description || item.subject || 'Informasi dari lembaga';
+           copy.append(title, detail);
+           row.append(mark, copy);
+           list.append(row);
+         });
+       };
+       const loadGuardianOverview = async student => {
+         const portal = window.DarussolahPortal;
+         const requestId = ++state.overviewRequest;
+         if (!portal?.session || !student?.id) return;
+         setText('#attendanceDataLabel', 'MEMUAT');
+         setText('#attendanceDetail', 'Memuat...');
+         try {
+           const overview = await portal.requestPrivate(portal.client, `guardian/overview?student_id=${encodeURIComponent(student.id)}`, portal.session);
+           if (requestId !== state.overviewRequest) return;
+           renderAttendance(overview);
+           window.dispatchEvent(new CustomEvent('darussolah:guardian-overview-ready', { detail: overview }));
+         } catch (error) {
+           if (requestId !== state.overviewRequest) return;
+           setText('#attendanceDataLabel', 'GAGAL MEMUAT');
+           setText('#attendanceDetail', 'Belum tersedia');
+           setText('#attendanceSubtitle', 'Rekap belum dapat dimuat');
+           setText('#attendanceRate', 'Coba lagi');
+           setText('#attendanceNote', error.message || 'Periksa koneksi lalu coba lagi.');
+           document.querySelector('.week-strip')?.replaceChildren();
+         }
+       };
+       const renderChildren = ({ students = [], classes = [] } = {}) => {
+         state.students = students;
+         state.classes = classes;
+         const options = document.querySelector('.child-options');
         if (!options) return;
         options.replaceChildren(...students.map(student => {
           const button = document.createElement('button');
           button.className = 'child-option';
           button.type = 'button';
-          button.dataset.child = student.id;
-          button.innerHTML = `<span>${student.full_name || 'Santri'}</span><small>${student.nis || 'ID santri'}</small>`;
+           button.dataset.child = student.id;
+           const name = document.createElement('span');
+           name.textContent = student.full_name || 'Santri';
+           const nis = document.createElement('small');
+           nis.textContent = student.nis || 'ID santri';
+           button.append(name, nis);
           button.addEventListener('click', () => selectChild(student));
           return button;
         }));
         if (students.length) selectChild(students[0], classes);
         else showEmpty('.child-options', 'Belum ada anak yang terhubung ke akun ini.');
       };
-      const selectChild = (student, classes = window.DarussolahPortal?.classes || []) => {
+       const selectChild = (student, classes = state.classes) => {
+         state.currentStudent = student;
         document.querySelectorAll('.child-option').forEach(button => {
           const active = button.dataset.child === student.id;
           button.classList.toggle('active', active);
@@ -257,22 +342,15 @@
         });
         const className = classes.find(item => item.id === student.class_id)?.name || 'Kelas belum tersedia';
          document.getElementById('childClass').textContent = className;
-         document.getElementById('invoiceChild').textContent = student.full_name || 'anak terpilih';
-         window.dispatchEvent(new CustomEvent('darussolah:child-selected', { detail: { student } }));
+          document.getElementById('invoiceChild').textContent = student.full_name || 'anak terpilih';
+          window.dispatchEvent(new CustomEvent('darussolah:child-selected', { detail: { student } }));
+          loadGuardianOverview(student);
        };
-      window.addEventListener('darussolah:ready', event => renderChildren(event.detail), { once: true });
+       window.addEventListener('darussolah:ready', event => renderChildren(event.detail), { once: true });
+       window.addEventListener('darussolah:guardian-overview-ready', event => renderAnnouncements(event.detail));
       showEmpty('.announcement-list', 'Belum ada pengumuman untuk akun ini.');
       showEmpty('.docs-list', 'Belum ada dokumen yang tersedia.');
-    const modals=document.querySelectorAll('.modal');
-    document.querySelectorAll('[data-modal]').forEach((button)=>button.addEventListener('click',()=>{const modal=document.getElementById(button.dataset.modal); modal.hidden=false; modal.setAttribute('aria-hidden','false'); modal.querySelector('textarea, input')?.focus();}));
-    document.querySelectorAll('[data-close-modal]').forEach((button)=>button.addEventListener('click',()=>{const modal=button.closest('.modal'); modal.hidden=true; modal.setAttribute('aria-hidden','true');}));
-    document.addEventListener('keydown',(event)=>{if(event.key==='Escape')modals.forEach((modal)=>{if(!modal.hidden){modal.hidden=true;modal.setAttribute('aria-hidden','true');}});});
-     document.getElementById('leaveForm').addEventListener('submit',(event)=>{event.preventDefault();showToast('Pengajuan belum terkirim','Fitur pengajuan izin akan aktif setelah endpoint layanan tersedia.');});
-     document.getElementById('feedbackForm').addEventListener('submit',(event)=>{event.preventDefault();const field=document.getElementById('feedback');if(!field.value.trim()){field.focus();showToast('Pesan masih kosong','Tulis saran singkat sebelum dikirim.');return;}showToast('Masukan belum terkirim','Fitur masukan akan aktif setelah endpoint layanan tersedia.');});
-    document.getElementById('payButton').addEventListener('click',()=>showToast('Menu pembayaran dibuka','Lanjutkan pembayaran melalui halaman Keuangan.'));
-    document.querySelectorAll('[data-download]').forEach((button)=>button.addEventListener('click',()=>showToast('Dokumen siap diunduh','Pratinjau PDF akan tersedia saat layanan terhubung.')));
-     document.querySelectorAll('[data-read]').forEach((button)=>button.addEventListener('click',()=>{button.classList.add('read');button.querySelector('.announcement-mark').style.background='#cad2cb';document.getElementById('announcementCount').textContent='Dibaca';showToast('Tampilan diperbarui','Status hanya berubah di layar sampai endpoint pengumuman tersedia.');}));
-     document.getElementById('notificationButton').addEventListener('click',()=>{document.getElementById('pengumuman').scrollIntoView({behavior:'smooth',block:'center'});showToast('Pengumuman','Pengumuman akun akan muncul setelah data resmi tersedia.');});
+       document.getElementById('notificationButton').addEventListener('click',()=>document.getElementById('pengumuman').scrollIntoView({behavior:'smooth',block:'center'}));
   </script>
 </body>
 </html>

@@ -1,8 +1,5 @@
 /* Live assignment submission UI for wali/santri pages. */
 (() => {
-  const escapeHtml = value => String(value ?? '').replace(/[&<>"]/g, character => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'
-  }[character]));
   const showToast = (title, detail) => {
     const titleNode = document.querySelector('#toastTitle, #toast-title');
     const detailNode = document.querySelector('#toastText, #toast-text');
@@ -11,7 +8,15 @@
     document.querySelector('#toast')?.classList.add('show');
   };
   const state = { resources: [], submissions: [], students: [], currentStudent: null };
-  const assignments = () => state.resources.filter(item => item.resource_type === 'assignment');
+   const resourcesForStudent = () => {
+     const student = state.currentStudent;
+     if (!student) return state.resources;
+     return state.resources.filter(item =>
+       (!item.institution_id || item.institution_id === student.institution_id)
+       && (!item.class_id || item.class_id === student.class_id)
+     );
+   };
+   const assignments = () => resourcesForStudent().filter(item => item.resource_type === 'assignment');
   const submissionFor = (resourceId, studentId) => state.submissions.find(item =>
     item.resource_id === resourceId && item.student_id === studentId
   );
@@ -51,7 +56,68 @@
     node.id = 'learningSubmissionModal';
     node.className = 'modal';
     node.hidden = true;
-    node.innerHTML = `<div class="modal-backdrop" data-close-submission></div><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="learningSubmissionTitle"><button class="dialog-close" type="button" data-close-submission aria-label="Tutup">&times;</button><span class="eyebrow">Pengumpulan tugas</span><h2 class="serif" id="learningSubmissionTitle">Kirim tugas</h2><p>Unggah satu berkas atau tulis catatan untuk guru. Berkas disimpan privat.</p><form id="learningSubmissionForm"><div class="form-grid"><div class="form-field full"><label for="submissionResource">Tugas</label><select id="submissionResource" required></select></div><div class="form-field full"><label for="submissionStudent">Untuk santri</label><select id="submissionStudent" required></select></div><div class="form-field full"><label for="submissionFile">Berkas opsional</label><input id="submissionFile" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp3,.m4a,.mp4,.webm,.mov" /><small>Ukuran maksimal 10 MB.</small></div><div class="form-field full"><label for="submissionNote">Catatan</label><textarea id="submissionNote" maxlength="3000" placeholder="Tulis catatan singkat untuk guru..."></textarea></div></div><button class="btn btn-primary form-submit" type="submit">Kirim pengumpulan</button></form></div>`;
+     const backdrop = document.createElement('div');
+     backdrop.className = 'modal-backdrop';
+     backdrop.dataset.closeSubmission = '';
+     const dialog = document.createElement('div');
+     dialog.className = 'dialog';
+     dialog.setAttribute('role', 'dialog');
+     dialog.setAttribute('aria-modal', 'true');
+     dialog.setAttribute('aria-labelledby', 'learningSubmissionTitle');
+     const close = document.createElement('button');
+     close.className = 'dialog-close';
+     close.type = 'button';
+     close.dataset.closeSubmission = '';
+     close.setAttribute('aria-label', 'Tutup');
+     close.textContent = '×';
+     const eyebrow = document.createElement('span');
+     eyebrow.className = 'eyebrow';
+     eyebrow.textContent = 'Pengumpulan tugas';
+     const heading = document.createElement('h2');
+     heading.className = 'serif';
+     heading.id = 'learningSubmissionTitle';
+     heading.textContent = 'Kirim tugas';
+     const description = document.createElement('p');
+     description.textContent = 'Unggah satu berkas atau tulis catatan untuk guru. Berkas disimpan privat.';
+     const form = document.createElement('form');
+     form.id = 'learningSubmissionForm';
+     const grid = document.createElement('div');
+     grid.className = 'form-grid';
+     const field = (labelText, control) => {
+       const wrapper = document.createElement('div');
+       wrapper.className = 'form-field full';
+       const label = document.createElement('label');
+       label.htmlFor = control.id;
+       label.textContent = labelText;
+       wrapper.append(label, control);
+       return wrapper;
+     };
+     const resourceSelect = document.createElement('select');
+     resourceSelect.id = 'submissionResource';
+     resourceSelect.required = true;
+     const studentSelect = document.createElement('select');
+     studentSelect.id = 'submissionStudent';
+     studentSelect.required = true;
+     const fileInput = document.createElement('input');
+     fileInput.id = 'submissionFile';
+     fileInput.type = 'file';
+     fileInput.accept = '.pdf,.doc,.docx,.jpg,.jpeg,.png,.mp3,.m4a,.mp4,.webm,.mov';
+     const fileHint = document.createElement('small');
+     fileHint.textContent = 'Ukuran maksimal 10 MB.';
+     const fileField = field('Berkas opsional', fileInput);
+     fileField.append(fileHint);
+     const note = document.createElement('textarea');
+     note.id = 'submissionNote';
+     note.maxLength = 3000;
+     note.placeholder = 'Tulis catatan singkat untuk guru...';
+     grid.append(field('Tugas', resourceSelect), field('Untuk santri', studentSelect), fileField, field('Catatan', note));
+     const submitButton = document.createElement('button');
+     submitButton.className = 'btn btn-primary form-submit';
+     submitButton.type = 'submit';
+     submitButton.textContent = 'Kirim pengumpulan';
+     form.append(grid, submitButton);
+     dialog.append(close, eyebrow, heading, description, form);
+     node.append(backdrop, dialog);
     document.body.append(node);
     node.querySelectorAll('[data-close-submission]').forEach(button => button.addEventListener('click', closeModal));
     node.querySelector('#learningSubmissionForm').addEventListener('submit', submit);
@@ -68,7 +134,8 @@
     const resourceSelect = node.querySelector('#submissionResource');
     const studentSelect = node.querySelector('#submissionStudent');
     resourceSelect.replaceChildren(...available.map(resource => new Option(resource.title, resource.id)));
-    studentSelect.replaceChildren(...state.students.map(student => new Option(student.full_name, student.id)));
+     const activeStudents = state.currentStudent ? [state.currentStudent] : state.students;
+     studentSelect.replaceChildren(...activeStudents.map(student => new Option(student.full_name, student.id)));
     resourceSelect.value = resourceId || available[0]?.id || '';
     studentSelect.value = (state.currentStudent || state.students[0])?.id || '';
     node.hidden = !available.length || !state.students.length;
@@ -82,25 +149,56 @@
   };
   const renderLiveLearning = () => {
     const list = document.querySelector('.learning-list');
-    if (!list || !state.resources.length) return;
-    list.replaceChildren();
-    state.resources.slice(0, 6).forEach(resource => {
-      const item = document.createElement('div');
-      item.className = 'learning-item';
-      const isAssignment = resource.resource_type === 'assignment';
+     if (!list) return;
+     list.replaceChildren();
+     const resources = resourcesForStudent();
+     if (!resources.length) {
+       const empty = document.createElement('p');
+       empty.className = 'empty-state';
+       empty.textContent = 'Belum ada materi atau tugas untuk kelas anak ini.';
+       list.append(empty);
+       return;
+     }
+     resources.slice(0, 6).forEach(resource => {
+       const item = document.createElement('div');
+       item.className = 'learning-item';
+       const isAssignment = resource.resource_type === 'assignment';
        const student = state.currentStudent || state.students[0];
        const submission = isAssignment && student ? submissionFor(resource.id, student.id) : null;
        const status = submission?.status === 'reviewed' ? 'Ditinjau' : submission ? 'Dikumpulkan' : isAssignment ? 'Kumpulkan' : 'Baca';
-       const action = isAssignment && !submission
-         ? `<button class="learning-status waiting learning-submit" type="button" data-submit-resource="${escapeHtml(resource.id)}">${status}</button>`
-         : !isAssignment && resource.file_path
-         ? `<button class="learning-status waiting learning-open" type="button" data-open-resource="${escapeHtml(resource.id)}">${status}</button>`
-         : `<span class="learning-status${isAssignment ? '' : ' waiting'}">${status}</span>`;
-       item.innerHTML = `<span class="learning-icon">${isAssignment ? '&#9998;' : '&#9670;'}</span><div class="learning-copy"><strong>${escapeHtml(resource.title)}</strong><span>${escapeHtml(resource.subject || (isAssignment ? 'Tugas' : 'Materi'))}${resource.due_date ? ` - Tenggat ${escapeHtml(resource.due_date)}` : ''}</span></div>${action}`;
-       item.querySelector('[data-submit-resource]')?.addEventListener('click', () => openModal(resource.id));
-       item.querySelector('[data-open-resource]')?.addEventListener('click', () => openResource(resource));
+       const icon = document.createElement('span');
+       icon.className = 'learning-icon';
+       icon.textContent = isAssignment ? '✎' : '◆';
+       const copy = document.createElement('div');
+       copy.className = 'learning-copy';
+       const title = document.createElement('strong');
+       title.textContent = resource.title || 'Tanpa judul';
+       const meta = document.createElement('span');
+       meta.textContent = `${resource.subject || (isAssignment ? 'Tugas' : 'Materi')}${resource.due_date ? ` - Tenggat ${resource.due_date}` : ''}`;
+       copy.append(title, meta);
+       let action;
+       if (isAssignment && !submission) {
+         action = document.createElement('button');
+         action.className = 'learning-status waiting learning-submit';
+         action.type = 'button';
+         action.dataset.submitResource = resource.id;
+         action.textContent = status;
+         action.addEventListener('click', () => openModal(resource.id));
+       } else if (!isAssignment && resource.file_path) {
+         action = document.createElement('button');
+         action.className = 'learning-status waiting learning-open';
+         action.type = 'button';
+         action.dataset.openResource = resource.id;
+         action.textContent = status;
+         action.addEventListener('click', () => openResource(resource));
+       } else {
+         action = document.createElement('span');
+         action.className = `learning-status${isAssignment ? '' : ' waiting'}`;
+         action.textContent = status;
+       }
+       item.append(icon, copy, action);
        list.append(item);
-    });
+     });
   };
   async function submit(event) {
     event.preventDefault();
