@@ -68,10 +68,13 @@ def download_object(base: str, bucket: str, key: str, object_path: str, destinat
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--bucket", default=os.getenv("SUPABASE_STORAGE_BUCKET", ""))
     args = parser.parse_args()
     base = os.environ["SUPABASE_URL"].rstrip("/")
     key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    bucket = os.environ["SUPABASE_STORAGE_BUCKET"]
+    bucket = args.bucket.strip()
+    if not bucket:
+        raise ValueError("SUPABASE_STORAGE_BUCKET or --bucket is required")
     output = args.output.resolve()
     manifest = []
     for object_path in walk_objects(base, bucket, key):

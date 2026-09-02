@@ -70,6 +70,18 @@ CREATE POLICY learning_submission_objects_select ON storage.objects
     END
   );
 
+DROP POLICY IF EXISTS learning_submission_objects_delete ON storage.objects;
+CREATE POLICY learning_submission_objects_delete ON storage.objects
+  FOR DELETE TO authenticated USING (
+    bucket_id = 'learning-submissions'
+    AND name ~ '^submissions/[0-9a-f-]{36}/[0-9a-f-]{36}/[0-9a-f-]{36}/[^/]+$'
+    AND darussolah.user_can_submit_learning_resource(
+      ((storage.foldername(name))[2])::uuid,
+      ((storage.foldername(name))[4])::uuid,
+      ((storage.foldername(name))[3])::uuid
+    )
+  );
+
 GRANT EXECUTE ON FUNCTION darussolah.user_can_view_learning_submission(uuid, uuid, uuid)
   TO authenticated;
 

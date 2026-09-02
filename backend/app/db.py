@@ -1562,7 +1562,7 @@ class FoundationStore:
             SELECT $1, i.id, $3, $4, $5, $6, $7, $8, $9,
                    $10, $11, $12, $13, $14, $15, $16, $17
             FROM institutions i
-            WHERE i.id = $2 AND i.tenant_id = $1
+            WHERE i.id = $2 AND i.tenant_id = $1 AND i.status = 'active'
             RETURNING id::text AS id, application_no, status,
                       institution_id::text AS institution_id, student_full_name,
                       submitted_at, created_at
@@ -1579,6 +1579,20 @@ class FoundationStore:
             async with self._tenant_connection(tenant_id) as connection:
                 row = await connection.fetchrow(query, *values)
         except asyncpg.exceptions.UniqueViolationError as exc:
+            if data.get("idempotency_key"):
+                async with self._tenant_connection(tenant_id) as connection:
+                    row = await connection.fetchrow(
+                        """
+                        SELECT id::text AS id, application_no, status,
+                               institution_id::text AS institution_id, student_full_name,
+                               submitted_at, created_at
+                        FROM registration_applications
+                        WHERE tenant_id = $1 AND idempotency_key = $2
+                        """,
+                        _uuid(tenant_id), data["idempotency_key"],
+                    )
+                if row is not None:
+                    return dict(row)
             raise ConflictError("registration could not be created twice") from exc
         if row is None:
             raise NotFoundError("institution not found in foundation")

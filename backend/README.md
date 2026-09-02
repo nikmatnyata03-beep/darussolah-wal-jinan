@@ -14,7 +14,7 @@ pytest
 ## Local run
 
 1. Copy `.env.example` to `.env` and set `DARUSSOLAH_DATABASE_URL`.
-2. Run `migrations/001_initial.sql`, then `migrations/002_core_portal.sql`, `migrations/003_attendance.sql`, `migrations/004_learning.sql`, `migrations/005_learning_submissions.sql`, `migrations/006_learning_submission_storage.sql`, `migrations/007_admin_operations.sql`, and `migrations/008_learning_resource_storage.sql` against the PostgreSQL database.
+2. Run `migrations/001_initial.sql`, then `migrations/002_core_portal.sql`, `migrations/003_attendance.sql`, `migrations/004_learning.sql`, `migrations/005_learning_submissions.sql`, `migrations/006_learning_submission_storage.sql`, `migrations/007_admin_operations.sql`, `migrations/008_learning_resource_storage.sql`, and `migrations/009_api_only_data_plane.sql` against the PostgreSQL database.
 3. Run `seed/001_demo_data.sql` for the initial foundation and four institutions, then `seed/002_core_demo_data.sql` for synthetic academic programs and classes, `seed/003_attendance_demo_data.sql` for synthetic students and attendance, `seed/004_learning_demo_data.sql` for synthetic materials and assignments, and `seed/005_learning_submissions_demo_data.sql` for synthetic submissions.
 4. Set `DARUSSOLAH_SUPABASE_URL` so the API can derive the Supabase JWKS URL. `DARUSSOLAH_JWT_SECRET` is optional legacy fallback support.
 5. Start the API:
@@ -54,4 +54,4 @@ Private routes require a Supabase Auth access token validated through the config
 
 The attendance write payload accepts a class, date, and one or more student records with `pending`, `present`, `excused`, `sick`, `absent`, or `late` status. A closed session cannot be changed. Learning resources are scoped to an institution or class and support `material`, `assignment`, and `announcement`. Students or guardians can create one submission per assignment with a private Storage path and/or note. Teachers can list submissions and mark them `reviewed` or `returned` with an optional score and feedback. Migration `006` creates the private `learning-submissions` bucket and restricts object paths to the tenant, student, and resource scope.
 
-The tables live in the `darussolah` schema. If a frontend uses Supabase REST directly, expose that schema in Supabase API settings and query it with the client schema selector; otherwise keep database access behind this API.
+The tables live in the `darussolah` schema and the API is the only application data plane. Migration `009` revokes direct table privileges from browser roles; do not expose the schema to frontend Supabase REST clients. Supabase Auth and the narrowly scoped Storage policies remain browser-facing.
