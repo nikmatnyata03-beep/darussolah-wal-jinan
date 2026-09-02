@@ -964,7 +964,7 @@ class FoundationStore:
                 f"""
                 SELECT module, count(*)::int AS total
                 FROM admin_records ar
-                WHERE ar.tenant_id = $1 AND ar.status = 'active' AND $2 IS NOT NULL
+                WHERE ar.tenant_id = $1 AND ar.status = 'active' AND $2::uuid IS NOT NULL
                 {record_scope}
                 GROUP BY module
                 ORDER BY module
@@ -1471,7 +1471,8 @@ class FoundationStore:
                 SELECT ar.id::text AS id, ar.module, ar.record_key, ar.entity_id::text AS entity_id,
                        payload, status, created_by::text AS created_by, created_at, updated_at
                 FROM admin_records ar
-                WHERE ar.tenant_id = $1 AND ar.module = $3 AND ar.status = 'active'
+                 WHERE ar.tenant_id = $1 AND ar.module = $3 AND ar.status = 'active'
+                   AND $2::uuid IS NOT NULL
                 {scope_clause}
                 ORDER BY updated_at DESC
                 """,
