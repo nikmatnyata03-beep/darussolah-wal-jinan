@@ -10,7 +10,7 @@
     if (detailNode) detailNode.textContent = detail;
     document.querySelector('#toast')?.classList.add('show');
   };
-  const state = { resources: [], submissions: [], students: [] };
+  const state = { resources: [], submissions: [], students: [], currentStudent: null };
   const assignments = () => state.resources.filter(item => item.resource_type === 'assignment');
   const submissionFor = (resourceId, studentId) => state.submissions.find(item =>
     item.resource_id === resourceId && item.student_id === studentId
@@ -18,6 +18,31 @@
   const closeModal = () => {
     const node = document.querySelector('#learningSubmissionModal');
     if (node) node.hidden = true;
+  };
+  const openResource = async resource => {
+    const portal = window.DarussolahPortal;
+    if (!resource.file_path) {
+      showToast('Berkas belum tersedia', 'Materi ini belum memiliki file yang dapat dibuka.');
+      return;
+    }
+    if (!portal?.client?.storage) {
+      showToast('Materi belum siap', 'Sesi portal belum tersedia untuk membuka berkas privat.');
+      return;
+    }
+    const popup = window.open('', '_blank');
+    try {
+      const result = await portal.client.storage.from(portal.config.resourceStorageBucket).createSignedUrl(resource.file_path, 300);
+      if (result.error || !result.data?.signedUrl) throw result.error || new Error('tautan materi tidak tersedia');
+      if (popup) {
+        popup.opener = null;
+        popup.location.href = result.data.signedUrl;
+      } else {
+        window.location.assign(result.data.signedUrl);
+      }
+    } catch (error) {
+      popup?.close();
+      showToast('Materi belum dapat dibuka', error.message || 'Periksa koneksi lalu coba lagi.');
+    }
   };
   const ensureModal = () => {
     let node = document.querySelector('#learningSubmissionModal');
@@ -45,7 +70,7 @@
     resourceSelect.replaceChildren(...available.map(resource => new Option(resource.title, resource.id)));
     studentSelect.replaceChildren(...state.students.map(student => new Option(student.full_name, student.id)));
     resourceSelect.value = resourceId || available[0]?.id || '';
-    studentSelect.value = state.students[0]?.id || '';
+    studentSelect.value = (state.currentStudent || state.students[0])?.id || '';
     node.hidden = !available.length || !state.students.length;
     if (!available.length || !state.students.length) {
       showToast('Belum siap mengumpulkan', 'Tugas atau data santri belum tersedia.');
@@ -63,12 +88,18 @@
       const item = document.createElement('div');
       item.className = 'learning-item';
       const isAssignment = resource.resource_type === 'assignment';
-      const student = state.students[0];
-      const submission = isAssignment && student ? submissionFor(resource.id, student.id) : null;
-      const status = submission?.status === 'reviewed' ? 'Ditinjau' : submission ? 'Dikumpulkan' : isAssignment ? 'Kumpulkan' : 'Baca';
-      item.innerHTML = `<span class="learning-icon">${isAssignment ? '&#9998;' : '&#9670;'}</span><div class="learning-copy"><strong>${escapeHtml(resource.title)}</strong><span>${escapeHtml(resource.subject || (isAssignment ? 'Tugas' : 'Materi'))}${resource.due_date ? ` - Tenggat ${escapeHtml(resource.due_date)}` : ''}</span></div>${isAssignment && !submission ? `<button class="learning-status waiting learning-submit" type="button" data-submit-resource="${escapeHtml(resource.id)}">${status}</button>` : `<span class="learning-status${isAssignment ? '' : ' waiting'}">${status}</span>`}`;
-      item.querySelector('[data-submit-resource]')?.addEventListener('click', () => openModal(resource.id));
-      list.append(item);
+       const student = state.currentStudent || state.students[0];
+       const submission = isAssignment && student ? submissionFor(resource.id, student.id) : null;
+       const status = submission?.status === 'reviewed' ? 'Ditinjau' : submission ? 'Dikumpulkan' : isAssignment ? 'Kumpulkan' : 'Baca';
+       const action = isAssignment && !submission
+         ? `<button class="learning-status waiting learning-submit" type="button" data-submit-resource="${escapeHtml(resource.id)}">${status}</button>`
+         : !isAssignment && resource.file_path
+         ? `<button class="learning-status waiting learning-open" type="button" data-open-resource="${escapeHtml(resource.id)}">${status}</button>`
+         : `<span class="learning-status${isAssignment ? '' : ' waiting'}">${status}</span>`;
+       item.innerHTML = `<span class="learning-icon">${isAssignment ? '&#9998;' : '&#9670;'}</span><div class="learning-copy"><strong>${escapeHtml(resource.title)}</strong><span>${escapeHtml(resource.subject || (isAssignment ? 'Tugas' : 'Materi'))}${resource.due_date ? ` - Tenggat ${escapeHtml(resource.due_date)}` : ''}</span></div>${action}`;
+       item.querySelector('[data-submit-resource]')?.addEventListener('click', () => openModal(resource.id));
+       item.querySelector('[data-open-resource]')?.addEventListener('click', () => openResource(resource));
+       list.append(item);
     });
   };
   async function submit(event) {
@@ -122,6 +153,13 @@
     state.resources = event.detail.learning || [];
     state.submissions = event.detail.learningSubmissions || [];
     state.students = event.detail.students || [];
+    state.currentStudent = state.students[0] || null;
     renderLiveLearning();
   }, { once: true });
+  window.addEventListener('darussolah:child-selected', event => {
+    const student = event.detail?.student;
+    if (!student) return;
+    state.currentStudent = student;
+    renderLiveLearning();
+  });
 })();

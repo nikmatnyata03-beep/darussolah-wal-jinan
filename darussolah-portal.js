@@ -8,6 +8,7 @@
     supabaseAnonKey: String(source.supabaseAnonKey || metaValue('darussolah-supabase-anon-key')),
     storageBucket: String(source.storageBucket || 'learning-submissions'),
     resourceStorageBucket: String(source.resourceStorageBucket || 'learning-resources'),
+    timezone: String(source.timezone || 'Asia/Jakarta'),
     tenantSlug: String(source.tenantSlug || 'yayasan-darussolah-wal-jinan')
   });
   const role = document.body?.dataset.portalRole || '';
@@ -155,6 +156,12 @@
     document.head.append(style);
   };
   const privatePath = suffix => `${config.apiBase}/v1/private/${encodeURIComponent(config.tenantSlug)}/${suffix}`;
+  const todayInConfiguredTimezone = () => {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+      timeZone: config.timezone, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date()).filter(item => item.type !== 'literal').map(item => [item.type, item.value]));
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  };
   const wait = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
   const retryableStatus = status => [408, 425, 429].includes(status) || status >= 500;
   const requestPrivate = async (client, suffix, session, options = {}) => {
@@ -258,7 +265,7 @@
         try {
           attendanceResponse = await fetchPrivate(
             client,
-            `attendance?class_id=${encodeURIComponent(primaryClass.id)}&attendance_date=${new Date().toISOString().slice(0, 10)}`,
+             `attendance?class_id=${encodeURIComponent(primaryClass.id)}&attendance_date=${todayInConfiguredTimezone()}`,
             session
           );
         } catch (error) {
