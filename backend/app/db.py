@@ -1323,6 +1323,7 @@ class FoundationStore:
                 SELECT tp.id::text AS id, tp.user_id::text AS user_id, tp.institution_id::text AS institution_id,
                        i.name AS institution_name, tp.display_name, tp.role_title, tp.subject, tp.education,
                        tp.short_bio, tp.photo_url, tp.status, tp.employment_type, tp.weekly_hours,
+                       tp.sort_order, tp.is_published,
                        COALESCE(string_agg(DISTINCT c.name, ', ' ORDER BY c.name), '') AS classes
                 FROM teacher_profiles tp
                 JOIN institutions i ON i.id = tp.institution_id
@@ -1368,13 +1369,14 @@ class FoundationStore:
                 """
                 INSERT INTO teacher_profiles (
                   tenant_id, institution_id, display_name, role_title, subject, education,
-                  short_bio, status, employment_type, weekly_hours
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                  short_bio, photo_url, status, employment_type, weekly_hours, sort_order, is_published
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                 RETURNING id
                 """,
                 _uuid(tenant_id), institution_id, data["display_name"], data.get("role_title"),
-                data.get("subject"), data.get("education"), data.get("short_bio"),
+                data.get("subject"), data.get("education"), data.get("short_bio"), data.get("photo_url"),
                 data.get("status", "active"), data.get("employment_type", "fixed"), data.get("weekly_hours", 0),
+                data.get("sort_order", 0), data.get("is_published", False),
             )
         staff = await self.list_admin_staff(tenant_id, user_id)
         return next((item for item in staff if item["id"] == str(staff_id)), {})
@@ -1382,6 +1384,7 @@ class FoundationStore:
     async def update_admin_staff(self, tenant_id: str, user_id: str, staff_id: str, data: dict[str, Any]) -> dict[str, Any]:
         allowed = {key: data[key] for key in (
             "display_name", "role_title", "subject", "education", "short_bio", "status", "employment_type", "weekly_hours",
+            "photo_url", "sort_order", "is_published",
         ) if key in data}
         if not allowed:
             raise ConflictError("no staff fields supplied")
@@ -1416,6 +1419,29 @@ class FoundationStore:
                 raise NotFoundError("staff member not found")
         staff = await self.list_admin_staff(tenant_id, user_id)
         return next((item for item in staff if item["id"] == str(staff_uuid)), {})
+
+    async def delete_admin_staff(self, tenant_id: str, user_id: str, staff_id: str) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            roles = await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
+            updated = await connection.execute(
+                """
+                UPDATE teacher_profiles tp
+                SET status = 'inactive', is_published = false, updated_at = now()
+                WHERE tp.id = $1 AND tp.tenant_id = $2
+                  AND ($3 OR EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.tenant_id = tp.tenant_id AND im.institution_id = tp.institution_id
+                      AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                  ))
+                """,
+                _uuid(staff_id), _uuid(tenant_id), global_admin, _uuid(user_id),
+            )
+            if updated.endswith("0"):
+                raise NotFoundError("staff member not found")
+        return {"id": staff_id, "status": "inactive", "is_published": False}
 
     async def list_admin_records(self, tenant_id: str, user_id: str, module: str) -> list[dict[str, Any]]:
         async with self._tenant_connection(tenant_id) as connection:
@@ -1692,6 +1718,175 @@ class FoundationStore:
                 raise NotFoundError("content not found")
         return dict(row)
 
+    async def delete_admin_content(self, tenant_id: str, user_id: str, content_id: str) -> dict[str, Any]:
+        return await self.update_admin_content(tenant_id, user_id, content_id, {"status": "archived"})
+
+    async def list_admin_page_blocks(
+        self, tenant_id: str, user_id: str, *, page_slug: str | None = None
+    ) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            roles = await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
+            where = ["pb.tenant_id = $1", "($3 OR (pb.site_kind = 'institution' AND EXISTS ("
+                     "SELECT 1 FROM institution_memberships im WHERE im.tenant_id = pb.tenant_id "
+                     "AND im.institution_id = pb.institution_id AND im.user_id = $2 "
+                     "AND im.membership_role = 'lembaga_admin')))" ]
+            values: list[Any] = [_uuid(tenant_id), _uuid(user_id), global_admin]
+            if page_slug:
+                where.append("pb.page_slug = $4")
+                values.append(page_slug)
+            rows = await connection.fetch(
+                f"""
+                SELECT pb.id::text AS id, pb.site_kind, pb.foundation_site_id::text AS foundation_site_id,
+                       pb.institution_id::text AS institution_id, COALESCE(i.name, f.name) AS site_name,
+                       pb.page_slug, pb.block_key, pb.block_type, pb.title, pb.body, pb.media_url,
+                       pb.settings, pb.status, pb.sort_order, pb.created_by::text AS created_by,
+                       pb.created_at, pb.updated_at
+                FROM page_blocks pb
+                LEFT JOIN institutions i ON i.id = pb.institution_id
+                LEFT JOIN foundation_sites f ON f.id = pb.foundation_site_id
+                WHERE {' AND '.join(where)}
+                ORDER BY pb.page_slug, pb.sort_order, pb.updated_at DESC, pb.title
+                """,
+                *values,
+            )
+        result = []
+        for row in rows:
+            item = dict(row)
+            if isinstance(item.get("settings"), str):
+                item["settings"] = json.loads(item["settings"])
+            result.append(item)
+        return result
+
+    async def create_admin_page_block(self, tenant_id: str, user_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        async with self._tenant_connection(tenant_id) as connection:
+            roles = await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
+            site_kind = data.get("site_kind", "foundation")
+            foundation_id = None
+            institution_id = None
+            if site_kind == "foundation":
+                if not global_admin:
+                    raise PermissionDeniedError("lembaga_admin cannot manage foundation layout")
+                foundation_id = await connection.fetchval(
+                    "SELECT id FROM foundation_sites WHERE tenant_id = $1 ORDER BY created_at LIMIT 1",
+                    _uuid(tenant_id),
+                )
+                if foundation_id is None:
+                    raise NotFoundError("foundation site not found")
+            else:
+                institution_id = _uuid(data["institution_id"]) if data.get("institution_id") else await connection.fetchval(
+                    """
+                    SELECT i.id FROM institutions i
+                    WHERE i.tenant_id = $1 AND i.status = 'active'
+                      AND ($3 OR EXISTS (
+                        SELECT 1 FROM institution_memberships im
+                        WHERE im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                          AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                      ))
+                    ORDER BY i.code LIMIT 1
+                    """,
+                    _uuid(tenant_id), _uuid(user_id), global_admin,
+                )
+                if institution_id is None:
+                    raise NotFoundError("institution not found")
+                valid = await connection.fetchval(
+                    """
+                    SELECT $3 OR EXISTS (
+                      SELECT 1 FROM institutions i
+                      JOIN institution_memberships im ON im.tenant_id = i.tenant_id AND im.institution_id = i.id
+                        AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                      WHERE i.id = $1 AND i.tenant_id = $2 AND i.status = 'active'
+                    )
+                    """,
+                    institution_id, _uuid(tenant_id), global_admin, _uuid(user_id),
+                )
+                if not valid:
+                    raise PermissionDeniedError("institution is outside this layout scope")
+            duplicate = await connection.fetchval(
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM page_blocks
+                  WHERE tenant_id = $1 AND site_kind = $2 AND page_slug = $3 AND block_key = $4
+                )
+                """,
+                _uuid(tenant_id), site_kind, data["page_slug"], data["block_key"],
+            )
+            if duplicate:
+                raise ConflictError("a page block with this key already exists")
+            block_id = await connection.fetchval(
+                """
+                INSERT INTO page_blocks (
+                  tenant_id, site_kind, foundation_site_id, institution_id, page_slug,
+                  block_key, block_type, title, body, media_url, settings, status, sort_order, created_by
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13, $14)
+                RETURNING id
+                """,
+                _uuid(tenant_id), site_kind, foundation_id, institution_id, data["page_slug"],
+                data["block_key"], data["block_type"], data["title"], data.get("body"), data.get("media_url"),
+                json.dumps(data.get("settings") or {}), data.get("status", "draft"), data.get("sort_order", 0), _uuid(user_id),
+            )
+        blocks = await self.list_admin_page_blocks(tenant_id, user_id, page_slug=data["page_slug"])
+        return next((item for item in blocks if item["id"] == str(block_id)), {})
+
+    async def update_admin_page_block(self, tenant_id: str, user_id: str, block_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        allowed = {key: data[key] for key in (
+            "page_slug", "block_key", "block_type", "title", "body", "media_url", "settings", "status", "sort_order",
+        ) if key in data}
+        if not allowed:
+            raise ConflictError("no page block fields supplied")
+        if "settings" in allowed:
+            allowed["settings"] = json.dumps(allowed["settings"] or {})
+        assignments = ", ".join(
+            f"{column} = ${index + 2}{'::jsonb' if column == 'settings' else ''}"
+            for index, column in enumerate(allowed)
+        )
+        async with self._tenant_connection(tenant_id) as connection:
+            roles = await self._require_roles(connection, tenant_id, user_id, (
+                "super_admin", "yayasan_admin", "lembaga_admin", "operator_pendaftaran",
+            ))
+            global_admin = bool(roles.intersection({"super_admin", "yayasan_admin", "operator_pendaftaran"}))
+            visible = await connection.fetchval(
+                """
+                SELECT EXISTS (
+                  SELECT 1 FROM page_blocks pb
+                  WHERE pb.id = $1 AND pb.tenant_id = $2
+                    AND ($3 OR (pb.site_kind = 'institution' AND EXISTS (
+                      SELECT 1 FROM institution_memberships im
+                      WHERE im.tenant_id = pb.tenant_id AND im.institution_id = pb.institution_id
+                        AND im.user_id = $4 AND im.membership_role = 'lembaga_admin'
+                    )))
+                )
+                """,
+                _uuid(block_id), _uuid(tenant_id), global_admin, _uuid(user_id),
+            )
+            if not visible:
+                raise NotFoundError("page block not found")
+            row = await connection.fetchrow(
+                f"""
+                UPDATE page_blocks SET {assignments}, updated_at = now()
+                WHERE id = $1 AND tenant_id = ${len(allowed) + 2}
+                RETURNING id::text AS id, site_kind, foundation_site_id::text AS foundation_site_id,
+                          institution_id::text AS institution_id, page_slug, block_key, block_type, title,
+                          body, media_url, settings, status, sort_order, created_by::text AS created_by,
+                          created_at, updated_at
+                """,
+                _uuid(block_id), *allowed.values(), _uuid(tenant_id),
+            )
+            if row is None:
+                raise NotFoundError("page block not found")
+        item = dict(row)
+        if isinstance(item.get("settings"), str):
+            item["settings"] = json.loads(item["settings"])
+        return item
+
+    async def delete_admin_page_block(self, tenant_id: str, user_id: str, block_id: str) -> dict[str, Any]:
+        return await self.update_admin_page_block(tenant_id, user_id, block_id, {"status": "archived"})
+
     async def export_admin_data(self, tenant_id: str, user_id: str) -> dict[str, Any]:
         async with self._tenant_connection(tenant_id) as connection:
             roles = await self._require_roles(connection, tenant_id, user_id, (
@@ -1719,8 +1914,9 @@ class FoundationStore:
             staff = await connection.fetch(
                 """
                 SELECT tp.id::text AS id, tp.institution_id::text AS institution_id,
-                       tp.display_name, tp.role_title, tp.subject, tp.education, tp.status,
-                       tp.employment_type, tp.weekly_hours, tp.created_at, tp.updated_at
+                       tp.display_name, tp.role_title, tp.subject, tp.education, tp.short_bio,
+                       tp.photo_url, tp.status, tp.employment_type, tp.weekly_hours,
+                       tp.sort_order, tp.is_published, tp.created_at, tp.updated_at
                 FROM teacher_profiles tp
                 WHERE tp.tenant_id = $1 AND (
                   $3 OR EXISTS (
@@ -1782,6 +1978,26 @@ class FoundationStore:
                 """,
                 _uuid(tenant_id), _uuid(user_id), global_admin,
             )
+            page_blocks = await connection.fetch(
+                """
+                SELECT pb.id::text AS id, pb.site_kind,
+                       pb.foundation_site_id::text AS foundation_site_id,
+                       pb.institution_id::text AS institution_id, pb.page_slug,
+                       pb.block_key, pb.block_type, pb.title, pb.body, pb.media_url,
+                       pb.settings, pb.status, pb.sort_order, pb.created_by::text AS created_by,
+                       pb.created_at, pb.updated_at
+                FROM page_blocks pb
+                WHERE pb.tenant_id = $1 AND (
+                  $3 OR (pb.site_kind = 'institution' AND EXISTS (
+                    SELECT 1 FROM institution_memberships im
+                    WHERE im.tenant_id = pb.tenant_id AND im.institution_id = pb.institution_id
+                      AND im.user_id = $2 AND im.membership_role = 'lembaga_admin'
+                  ))
+                )
+                ORDER BY pb.page_slug, pb.sort_order, pb.updated_at DESC
+                """,
+                _uuid(tenant_id), _uuid(user_id), global_admin,
+            )
             attendance = await connection.fetch(
                 """
                 SELECT id::text AS id, institution_id::text AS institution_id,
@@ -1814,7 +2030,160 @@ class FoundationStore:
             "staff": serialise(staff),
             "records": serialise(records),
             "content": serialise(content),
+            "page_blocks": serialise(page_blocks),
             "attendance_sessions": serialise(attendance),
+        }
+
+    async def restore_admin_data(self, tenant_id: str, user_id: str, backup: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(backup, dict):
+            raise ConflictError("backup must be a JSON object")
+        if backup.get("tenant_id") and str(backup["tenant_id"]) != str(tenant_id):
+            raise ConflictError("backup belongs to a different foundation")
+
+        def items(key: str) -> list[dict[str, Any]]:
+            value = backup.get(key, [])
+            if value is None:
+                return []
+            if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
+                raise ConflictError(f"backup field {key} must be a list of objects")
+            return value
+
+        def timestamp(value: Any) -> datetime | None:
+            if not value:
+                return None
+            if isinstance(value, datetime):
+                return value
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+
+        content = items("content")
+        page_blocks = items("page_blocks")
+        staff = items("staff")
+        records = items("records")
+        try:
+            async with self._tenant_connection(tenant_id) as connection:
+                roles = await self._require_roles(connection, tenant_id, user_id, ("super_admin", "yayasan_admin"))
+                if not roles.intersection({"super_admin", "yayasan_admin"}):
+                    raise PermissionDeniedError("only global admins can restore CMS data")
+
+                for item in content:
+                    content_id = _uuid(item["id"])
+                    site_kind = item["site_kind"]
+                    foundation_id = _uuid(item["foundation_site_id"]) if item.get("foundation_site_id") else None
+                    institution_id = _uuid(item["institution_id"]) if item.get("institution_id") else None
+                    existing_id = await connection.fetchval(
+                        "SELECT id FROM site_content WHERE tenant_id = $1 AND site_kind = $2 AND slug = $3",
+                        _uuid(tenant_id), site_kind, item["slug"],
+                    )
+                    if existing_id and existing_id != content_id:
+                        content_id = existing_id
+                    await connection.execute(
+                        """
+                        INSERT INTO site_content (
+                          id, tenant_id, site_kind, foundation_site_id, institution_id, content_type,
+                          slug, title, excerpt, body, cover_url, status, sort_order, published_at
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                        ON CONFLICT (id) DO UPDATE SET
+                          site_kind = EXCLUDED.site_kind, foundation_site_id = EXCLUDED.foundation_site_id,
+                          institution_id = EXCLUDED.institution_id, content_type = EXCLUDED.content_type,
+                          slug = EXCLUDED.slug, title = EXCLUDED.title, excerpt = EXCLUDED.excerpt,
+                          body = EXCLUDED.body, cover_url = EXCLUDED.cover_url, status = EXCLUDED.status,
+                          sort_order = EXCLUDED.sort_order, published_at = EXCLUDED.published_at,
+                          updated_at = now()
+                        """,
+                        content_id, _uuid(tenant_id), site_kind, foundation_id, institution_id,
+                        item["content_type"], item["slug"], item["title"], item.get("excerpt"), item.get("body"),
+                        item.get("cover_url"), item.get("status", "draft"), int(item.get("sort_order", 0)),
+                        timestamp(item.get("published_at")),
+                    )
+
+                for item in page_blocks:
+                    block_id = _uuid(item["id"])
+                    existing_id = await connection.fetchval(
+                        """
+                        SELECT id FROM page_blocks
+                        WHERE tenant_id = $1 AND site_kind = $2 AND page_slug = $3 AND block_key = $4
+                        """,
+                        _uuid(tenant_id), item["site_kind"], item["page_slug"], item["block_key"],
+                    )
+                    if existing_id and existing_id != block_id:
+                        block_id = existing_id
+                    await connection.execute(
+                        """
+                        INSERT INTO page_blocks (
+                          id, tenant_id, site_kind, foundation_site_id, institution_id, page_slug,
+                          block_key, block_type, title, body, media_url, settings, status, sort_order, created_by
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13, $14, $15)
+                        ON CONFLICT (id) DO UPDATE SET
+                          site_kind = EXCLUDED.site_kind, foundation_site_id = EXCLUDED.foundation_site_id,
+                          institution_id = EXCLUDED.institution_id, page_slug = EXCLUDED.page_slug,
+                          block_key = EXCLUDED.block_key, block_type = EXCLUDED.block_type,
+                          title = EXCLUDED.title, body = EXCLUDED.body, media_url = EXCLUDED.media_url,
+                          settings = EXCLUDED.settings, status = EXCLUDED.status, sort_order = EXCLUDED.sort_order,
+                          updated_at = now()
+                        """,
+                        block_id, _uuid(tenant_id), item["site_kind"],
+                        _uuid(item["foundation_site_id"]) if item.get("foundation_site_id") else None,
+                        _uuid(item["institution_id"]) if item.get("institution_id") else None,
+                        item["page_slug"], item["block_key"], item["block_type"], item["title"], item.get("body"),
+                        item.get("media_url"), json.dumps(item.get("settings") or {}), item.get("status", "draft"),
+                        int(item.get("sort_order", 0)), _uuid(user_id),
+                    )
+
+                for item in staff:
+                    staff_id = _uuid(item["id"])
+                    await connection.execute(
+                        """
+                        INSERT INTO teacher_profiles (
+                          id, tenant_id, institution_id, display_name, role_title, subject, short_bio,
+                          education, photo_url, status, employment_type, weekly_hours, sort_order, is_published
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                        ON CONFLICT (id) DO UPDATE SET
+                          institution_id = EXCLUDED.institution_id, display_name = EXCLUDED.display_name,
+                          role_title = EXCLUDED.role_title, subject = EXCLUDED.subject, short_bio = EXCLUDED.short_bio,
+                          education = EXCLUDED.education, photo_url = EXCLUDED.photo_url, status = EXCLUDED.status,
+                          employment_type = EXCLUDED.employment_type, weekly_hours = EXCLUDED.weekly_hours,
+                          sort_order = EXCLUDED.sort_order, is_published = EXCLUDED.is_published, updated_at = now()
+                        """,
+                        staff_id, _uuid(tenant_id), _uuid(item["institution_id"]), item["display_name"],
+                        item.get("role_title"), item.get("subject"), item.get("short_bio"), item.get("education"),
+                        item.get("photo_url"), item.get("status", "active"), item.get("employment_type", "fixed"),
+                        int(item.get("weekly_hours", 0)), int(item.get("sort_order", 0)), bool(item.get("is_published", False)),
+                    )
+
+                for item in records:
+                    await connection.execute(
+                        """
+                        INSERT INTO admin_records (
+                          tenant_id, module, record_key, entity_id, payload, status, created_by
+                        ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
+                        ON CONFLICT (tenant_id, module, record_key) DO UPDATE SET
+                          entity_id = EXCLUDED.entity_id, payload = EXCLUDED.payload,
+                          status = EXCLUDED.status, updated_at = now()
+                        """,
+                        _uuid(tenant_id), item["module"], item["record_key"],
+                        _uuid(item["entity_id"]) if item.get("entity_id") else None,
+                        json.dumps(item.get("payload") or {}), item.get("status", "active"), _uuid(user_id),
+                    )
+                await connection.execute(
+                    """
+                    INSERT INTO audit_logs (tenant_id, actor_user_id, action, entity_type, after_data, reason)
+                    VALUES ($1, $2, 'restore', 'cms_snapshot', $3::jsonb, 'CMS snapshot restored by global admin')
+                    """,
+                    _uuid(tenant_id), _uuid(user_id), json.dumps({
+                        "content": len(content), "page_blocks": len(page_blocks),
+                        "staff": len(staff), "records": len(records),
+                    }),
+                )
+        except PermissionDeniedError:
+            raise
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+            raise ConflictError("invalid CMS backup format") from exc
+        return {
+            "restored": True,
+            "content": len(content),
+            "page_blocks": len(page_blocks),
+            "staff": len(staff),
+            "records": len(records),
         }
 
     async def fetch_public_foundation(self, tenant_id: str) -> dict[str, Any]:
@@ -1905,6 +2274,29 @@ class FoundationStore:
             )
         return [dict(row) for row in rows]
 
+    async def list_public_page_blocks(self, tenant_id: str, page_slug: str) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            rows = await connection.fetch(
+                """
+                SELECT pb.id::text AS id, pb.site_kind, pb.page_slug, pb.block_key, pb.block_type,
+                       pb.title, pb.body, pb.media_url, pb.settings, pb.status, pb.sort_order,
+                       COALESCE(i.name, f.name) AS site_name
+                FROM page_blocks pb
+                LEFT JOIN institutions i ON i.id = pb.institution_id
+                LEFT JOIN foundation_sites f ON f.id = pb.foundation_site_id
+                WHERE pb.tenant_id = $1 AND pb.page_slug = $2 AND pb.status = 'published'
+                ORDER BY pb.sort_order, pb.updated_at DESC, pb.title
+                """,
+                _uuid(tenant_id), page_slug,
+            )
+        result = []
+        for row in rows:
+            item = dict(row)
+            if isinstance(item.get("settings"), str):
+                item["settings"] = json.loads(item["settings"])
+            result.append(item)
+        return result
+
     async def list_public_teachers(self, tenant_id: str, institution_id: str) -> list[dict[str, Any]]:
         async with self._tenant_connection(tenant_id) as connection:
             rows = await connection.fetch(
@@ -1917,6 +2309,23 @@ class FoundationStore:
                 ORDER BY sort_order, display_name
                 """,
                 _uuid(tenant_id), _uuid(institution_id),
+            )
+        return [dict(row) for row in rows]
+
+    async def list_public_teachers_for_foundation(self, tenant_id: str) -> list[dict[str, Any]]:
+        async with self._tenant_connection(tenant_id) as connection:
+            rows = await connection.fetch(
+                """
+                SELECT tp.id::text AS id, tp.institution_id::text AS institution_id,
+                       i.name AS institution_name, tp.display_name, tp.role_title, tp.subject,
+                       tp.short_bio, tp.education, tp.photo_url, tp.sort_order
+                FROM teacher_profiles tp
+                JOIN institutions i ON i.id = tp.institution_id
+                WHERE tp.tenant_id = $1 AND i.status = 'active'
+                  AND tp.status = 'active' AND tp.is_published
+                ORDER BY tp.sort_order, i.code, tp.display_name
+                """,
+                _uuid(tenant_id),
             )
         return [dict(row) for row in rows]
 
